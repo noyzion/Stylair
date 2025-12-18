@@ -15,7 +15,7 @@ export default function HomeScreen() {
       <ThemedText type="subtitle" style={styles.subtitleContainer}>your digital closet</ThemedText>
     
       <ThemedView style={styles.buttonsArea}>
-       <Link href="/add-item" asChild>
+       <Link href="/(tabs)/addItemScreen" asChild>
         <Pressable style={styles.actionButton}>
          <ThemedText style={styles.actionButtonText}>Add item to closet</ThemedText>
         </Pressable>
