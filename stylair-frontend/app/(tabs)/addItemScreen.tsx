@@ -3,6 +3,7 @@ import {View, Text, ScrollView, StyleSheet, Pressable} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { ImageBackground } from 'react-native';
+import { styles } from '../../assets/styles/AddItemScreen.styles';
 
 type ClosetItem = {
   id: string;
@@ -132,115 +133,22 @@ export default function AddItemScreen() {
               </View>
             </Pressable>
           </View>
+
+          {choice === 'manual' && (<View style={styles.manualFormContainer}>
+            <Text style={styles.formLabel}>Category *</Text>
+            <View style={styles.inputBox}>
+              <Text>Dress</Text>
+            </View>
+            <Text style={styles.formLabel}>Sub-Category (optional)</Text>
+            <View style={styles.inputBox}> 
+              <Text style={{ color: '#999' }}>e.g. T-shirt, Jeans, Sneakers</Text>
+              </View>
+          </View>
+        )}
+
          </ScrollView>
     )
 }
 
-const styles = StyleSheet.create({
-  header: {
-    fontFamily: 'Poppins',
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'rgb(108, 99, 255)',
-    marginTop: 80,
-    margin: 15,
-    textAlign: 'center',
-  }, 
-  uploadPhotoButton: {
-    backgroundColor: 'rgb(108, 99, 255)',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    flexDirection: 'row',    
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 6,
-  },
-  photoButtonsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 30,
-  },
-  uploadPhotoText: {
-    color: 'white',
-    fontSize: 15,
-    fontWeight: '500',
-    marginLeft: 8,          
-  },  
-  dividerText: {
-    textAlign: 'center',
-    marginVertical: 12,
-    color: '#111',
-    fontSize: 18,
-    marginTop: 20,
-  },  
-  imageCard: {
-    height: 280,
-    marginHorizontal: 20,
-    marginTop: 20,
-    borderRadius: 16,
-    borderWidth: 3,
-    borderStyle: 'dashed',
-    borderColor: '#E0E0E0',
-    backgroundColor: '#FAFAFA',
-    overflow: 'hidden',
-  },
-  imageBackground: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  imageBackgroundImage: {
-    resizeMode: 'cover', 
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255,255,255,0.6)',
-  },
-  cardContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  columnCardsUserChoice: {
-    marginTop: 8,
-    paddingHorizontal: 20,
-    gap: 12,
-  },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    padding: 16,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: '#E0E0E0',
-    backgroundColor: '#FFFFFF',
-  },
-  choiceText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111',
-  },
-  descriptionText: {
-    fontSize: 13,
-    color: '#666',
-    marginTop: 4,
-  },  
-  optionSelected: {
-    borderColor: 'rgb(108, 99, 255)',
-    backgroundColor: 'rgba(108, 99, 255, 0.08)',
-  },
-  iconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F2F2F7',
-  },
-  iconContainerSelected: {
-    backgroundColor: 'rgb(108, 99, 255)',
-  },  
-});
-  
 
 
