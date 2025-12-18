@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import {View, Text, ScrollView, StyleSheet, Pressable, TextInput} from 'react-native';
+import {View, Text, ScrollView, StyleSheet, Pressable} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Image } from 'react-native';
-import placeholderImage from '../../assets/images/image-placeholder.png';
 import { Ionicons } from '@expo/vector-icons';
 import { ImageBackground } from 'react-native';
 
@@ -75,7 +73,7 @@ export default function AddItemScreen() {
         </View>
 
         <View style={styles.imageCard}>
-            <ImageBackground source={image ? { uri: image } : undefined} style={styles.imageBackground}
+            <ImageBackground source={image ? { uri: image } : null} style={styles.imageBackground}
               imageStyle={styles.imageBackgroundImage}>
               {image && <View style={styles.overlay} />}
               <View style={styles.cardContent}>
@@ -97,11 +95,41 @@ export default function AddItemScreen() {
               </View>
             </ImageBackground>
           </View>
+
+          <Text style={styles.dividerText}> How would you like to add item details?</Text>
+          <View style={styles.columnCardsUserChoice}> 
+            <Pressable>
+            <View style={styles.option}>
+              <Ionicons name="pencil-outline" size={20} color="#6C63FF" />
+              <View style={{ marginLeft: 12 }}>
+                <Text style={styles.choiceText}>Fill Manually</Text>
+                <Text style={styles.descriptionText}>Enter item details yourself</Text>
+              </View>
+            </View>
+            </Pressable>
+            <Pressable>
+              <View style={styles.option}>
+                <Ionicons name="sparkles-outline" size={20} color="#6C63FF" />
+                <View style={{ marginLeft: 12 }}>
+                <Text style= {styles.choiceText}>Generate with AI (from image)</Text>
+                <Text style= {styles.descriptionText}>Let AI analyze the photo</Text>
+              </View>
+            </View>
+            </Pressable>
+            <Pressable>
+              <View style={styles.option}>
+                <Ionicons name="barcode-outline" size={20} color="#6C63FF" />
+                <View style={{ marginLeft: 12 }}>
+                <Text style= {styles.choiceText}>Generate with AI (brand & SKU)</Text>
+                <Text style= {styles.descriptionText}>Use brand and product code</Text>
+                </View>
+              </View>
+            </Pressable>
+          </View>
          </ScrollView>
     )
 }
 
- 
 const styles = StyleSheet.create({
   header: {
     fontFamily: 'Poppins',
@@ -111,11 +139,7 @@ const styles = StyleSheet.create({
     marginTop: 80,
     margin: 15,
     textAlign: 'center',
-  },
-  imagePlaceholder: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },  
+  }, 
   uploadPhotoButton: {
     backgroundColor: 'rgb(108, 99, 255)',
     paddingVertical: 14,
@@ -126,7 +150,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginHorizontal: 6,
   },
-  
   photoButtonsRow: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -138,54 +161,12 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginLeft: 8,          
   },  
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 24,
-    marginBottom: 8,
-  },
-  saveButton: {
-    marginTop: 16,
-    alignSelf: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 22,
-    backgroundColor: 'rgb(108, 99, 255)',
-  },
-  saveButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  disabledButton: {
-    borderColor: '#ccc',
-  },
-  helperText: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 6,
-    textAlign: 'center',
-  },
   dividerText: {
     textAlign: 'center',
     marginVertical: 12,
-    color: '#999',
-    fontSize: 16,
-  },
-  itemImage: {
-    width: 160,
-    height: 160,
-    resizeMode: 'contain',
-  },
-  backgroundImage: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 16,
-    opacity: 0.25,
-    resizeMode: 'cover',
+    color: '#111',
+    fontSize: 18,
+    marginTop: 20,
   },  
   imageCard: {
     height: 280,
@@ -214,6 +195,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  columnCardsUserChoice: {
+    marginTop: 8,
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: 16,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#E0E0E0',
+    backgroundColor: '#FFFFFF',
+  },
+  choiceText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111',
+  },
+  descriptionText: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: 4,
+  },  
 });
   
 
