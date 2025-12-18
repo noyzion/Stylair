@@ -29,7 +29,7 @@ Stylair is a smart mobile application for managing a personal digital wardrobe, 
 - Add Item (Camera / Gallery)
 - Basic tagging form with validations
 - Wardrobe view
-- (Planned) Outfit recommendations
+- Outfit recommendations
 
 ## 🚀 Getting Started
 ```bash
