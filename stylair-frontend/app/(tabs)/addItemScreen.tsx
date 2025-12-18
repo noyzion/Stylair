@@ -41,7 +41,6 @@ export default function AddItemScreen() {
                 console.log(result.assets[0].uri);
                 setImage(result.assets[0].uri);
               }   
-
     };
 
     const takeImage = async () => {
@@ -61,10 +60,8 @@ export default function AddItemScreen() {
                 console.log(result.assets[0].uri);
                 setImage(result.assets[0].uri);
               }   
-
     };
 
-    
     return (
         <ScrollView  style={{ flex: 1, backgroundColor: 'White', }}>
           
@@ -73,7 +70,7 @@ export default function AddItemScreen() {
         </View>
 
         <View style={styles.imageCard}>
-            <ImageBackground source={image ? { uri: image } : null} style={styles.imageBackground}
+            <ImageBackground source={image ? { uri: image } : undefined} style={styles.imageBackground}
               imageStyle={styles.imageBackgroundImage}>
               {image && <View style={styles.overlay} />}
               <View style={styles.cardContent}>
@@ -98,27 +95,35 @@ export default function AddItemScreen() {
 
           <Text style={styles.dividerText}> How would you like to add item details?</Text>
           <View style={styles.columnCardsUserChoice}> 
-            <Pressable>
-            <View style={styles.option}>
-              <Ionicons name="pencil-outline" size={20} color="#6C63FF" />
+
+            <Pressable onPress={() => setChoice('manual')}>
+            <View style={[styles.option, choice == 'manual' && styles.optionSelected]}>
+            <View style={[styles.iconContainer, choice == 'manual' && styles.iconContainerSelected]}> 
+              <Ionicons name="pencil-outline" size={20} color={choice === 'manual' ? 'white' : 'rgb(108, 99, 255)'}/>
+              </View>
               <View style={{ marginLeft: 12 }}>
                 <Text style={styles.choiceText}>Fill Manually</Text>
                 <Text style={styles.descriptionText}>Enter item details yourself</Text>
               </View>
             </View>
             </Pressable>
-            <Pressable>
-              <View style={styles.option}>
-                <Ionicons name="sparkles-outline" size={20} color="#6C63FF" />
+
+            <Pressable onPress={() => setChoice('ai-image')}>
+              <View style={[styles.option, choice == 'ai-image' && styles.optionSelected]}>
+              <View style={[styles.iconContainer, choice == 'ai-image' && styles.iconContainerSelected]}>
+                <Ionicons name="sparkles-outline" size={20} color={choice === 'ai-image' ? 'white' : 'rgb(108, 99, 255)'} />
+                </View> 
                 <View style={{ marginLeft: 12 }}>
                 <Text style= {styles.choiceText}>Generate with AI (from image)</Text>
                 <Text style= {styles.descriptionText}>Let AI analyze the photo</Text>
               </View>
             </View>
             </Pressable>
-            <Pressable>
-              <View style={styles.option}>
-                <Ionicons name="barcode-outline" size={20} color="#6C63FF" />
+            <Pressable onPress={() => setChoice('ai-product')}>
+              <View style={[styles.option, choice == 'ai-product' && styles.optionSelected]}>
+              <View style={[styles.iconContainer, choice == 'ai-product' && styles.iconContainerSelected]}>
+                <Ionicons name="barcode-outline" size={20} color={choice === 'ai-product' ? 'white' : 'rgb(108, 99, 255)'} />
+                </View> 
                 <View style={{ marginLeft: 12 }}>
                 <Text style= {styles.choiceText}>Generate with AI (brand & SKU)</Text>
                 <Text style= {styles.descriptionText}>Use brand and product code</Text>
@@ -218,6 +223,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#666',
     marginTop: 4,
+  },  
+  optionSelected: {
+    borderColor: 'rgb(108, 99, 255)',
+    backgroundColor: 'rgba(108, 99, 255, 0.08)',
+  },
+  
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F2F2F7',
+  },
+  
+  iconContainerSelected: {
+    backgroundColor: 'rgb(108, 99, 255)',
   },  
 });
   
