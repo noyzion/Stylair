@@ -73,12 +73,12 @@ export default function AddItemScreen() {
         </View>
         <Text style={styles.dividerText}>or</Text>
         <View style={styles.inputRow}>
-        <TextInput style={styles.input} placeholder="מק״ט" value={sku} onChangeText={setSku}/>
-        <TextInput style={styles.input} placeholder="חברה\מותג" value={brand} onChangeText={setBrand}/>
+        <TextInput style={styles.input} placeholder="SKU" value={sku} onChangeText={setSku}/>
+        <TextInput style={styles.input} placeholder="Brand" value={brand} onChangeText={setBrand}/>
         </View>
          <Pressable style={[styles.searchButton, !(sku && brand) && styles.disabledButton]}
                     disabled={!(sku && brand)} onPress={handleSearch}>
-          <Text style={styles.searchButtonText}>חפש באתר החברה</Text></Pressable>
+          <Text style={styles.searchButtonText}>Search on brand website</Text></Pressable>
          
          </ScrollView>
     )
