@@ -1,6 +1,6 @@
 public class OutfitRecommendationResponse
 {
-    public string outfitId { get; set; }
-    public List<OutfitItem> items { get; set; }
-    public string message { get; set; }
+    public string outfitId { get; set; } = string.Empty;
+    public List<OutfitItem> items { get; set; } = new();
+    public string reasonText { get; set; } = string.Empty;
 }
