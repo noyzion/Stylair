@@ -9,7 +9,7 @@ type ClosetItem = {
   id: string;
   imageUri: string;
   category: 'Top' | 'Bottom' | 'Dress' | 'Shoes' | 'Outerwear';
-  subCategory?: string; // T-Shirt, Jeans, Blazer
+  subCategory?: string; 
   color: string;
   style?: 'Casual' | 'Formal' | 'Sport' | 'Evening';
   season?: 'Summer' | 'Winter' | 'All';
@@ -143,6 +143,45 @@ export default function AddItemScreen() {
             <View style={styles.inputBox}> 
               <Text style={{ color: '#999' }}>e.g. T-shirt, Jeans, Sneakers</Text>
               </View>
+              <Text style={styles.formLabel}>Color *</Text>
+                <View style={styles.inputBox}>
+                  <Text>blue</Text>
+                </View>
+                <Text style={styles.formLabel}>Style</Text>
+
+            <View style={styles.chipsRow}>
+              <View style={[styles.chip, styles.chipSelected]}>
+                <Text style={styles.chipTextSelected}>Casual</Text>
+              </View>
+              <View style={styles.chip}>
+                <Text style={styles.chipText}>Formal</Text>
+              </View>
+              <View style={styles.chip}>
+                <Text style={styles.chipText}>Sport</Text>
+              </View>
+              <View style={styles.chip}>
+                <Text style={styles.chipText}>Evening</Text>
+              </View>
+            </View>
+            <Text style={styles.formLabel}>Season</Text>
+            <View style={styles.chipsRow}>
+              <View style={[styles.chip, styles.chipSelected]}>
+                <Text style={styles.chipTextSelected}>Summer</Text>
+              </View>
+              <View style={styles.chip}>
+                <Text style={styles.chipText}>Winter</Text>
+              </View>
+              <View style={styles.chip}>
+                <Text style={styles.chipText}>Spring</Text>
+              </View>
+              <View style={styles.chip}>
+                <Text style={styles.chipText}>Fall</Text>
+              </View>
+              <View style={styles.chip}>
+                <Text style={styles.chipText}>All</Text>
+              </View>
+            </View>
+
           </View>
         )}
 
