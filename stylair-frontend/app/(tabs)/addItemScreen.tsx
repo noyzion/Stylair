@@ -102,7 +102,7 @@ export default function AddItemScreen() {
               <Ionicons name="pencil-outline" size={20} color={choice === 'manual' ? 'white' : 'rgb(108, 99, 255)'}/>
               </View>
               <View style={{ marginLeft: 12 }}>
-                <Text style={styles.choiceText}>Fill Manually</Text>
+                <Text style={[styles.choiceText,choice === 'manual' && { color: 'rgb(108, 99, 255)' },]}>Fill Manually</Text>
                 <Text style={styles.descriptionText}>Enter item details yourself</Text>
               </View>
             </View>
@@ -114,7 +114,7 @@ export default function AddItemScreen() {
                 <Ionicons name="sparkles-outline" size={20} color={choice === 'ai-image' ? 'white' : 'rgb(108, 99, 255)'} />
                 </View> 
                 <View style={{ marginLeft: 12 }}>
-                <Text style= {styles.choiceText}>Generate with AI (from image)</Text>
+                <Text style={[styles.choiceText,choice === 'ai-image' && { color: 'rgb(108, 99, 255)' },]} >Generate with AI (from image)</Text>
                 <Text style= {styles.descriptionText}>Let AI analyze the photo</Text>
               </View>
             </View>
@@ -125,7 +125,8 @@ export default function AddItemScreen() {
                 <Ionicons name="barcode-outline" size={20} color={choice === 'ai-product' ? 'white' : 'rgb(108, 99, 255)'} />
                 </View> 
                 <View style={{ marginLeft: 12 }}>
-                <Text style= {styles.choiceText}>Generate with AI (brand & SKU)</Text>
+                <Text style={[styles.choiceText,choice === 'ai-product' && { color: 'rgb(108, 99, 255)' },]}>
+                  Generate with AI (brand & SKU)</Text>
                 <Text style= {styles.descriptionText}>Use brand and product code</Text>
                 </View>
               </View>
@@ -228,7 +229,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgb(108, 99, 255)',
     backgroundColor: 'rgba(108, 99, 255, 0.08)',
   },
-  
   iconContainer: {
     width: 36,
     height: 36,
@@ -237,7 +237,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#F2F2F7',
   },
-  
   iconContainerSelected: {
     backgroundColor: 'rgb(108, 99, 255)',
   },  
