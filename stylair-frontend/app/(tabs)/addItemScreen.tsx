@@ -25,14 +25,18 @@ type UserChoice = 'manual' | 'ai-image' | 'ai-product';
 
 export default function AddItemScreen() {
     const [image, setImage] = useState<string | null>(null);
-    const [choice, setChoice] = useState<UserChoice  | null>(null);
-    const [category, setCategory] = useState<'Top' | 'Bottom' | 'Dress' | 'Shoes'>('Dress');
+    const [choice, setChoice] = useState<UserChoice | null>(null);
+    const [category, setCategory] = useState<'Top' | 'Bottom' | 'Dress' | 'Shoes' | null>(null);
     const [subCategory, setSubCategory] = useState('');
     const [color, setColor] = useState('');
     const [style, setStyle] = useState<'Casual' | 'Formal' | 'Sport' | 'Evening' | null>('Casual');
     const [season, setSeason] = useState<'Summer' | 'Winter' | 'Spring' | 'Fall' | 'All' | null>('Summer');
     const [isCategoryOpen, setIsCategoryOpen] = useState(false);
-    const [tempCategory, setTempCategory] = useState<'Top' | 'Bottom' | 'Dress' | 'Shoes'>(category);
+    const [tempCategory, setTempCategory] = useState<'Top' | 'Bottom' | 'Dress' | 'Shoes' | null>(null);
+    const [touched, setTouched] = useState({image: false,category: false,color: false,});
+
+    const isFormValid = !!image && !!category && color.trim().length > 0;
+
 
     const pickImage = async () => {
         const permissionResult =
@@ -50,6 +54,7 @@ export default function AddItemScreen() {
               if (!result.canceled) {
                 console.log(result.assets[0].uri);
                 setImage(result.assets[0].uri);
+                setTouched(prev => ({ ...prev, image: true }));
               }   
     };
 
@@ -67,9 +72,9 @@ export default function AddItemScreen() {
                 quality: 1,
               });
               if (!result.canceled) {
-                console.log(result.assets[0].uri);
                 setImage(result.assets[0].uri);
-              }   
+                setTouched(prev => ({ ...prev, image: true }));
+              }               
     };
 
     return (
@@ -102,6 +107,8 @@ export default function AddItemScreen() {
               </View>
             </ImageBackground>
           </View>
+          {touched.image && !image && (
+         <Text style={[styles.errorText, { textAlign: 'center', marginTop: 8 }]}>Image is required</Text>)}
 
           <Text style={styles.dividerText}> How would you like to add item details?</Text>
           <View style={styles.columnCardsUserChoice}> 
@@ -153,6 +160,7 @@ export default function AddItemScreen() {
                   </Text>
                 </View>
               </Pressable>
+              {touched.category && !category && (<Text style={styles.errorText}>Category is required</Text>)}
             <Modal visible={isCategoryOpen} transparent animationType="slide">
               <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
@@ -166,7 +174,8 @@ export default function AddItemScreen() {
                       <Pressable onPress={() => setIsCategoryOpen(false)}>
                          <Text style={styles.modalClose}>Cancel</Text>
                       </Pressable>
-                      <Pressable onPress={() => {setCategory(tempCategory); setIsCategoryOpen(false); }}>
+                      <Pressable onPress={() => {setCategory(tempCategory);   
+                      setTouched(prev => ({ ...prev, category: true })); setIsCategoryOpen(false); }}>
                         <Text style={styles.modalDone}>Done</Text>
                       </Pressable>
 
@@ -180,10 +189,12 @@ export default function AddItemScreen() {
               </View>
 
             <Text style={styles.formLabel}>Color *</Text>
-              <View style={styles.inputBox}>
-                <TextInput value={color} onChangeText={setColor} placeholder="e.g Blue" style={{ padding:0}}/>
+              <View style={[styles.inputBox, touched.color && !color && styles.inputError,]}>
+                <TextInput value={color} onChangeText={(text) => { setColor(text); 
+                  setTouched(prev => ({ ...prev, color: true }));}} placeholder="e.g Blue" style={{ padding:0}}/>
               </View>
-
+              {touched.color && !color && (<Text style={styles.errorText}>Color is required</Text>)}
+      
             <Text style={styles.formLabel}>Style</Text>
             <View style={styles.chipsRow}>
               <Pressable onPress={() => setStyle('Casual')}>
@@ -246,11 +257,27 @@ export default function AddItemScreen() {
               </View>
             </Pressable>
             </View>
-
+                   
           </View>
         )}
+       {choice === 'manual' && (
+        <Pressable
+        disabled={!isFormValid}
+        onPress={() => {
+          setTouched({ image: true, category: true, color: true });
+          if (!isFormValid) return;
+          // saveItem()
+        }}
+        style={({ pressed }) => [
+          styles.saveButton,
+          !isFormValid && { opacity: 0.5 },
+          pressed && styles.saveButtonPressed,
+        ]}
+      >
+        <Text style={styles.saveButtonText}>Save to Closet</Text>
+      </Pressable> )}
 
-         </ScrollView>
+        </ScrollView>
     )
 }
 

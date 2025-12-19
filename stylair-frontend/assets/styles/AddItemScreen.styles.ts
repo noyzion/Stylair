@@ -212,5 +212,32 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  errorText: {
+    color: '#D32F2F',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  inputError: {
+    borderColor: '#D32F2F',
+  },
+  saveButton: {
+    marginTop: 24,
+    alignSelf: 'center',
+    width: '100%',
+    paddingVertical: 16,
+    borderRadius: 14,
+    backgroundColor: 'rgb(108, 99, 255)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },  
+  saveButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  saveButtonPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.98 }],
+  },
   
 });
