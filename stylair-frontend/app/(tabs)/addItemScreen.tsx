@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import {View, Text, ScrollView, StyleSheet, Pressable} from 'react-native';
+import {View, Text, ScrollView, StyleSheet, Pressable, Modal} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { ImageBackground } from 'react-native';
 import { styles } from '../../assets/styles/AddItemScreen.styles';
+import { TextInput } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 
 type ClosetItem = {
   id: string;
   imageUri: string;
-  category: 'Top' | 'Bottom' | 'Dress' | 'Shoes' | 'Outerwear';
+  category: 'Top' | 'Bottom' | 'Dress' | 'Shoes';
   subCategory?: string; 
   color: string;
   style?: 'Casual' | 'Formal' | 'Sport' | 'Evening';
@@ -24,6 +26,13 @@ type UserChoice = 'manual' | 'ai-image' | 'ai-product';
 export default function AddItemScreen() {
     const [image, setImage] = useState<string | null>(null);
     const [choice, setChoice] = useState<UserChoice  | null>(null);
+    const [category, setCategory] = useState<'Top' | 'Bottom' | 'Dress' | 'Shoes'>('Dress');
+    const [subCategory, setSubCategory] = useState('');
+    const [color, setColor] = useState('');
+    const [style, setStyle] = useState<'Casual' | 'Formal' | 'Sport' | 'Evening' | null>('Casual');
+    const [season, setSeason] = useState<'Summer' | 'Winter' | 'Spring' | 'Fall' | 'All' | null>('Summer');
+    const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+    const [tempCategory, setTempCategory] = useState<'Top' | 'Bottom' | 'Dress' | 'Shoes'>(category);
 
     const pickImage = async () => {
         const permissionResult =
@@ -135,51 +144,107 @@ export default function AddItemScreen() {
           </View>
 
           {choice === 'manual' && (<View style={styles.manualFormContainer}>
+            
             <Text style={styles.formLabel}>Category *</Text>
-            <View style={styles.inputBox}>
-              <Text>Dress</Text>
-            </View>
-            <Text style={styles.formLabel}>Sub-Category (optional)</Text>
-            <View style={styles.inputBox}> 
-              <Text style={{ color: '#999' }}>e.g. T-shirt, Jeans, Sneakers</Text>
-              </View>
-              <Text style={styles.formLabel}>Color *</Text>
+            <Pressable onPress={() => {setTempCategory(category); setIsCategoryOpen(true)}}>
                 <View style={styles.inputBox}>
-                  <Text>blue</Text>
+                  <Text style={{ color: category ? '#111' : '#999' }}>
+                    {category || 'Select a category'}
+                  </Text>
                 </View>
-                <Text style={styles.formLabel}>Style</Text>
+              </Pressable>
+            <Modal visible={isCategoryOpen} transparent animationType="slide">
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Select a category</Text>
+                      <Picker selectedValue={tempCategory} onValueChange={(value) => { setTempCategory(value);}}>
+                        <Picker.Item label="Top" value="Top" />
+                        <Picker.Item label="Bottom" value="Bottom" />
+                        <Picker.Item label="Dress" value="Dress" />
+                        <Picker.Item label="Shoes" value="Shoes" />
+                      </Picker>
+                      <Pressable onPress={() => setIsCategoryOpen(false)}>
+                         <Text style={styles.modalClose}>Cancel</Text>
+                      </Pressable>
+                      <Pressable onPress={() => {setCategory(tempCategory); setIsCategoryOpen(false); }}>
+                        <Text style={styles.modalDone}>Done</Text>
+                      </Pressable>
 
+                    </View>
+                  </View>
+                </Modal>
+
+            <Text style={styles.formLabel}>Sub-Category (optional)</Text>
+              <View style={styles.inputBox}> 
+                <TextInput value={subCategory} onChangeText={setSubCategory} placeholder="e.g T-shirt, Jeans, Sneakers" style={{ padding:0}}/>
+              </View>
+
+            <Text style={styles.formLabel}>Color *</Text>
+              <View style={styles.inputBox}>
+                <TextInput value={color} onChangeText={setColor} placeholder="e.g Blue" style={{ padding:0}}/>
+              </View>
+
+            <Text style={styles.formLabel}>Style</Text>
             <View style={styles.chipsRow}>
-              <View style={[styles.chip, styles.chipSelected]}>
-                <Text style={styles.chipTextSelected}>Casual</Text>
-              </View>
-              <View style={styles.chip}>
-                <Text style={styles.chipText}>Formal</Text>
-              </View>
-              <View style={styles.chip}>
-                <Text style={styles.chipText}>Sport</Text>
-              </View>
-              <View style={styles.chip}>
-                <Text style={styles.chipText}>Evening</Text>
-              </View>
+              <Pressable onPress={() => setStyle('Casual')}>
+                <View style={[styles.chip, style === 'Casual' && styles.chipSelected]}>
+                <Text  style={style === 'Casual'  ? styles.chipTextSelected : styles.chipText}>Casual</Text>
+                </View>
+              </Pressable>
+              <Pressable onPress={() => setStyle('Formal')}>
+                <View style={[styles.chip, style === 'Formal' && styles.chipSelected]}>
+                <Text  style={style === 'Formal'  ? styles.chipTextSelected : styles.chipText}>Formal</Text>
+                </View>
+              </Pressable>
+              <Pressable onPress={() => setStyle('Sport')}>
+                <View style={[styles.chip, style === 'Sport' && styles.chipSelected]}>
+                <Text  style={style === 'Sport'  ? styles.chipTextSelected : styles.chipText}>Sport</Text>
+                </View>
+              </Pressable>
+              <Pressable onPress={() => setStyle('Evening')}>
+                <View style={[styles.chip, style === 'Evening' && styles.chipSelected]}>
+                <Text  style={style === 'Evening'  ? styles.chipTextSelected : styles.chipText}>Evening</Text>
+                </View>
+              </Pressable>
             </View>
             <Text style={styles.formLabel}>Season</Text>
             <View style={styles.chipsRow}>
-              <View style={[styles.chip, styles.chipSelected]}>
-                <Text style={styles.chipTextSelected}>Summer</Text>
+
+            <Pressable onPress={() => setSeason('Summer')}>
+              <View style={[styles.chip, season === 'Summer' && styles.chipSelected]}>
+                <Text style={season === 'Summer' ? styles.chipTextSelected : styles.chipText}>
+                  Summer
+                </Text>
               </View>
-              <View style={styles.chip}>
-                <Text style={styles.chipText}>Winter</Text>
+            </Pressable>
+            <Pressable onPress={() => setSeason('Winter')}>
+              <View style={[styles.chip, season === 'Winter' && styles.chipSelected]}>
+                <Text style={season === 'Winter' ? styles.chipTextSelected : styles.chipText}>
+                Winter
+                </Text>
               </View>
-              <View style={styles.chip}>
-                <Text style={styles.chipText}>Spring</Text>
+            </Pressable>
+            <Pressable onPress={() => setSeason('Fall')}>
+              <View style={[styles.chip, season === 'Fall' && styles.chipSelected]}>
+                <Text style={season === 'Fall' ? styles.chipTextSelected : styles.chipText}>
+                Fall
+                </Text>
               </View>
-              <View style={styles.chip}>
-                <Text style={styles.chipText}>Fall</Text>
+            </Pressable>
+            <Pressable onPress={() => setSeason('Spring')}>
+              <View style={[styles.chip, season === 'Spring' && styles.chipSelected]}>
+                <Text style={season === 'Spring' ? styles.chipTextSelected : styles.chipText}>
+                Spring
+                </Text>
               </View>
-              <View style={styles.chip}>
-                <Text style={styles.chipText}>All</Text>
+            </Pressable>
+            <Pressable onPress={() => setSeason('All')}>
+              <View style={[styles.chip, season === 'All' && styles.chipSelected]}>
+                <Text style={season === 'All' ? styles.chipTextSelected : styles.chipText}>
+                All
+                </Text>
               </View>
+            </Pressable>
             </View>
 
           </View>

@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { Modal, StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
   header: {
@@ -139,11 +139,12 @@ export const styles = StyleSheet.create({
   },
   inputBox: {
     borderWidth: 1,
-    borderColor: '#E6E6EB',
-    borderRadius: 14,
-    padding: 14,
-    backgroundColor: '#FAFAFC',
+    borderColor: '#E0E0E0',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
+  
   chipsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -173,6 +174,43 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     color: 'white',
     fontWeight: '500',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'flex-end',
+  },
+  
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+  },
+  
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  
+  modalClose: {
+    textAlign: 'center',
+    color: 'rgb(108, 99, 255)',
+    marginTop: 10,
+    fontSize: 16,
+  },
+  modalDone: {
+    marginTop: 16,
+    alignSelf: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 20,
+    backgroundColor: 'rgb(108, 99, 255)',
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
   
 });
