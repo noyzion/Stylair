@@ -140,9 +140,10 @@ export const styles = StyleSheet.create({
   inputBox: {
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    
   },
   
   chipsRow: {
@@ -239,5 +240,56 @@ export const styles = StyleSheet.create({
     opacity: 0.85,
     transform: [{ scale: 0.98 }],
   },
+  aiCard: {
+    marginTop: 20,
+    marginHorizontal: 20,
+    paddingVertical: 28,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    backgroundColor: '#FAF7FF',
+    alignItems: 'center',
+  },
   
+  aiIconWrapper: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(108, 99, 255, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  
+  aiTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111',
+    textAlign: 'center',
+  },
+  
+  aiDescription: {
+    fontSize: 13,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 6,
+    marginBottom: 20,
+  },
+  
+  aiButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgb(186, 138, 255)',
+    paddingVertical: 14,
+    paddingHorizontal: 26,
+    borderRadius: 14,
+    gap: 8,
+    marginTop: 10,
+  },
+  
+  aiButtonText: {
+    color: 'white',
+    fontSize: 15,
+    fontWeight: '600',
+  },
 });

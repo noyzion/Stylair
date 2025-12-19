@@ -6,6 +6,7 @@ import { ImageBackground } from 'react-native';
 import { styles } from '../../assets/styles/AddItemScreen.styles';
 import { TextInput } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { KeyboardAvoidingView, Platform } from 'react-native';
 
 type ClosetItem = {
   id: string;
@@ -34,8 +35,11 @@ export default function AddItemScreen() {
     const [isCategoryOpen, setIsCategoryOpen] = useState(false);
     const [tempCategory, setTempCategory] = useState<'Top' | 'Bottom' | 'Dress' | 'Shoes' | null>(null);
     const [touched, setTouched] = useState({image: false,category: false,color: false,});
+    const [brand, setBrand] = useState('');
+    const [sku, setSku] = useState('');
 
     const isFormValid = !!image && !!category && color.trim().length > 0;
+    const isProductValid = brand.trim().length > 0 && sku.trim().length > 0;
 
 
     const pickImage = async () => {
@@ -78,8 +82,17 @@ export default function AddItemScreen() {
     };
 
     return (
-        <ScrollView  style={{ flex: 1, backgroundColor: 'White', }}>
-          
+        
+      <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        style={{ flex: 1, backgroundColor: '#F5F5F7' }}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
+    
         <View style={{backgroundColor: 'white'}}> 
             <Text style ={styles.header} >Add Item To Your Closet</Text>
         </View>
@@ -149,6 +162,46 @@ export default function AddItemScreen() {
               </View>
             </Pressable>
           </View>
+
+          {choice === 'ai-product' && (
+            <View style={styles.aiCard}>
+              <View style={styles.aiIconWrapper}>
+                <Ionicons name="pricetag-outline" size={26} color="rgb(108, 99, 255)" />
+              </View>
+              <Text style={styles.formLabel}>Brand</Text>
+              <View style={styles.inputBox}>
+                <TextInput value={brand} onChangeText={setBrand}  placeholder="e.g. Nike, Zara, Levi's" style={{ padding: 0 }}/>
+              </View>
+              <Text style={styles.formLabel}>SKU / Model Number</Text>
+              <View style={styles.inputBox}>
+                <TextInput value={sku} onChangeText={setSku} placeholder="e.g. AB123456, 501-ORIGINAL" style={{ padding: 0 }}/>
+              </View>
+              <Pressable disabled={!isProductValid} onPress={() => {// generateFromBrandAndSKU()
+                }}>
+                <View style={[styles.aiButton,!isProductValid && { opacity: 0.5},]}>
+                  <Ionicons name="sparkles-outline" size={18} color="white" />
+                  <Text style={styles.aiButtonText}>Generate Details </Text>
+                </View>
+              </Pressable>
+            </View>
+          )}
+
+          {choice === 'ai-image' && (
+            <View style={styles.aiCard}>
+              <View style={styles.aiIconWrapper}>
+                <Ionicons name="sparkles" size={26} color="rgb(108, 99, 255)" />
+              </View>
+               <Text style={styles.aiTitle}>AI will analyze your photo</Text>
+               <Text style={styles.aiDescription}> Detect category, color, style, and more</Text>
+              <Pressable disabled={!image} onPress={() => { // generateFromImage() 
+                }}>
+                <View style={[styles.aiButton, !image && { opacity: 0.5 },]} >
+                  <Ionicons name="sparkles-outline" size={18} color="white" />
+                  <Text style={styles.aiButtonText}>Generate Details</Text>
+                </View>
+              </Pressable>
+            </View>
+          )}
 
           {choice === 'manual' && (<View style={styles.manualFormContainer}>
             
@@ -277,7 +330,8 @@ export default function AddItemScreen() {
         <Text style={styles.saveButtonText}>Save to Closet</Text>
       </Pressable> )}
 
-        </ScrollView>
+      </ScrollView>
+</KeyboardAvoidingView>
     )
 }
 
