@@ -13,7 +13,7 @@ public class OutfitController : ControllerBase // ControllerBase is the base cla
     [HttpPost("recommendation")] //attribute to map the method to the http post request
     public IActionResult Recommand(OutfitRecommendationRequest request)
     {
-        OutfitRecommendationResponse response = _service.ReturnResponse(request);
+        OutfitRecommendationsListResponse response = _service.ReturnResponse(request);
         return Ok(response);
     }
 }

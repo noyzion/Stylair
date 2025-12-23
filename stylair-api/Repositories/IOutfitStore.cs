@@ -2,5 +2,6 @@
 //we are using interface beacuse of the future change from mockDB to DynamoDB
 public interface IOutfitStore
 {
-    OutfitRecommendationResponse GetOutfitById(string outfitId);
+    OutfitRecommendationResponse GetOutfitByCriteria(OutfitCriteria criteria);
+    bool IsClosetEmpty();
 }
