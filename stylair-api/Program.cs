@@ -8,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
+builder.Services.AddScoped<OutfitRecommendationService>();
+builder.Services.AddScoped<IOutfitStore, MockOutfitStore>();
 
 var app = builder.Build();
 
