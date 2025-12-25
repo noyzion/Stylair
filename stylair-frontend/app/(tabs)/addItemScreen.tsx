@@ -8,6 +8,31 @@ import { TextInput } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 
+const BASE_URL = "http:/192.168.1.186:5292";
+
+export async function addItemToCloset(item: {
+  itemName: string;
+  itemCategory: string;
+  itemImage: string;
+  style: string[];
+  colors: string[];
+  season: string;
+}) {
+  const response = await fetch(`${BASE_URL}/api/closet/items`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(item),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to add item");
+  }
+
+  return response.json();
+}
+
 type ClosetItem = {
   id: string;
   imageUri: string;
@@ -41,6 +66,24 @@ export default function AddItemScreen() {
     const isFormValid = !!image && !!category && color.trim().length > 0;
     const isProductValid = brand.trim().length > 0 && sku.trim().length > 0;
 
+    const saveItem = async () => {
+      try {
+        await addItemToCloset({
+          itemName: subCategory || category!, 
+          itemCategory: category!.toLowerCase(), 
+          itemImage: image ?? "",
+          style: style ? [style.toLowerCase()] : [],
+          colors: [color.toLowerCase()],
+          season: season ? season.toLowerCase() : "all",
+        });
+    
+        alert("Item added successfully");
+      } catch (error) {
+        console.error(error);
+        alert("Failed to add item");
+      }
+    };
+    
 
     const pickImage = async () => {
         const permissionResult =
@@ -319,7 +362,7 @@ export default function AddItemScreen() {
         onPress={() => {
           setTouched({ image: true, category: true, color: true });
           if (!isFormValid) return;
-          // saveItem()
+          saveItem()
         }}
         style={({ pressed }) => [
           styles.saveButton,
