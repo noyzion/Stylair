@@ -58,6 +58,7 @@ export default function AddItemScreen() {
     const [touched, setTouched] = useState({image: false,category: false,color: false,});
     const [brand, setBrand] = useState('');
     const [sku, setSku] = useState('');
+    const [colors, setColors] = useState<string[]>([]);
 
     const isFormValid = !!image && !!category && color.trim().length > 0;
     const isProductValid = brand.trim().length > 0 && sku.trim().length > 0;
@@ -282,9 +283,35 @@ export default function AddItemScreen() {
 
             <Text style={styles.formLabel}>Color *</Text>
               <View style={[styles.inputBox, touched.color && !color && styles.inputError,]}>
-                <TextInput value={color} onChangeText={(text) => { setColor(text); 
-                  setTouched(prev => ({ ...prev, color: true }));}} placeholder="e.g Blue" style={{ padding:0}}/>
+              <TextInput value={color} onChangeText={setColor} placeholder="e.g Blue"/>
+              <Pressable disabled={!color.trim()} onPress={() => { if (!color.trim()) return;
+                                                                  setColors(prev =>
+                                                                    prev.includes(color.toLowerCase())
+                                                                      ? prev
+                                                                      : [...prev, color.toLowerCase()]
+                                                                  );
+                                                                  setColor('');}}
+                                                   style={styles.addColorStyle}>
+                  <Ionicons name="add-circle-outline" size={18} color="white" />
+                  <Text style={{color: 'white',fontWeight: '600',marginLeft: 6, }}>
+                    Add Color
+                  </Text>
+                </Pressable>
+
+
               </View>
+              <View style={styles.chipsRow}>
+                {colors.map(c => (
+                  <Pressable key={c} onPress={() =>
+                    setColors(prev => prev.filter(x => x !== c))
+                  }>
+                    <View style={styles.chip}>
+                      <Text>{c}</Text>
+                    </View>
+                  </Pressable>
+                ))}
+              </View>
+
               {touched.color && !color && (<Text style={styles.errorText}>Color is required</Text>)}
       
             <Text style={styles.formLabel}>Style</Text>
