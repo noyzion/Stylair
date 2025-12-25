@@ -1,11 +1,7 @@
 import { useState } from 'react';
-import {View, Text, ScrollView, StyleSheet, Pressable, Modal} from 'react-native';
+import {View, Text, ScrollView, Pressable} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Ionicons } from '@expo/vector-icons';
-import { ImageBackground } from 'react-native';
 import { styles } from '../../assets/styles/AddItemScreen.styles';
-import { TextInput } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import { addItemToCloset } from '../../services/closet.service';
 import { ImagePickerCard } from '@/components/add-item/ImagePickerCard';
@@ -174,7 +170,6 @@ export default function AddItemScreen() {
             hasColor={hasColor}
           />
         )}
-
 
        {choice === 'manual' && (
         <Pressable
