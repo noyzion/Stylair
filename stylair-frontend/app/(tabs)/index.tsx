@@ -80,6 +80,14 @@ export default function HomeScreen() {
         />
 
         <ThemedView style={styles.buttonsArea}>
+
+        <Link href="/(tabs)/todayLook" asChild>
+          <Pressable style={styles.firstActionButton}>
+            <ThemedText style={styles.firstActionButtonText}>
+              Choose today’s look
+            </ThemedText>
+          </Pressable>
+        </Link>
           <Link href="/(tabs)/addItemScreen" asChild>
             <Pressable style={styles.firstActionButton}>
               <ThemedText style={styles.firstActionButtonText}>
