@@ -105,16 +105,11 @@ export default function AddItemScreen() {
               }               
       };
     
-      function toggleValue<T>(
-        value: T,
-        list: T[],
-        setList: React.Dispatch<React.SetStateAction<T[]>>
-      ) {
-        setList(
-          list.includes(value)
-            ? list.filter(v => v !== value)
-            : [...list, value]
-        );
+      function toggleValue<T>(value: T, list: T[], setList: React.Dispatch<React.SetStateAction<T[]>> ) {
+        setList( list.includes(value)
+                ? list.filter(v => v !== value)
+                : [...list, value]
+            );
       }
                
     return (

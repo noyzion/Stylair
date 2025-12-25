@@ -11,7 +11,8 @@ type Props = {
 export function ImagePickerCard({ image, onPickImage, onTakeImage }: Props) {
   return (
     <View style={styles.imageCard}>
-      <ImageBackground source={image ? { uri: image } : undefined} style={styles.imageBackground} imageStyle={styles.imageBackgroundImage}>
+      <ImageBackground source={image ? { uri: image } : undefined} style={styles.imageBackground}
+                                 imageStyle={styles.imageBackgroundImage}>
         {image && <View style={styles.overlay} />}
         <View style={styles.cardContent}>
           {!image && ( <Ionicons name="image-outline" size={64} color="#C7C7CC" style={{ marginBottom: 20 }} /> )}

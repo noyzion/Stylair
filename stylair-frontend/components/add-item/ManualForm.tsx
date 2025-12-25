@@ -77,7 +77,7 @@ export function ManualForm(props: Props) {
             onConfirm={() => {setCategory(tempCategory); 
                               setTouched(prev => ({ ...prev, category: true }));
                               setIsCategoryOpen(false);
-                            }}/>
+        }}/>
 
 
     <Text style={styles.formLabel}>Sub-Category (optional)</Text>
