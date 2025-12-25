@@ -10,6 +10,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 builder.Services.AddScoped<OutfitRecommendationService>();
 builder.Services.AddScoped<IOutfitStore, MockOutfitStore>();
+builder.Services.AddSingleton<IClosetItemStore, MockClosetItemStore>();
+builder.Services.AddScoped<ClosetService>();
 
 var app = builder.Build();
 

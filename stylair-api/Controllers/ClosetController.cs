@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc;
+
 [ApiController]
 [Route("api/closet")]
 public class ClosetController : ControllerBase // ControllerBase is the base class for all controllers
@@ -13,6 +15,13 @@ public class ClosetController : ControllerBase // ControllerBase is the base cla
     public IActionResult AddItem(AddItemRequest request)
     {
         _service.AddItem(request);
-        return Ok();
+        return Ok(new { message = "Item added successfully" });
     }
+    [HttpGet("items")]
+    public IActionResult GetAllItems()
+    {
+        var items = _service.GetAllItems();
+        return Ok(items);
+    }
+
 }

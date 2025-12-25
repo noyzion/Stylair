@@ -9,6 +9,12 @@ public class ClosetService
 
     public void AddItem(AddItemRequest request)
     {
+        if (string.IsNullOrWhiteSpace(request.itemName))
+            throw new ArgumentException("Item name is required");
+
+        if (string.IsNullOrWhiteSpace(request.itemCategory))
+            throw new ArgumentException("Item category is required");
+
         var item = new OutfitItem  //making outfititem
         {
             itemId = Guid.NewGuid().ToString(),  //id - backend decision 
@@ -22,4 +28,10 @@ public class ClosetService
 
         _store.Add(item);
     }
+    
+    public List<OutfitItem> GetAllItems()
+    {
+        return _store.GetAll();
+    }
+
 }
