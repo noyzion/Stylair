@@ -9,14 +9,37 @@ import {
   Platform,
 } from "react-native";
 import { Pressable } from "react-native";
+import { API_ENDPOINTS } from "@/constants/config"; //import the API_ENDPOINTS from the config file
 
 export default function TodayLookScreen() {
   const [message, setMessage] = useState("");
 
-  const handleSend = () => {
-    // כאן תוסיף את הלוגיקה לשליחת ההודעה
-    console.log("Sending message:", message);
-    setMessage(""); // נקה את השדה אחרי שליחה
+  const [outfits, setOutfits] = useState([]); //list of outfits and function to set it (inital empty list)
+  const [loading, setLoading] = useState(false); //loading state and function to set it (inital false)
+  const [error, setError] = useState<string | null>(null); //error state and function to set it (inital null)
+
+  //function to send the message to the API, async because we are using await to wait for the response
+  const handleSend = async () => {
+    if (message === "") return;
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(API_ENDPOINTS.OUTFIT_RECOMMENDATION, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch outfits");
+      }
+      const data = await response.json();
+      setOutfits(data.outfits);
+      setMessage(""); //clear the message
+      setLoading(false);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "An error occurred");
+      setLoading(false);
+    }
   };
 
   return (
@@ -30,7 +53,9 @@ export default function TodayLookScreen() {
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.centerContainer}>
-          <Text style={styles.header}>Choose Today's Look</Text>
+          <Text style={styles.header}>
+            Let’s find the perfect outfit for today...
+          </Text>
 
           {/* Chat input */}
           <View style={styles.inputContainer}>
@@ -64,7 +89,7 @@ const styles = StyleSheet.create({
   },
   header: {
     fontFamily: "Manrope-bold",
-    fontSize: 40,
+    fontSize: 30,
     fontWeight: "700",
     color: "rgb(108, 99, 255)",
     marginBottom: 30,
@@ -76,9 +101,9 @@ const styles = StyleSheet.create({
     marginTop: 20,
     padding: 16,
     borderRadius: 32,
-    backgroundColor: "rgba(255, 255, 255, 0.09)",
+    backgroundColor: "rgba(255, 255, 255, 0.79)",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.66)",
+    borderColor: "rgba(255, 255, 255, 0)",
     shadowColor: "#000",
     shadowOpacity: 0.15,
     shadowRadius: 20,
@@ -87,13 +112,12 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
+    borderWidth: 0,
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 10,
     marginRight: 8,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "transparent",
   },
   sendButton: {
     backgroundColor: "rgb(108, 99, 255)",
