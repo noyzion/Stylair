@@ -8,7 +8,15 @@ import { TextInput } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 
-const BASE_URL = "http:/192.168.1.186:5292";
+const BASE_URL = "http://192.168.1.186:5292";
+
+export const CATEGORIES = ['top', 'bottom', 'dress', 'shoes'] as const;
+export const STYLES = ['casual', 'formal', 'sport', 'evening'] as const;
+export const SEASONS = ['summer', 'winter', 'spring', 'fall', 'all'] as const;
+
+export type Category = typeof CATEGORIES[number];
+export type Style = typeof STYLES[number];
+export type Season = typeof SEASONS[number];
 
 export async function addItemToCloset(item: {
   itemName: string;
@@ -18,6 +26,7 @@ export async function addItemToCloset(item: {
   colors: string[];
   season: string;
 }) {
+
   const response = await fetch(`${BASE_URL}/api/closet/items`, {
     method: "POST",
     headers: {
@@ -33,32 +42,19 @@ export async function addItemToCloset(item: {
   return response.json();
 }
 
-type ClosetItem = {
-  id: string;
-  imageUri: string;
-  category: 'Top' | 'Bottom' | 'Dress' | 'Shoes';
-  subCategory?: string; 
-  color: string;
-  style?: 'Casual' | 'Formal' | 'Sport' | 'Evening';
-  season?: 'Summer' | 'Winter' | 'All';
-  source: 'manual' | 'ai-image' | 'ai-product';
-  brand?: string;
-  sku?: string;
-  createdAt: string;
-};
 
 type UserChoice = 'manual' | 'ai-image' | 'ai-product';
 
 export default function AddItemScreen() {
     const [image, setImage] = useState<string | null>(null);
     const [choice, setChoice] = useState<UserChoice | null>(null);
-    const [category, setCategory] = useState<'Top' | 'Bottom' | 'Dress' | 'Shoes' | null>(null);
     const [subCategory, setSubCategory] = useState('');
-    const [color, setColor] = useState('');
-    const [style, setStyle] = useState<'Casual' | 'Formal' | 'Sport' | 'Evening' | null>('Casual');
-    const [season, setSeason] = useState<'Summer' | 'Winter' | 'Spring' | 'Fall' | 'All' | null>('Summer');
+    const [category, setCategory] = useState<Category | null>(null);
+    const [style, setStyle] = useState<Style>('casual');
+    const [season, setSeason] = useState<Season>('all');
+    const [color, setColor] = useState<string>('');
     const [isCategoryOpen, setIsCategoryOpen] = useState(false);
-    const [tempCategory, setTempCategory] = useState<'Top' | 'Bottom' | 'Dress' | 'Shoes' | null>(null);
+    const [tempCategory, setTempCategory] = useState<Category | null>(null);
     const [touched, setTouched] = useState({image: false,category: false,color: false,});
     const [brand, setBrand] = useState('');
     const [sku, setSku] = useState('');
@@ -69,14 +65,14 @@ export default function AddItemScreen() {
     const saveItem = async () => {
       try {
         await addItemToCloset({
-          itemName: subCategory || category!, 
-          itemCategory: category!.toLowerCase(), 
-          itemImage: image ?? "",
-          style: style ? [style.toLowerCase()] : [],
+          itemName: subCategory! || category!,
+          itemCategory: category!,    
+          itemImage: image!,
+          style: [style],            
           colors: [color.toLowerCase()],
-          season: season ? season.toLowerCase() : "all",
+          season: season          
         });
-    
+        
         alert("Item added successfully");
       } catch (error) {
         console.error(error);
@@ -262,10 +258,10 @@ export default function AddItemScreen() {
                 <View style={styles.modalContent}>
                   <Text style={styles.modalTitle}>Select a category</Text>
                       <Picker selectedValue={tempCategory} onValueChange={(value) => { setTempCategory(value);}}>
-                        <Picker.Item label="Top" value="Top" />
-                        <Picker.Item label="Bottom" value="Bottom" />
-                        <Picker.Item label="Dress" value="Dress" />
-                        <Picker.Item label="Shoes" value="Shoes" />
+                        <Picker.Item label="Top" value="top" />
+                        <Picker.Item label="Bottom" value="bottom" />
+                        <Picker.Item label="Dress" value="dress" />
+                        <Picker.Item label="Shoes" value="shoes" />
                       </Picker>
                       <Pressable onPress={() => setIsCategoryOpen(false)}>
                          <Text style={styles.modalClose}>Cancel</Text>
@@ -293,61 +289,61 @@ export default function AddItemScreen() {
       
             <Text style={styles.formLabel}>Style</Text>
             <View style={styles.chipsRow}>
-              <Pressable onPress={() => setStyle('Casual')}>
-                <View style={[styles.chip, style === 'Casual' && styles.chipSelected]}>
-                <Text  style={style === 'Casual'  ? styles.chipTextSelected : styles.chipText}>Casual</Text>
+              <Pressable onPress={() => setStyle('casual')}>
+                <View style={[styles.chip, style === 'casual' && styles.chipSelected]}>
+                <Text  style={style === 'casual'  ? styles.chipTextSelected : styles.chipText}>Casual</Text>
                 </View>
               </Pressable>
-              <Pressable onPress={() => setStyle('Formal')}>
-                <View style={[styles.chip, style === 'Formal' && styles.chipSelected]}>
-                <Text  style={style === 'Formal'  ? styles.chipTextSelected : styles.chipText}>Formal</Text>
+              <Pressable onPress={() => setStyle('formal')}>
+                <View style={[styles.chip, style === 'formal' && styles.chipSelected]}>
+                <Text  style={style === 'formal'  ? styles.chipTextSelected : styles.chipText}>Formal</Text>
                 </View>
               </Pressable>
-              <Pressable onPress={() => setStyle('Sport')}>
-                <View style={[styles.chip, style === 'Sport' && styles.chipSelected]}>
-                <Text  style={style === 'Sport'  ? styles.chipTextSelected : styles.chipText}>Sport</Text>
+              <Pressable onPress={() => setStyle('sport')}>
+                <View style={[styles.chip, style === 'sport' && styles.chipSelected]}>
+                <Text  style={style === 'sport'  ? styles.chipTextSelected : styles.chipText}>Sport</Text>
                 </View>
               </Pressable>
-              <Pressable onPress={() => setStyle('Evening')}>
-                <View style={[styles.chip, style === 'Evening' && styles.chipSelected]}>
-                <Text  style={style === 'Evening'  ? styles.chipTextSelected : styles.chipText}>Evening</Text>
+              <Pressable onPress={() => setStyle('evening')}>
+                <View style={[styles.chip, style === 'evening' && styles.chipSelected]}>
+                <Text  style={style === 'evening'  ? styles.chipTextSelected : styles.chipText}>Evening</Text>
                 </View>
               </Pressable>
             </View>
             <Text style={styles.formLabel}>Season</Text>
             <View style={styles.chipsRow}>
 
-            <Pressable onPress={() => setSeason('Summer')}>
-              <View style={[styles.chip, season === 'Summer' && styles.chipSelected]}>
-                <Text style={season === 'Summer' ? styles.chipTextSelected : styles.chipText}>
+            <Pressable onPress={() => setSeason('summer')}>
+              <View style={[styles.chip, season === 'summer' && styles.chipSelected]}>
+                <Text style={season === 'summer' ? styles.chipTextSelected : styles.chipText}>
                   Summer
                 </Text>
               </View>
             </Pressable>
-            <Pressable onPress={() => setSeason('Winter')}>
-              <View style={[styles.chip, season === 'Winter' && styles.chipSelected]}>
-                <Text style={season === 'Winter' ? styles.chipTextSelected : styles.chipText}>
+            <Pressable onPress={() => setSeason('winter')}>
+              <View style={[styles.chip, season === 'winter' && styles.chipSelected]}>
+                <Text style={season === 'winter' ? styles.chipTextSelected : styles.chipText}>
                 Winter
                 </Text>
               </View>
             </Pressable>
-            <Pressable onPress={() => setSeason('Fall')}>
-              <View style={[styles.chip, season === 'Fall' && styles.chipSelected]}>
-                <Text style={season === 'Fall' ? styles.chipTextSelected : styles.chipText}>
+            <Pressable onPress={() => setSeason('fall')}>
+              <View style={[styles.chip, season === 'fall' && styles.chipSelected]}>
+                <Text style={season === 'fall' ? styles.chipTextSelected : styles.chipText}>
                 Fall
                 </Text>
               </View>
             </Pressable>
-            <Pressable onPress={() => setSeason('Spring')}>
-              <View style={[styles.chip, season === 'Spring' && styles.chipSelected]}>
-                <Text style={season === 'Spring' ? styles.chipTextSelected : styles.chipText}>
+            <Pressable onPress={() => setSeason('spring')}>
+              <View style={[styles.chip, season === 'spring' && styles.chipSelected]}>
+                <Text style={season === 'spring' ? styles.chipTextSelected : styles.chipText}>
                 Spring
                 </Text>
               </View>
             </Pressable>
-            <Pressable onPress={() => setSeason('All')}>
-              <View style={[styles.chip, season === 'All' && styles.chipSelected]}>
-                <Text style={season === 'All' ? styles.chipTextSelected : styles.chipText}>
+            <Pressable onPress={() => setSeason('all')}>
+              <View style={[styles.chip, season === 'all' && styles.chipSelected]}>
+                <Text style={season === 'all' ? styles.chipTextSelected : styles.chipText}>
                 All
                 </Text>
               </View>
