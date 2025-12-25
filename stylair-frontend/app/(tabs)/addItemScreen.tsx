@@ -42,7 +42,6 @@ export default function AddItemScreen() {
 
     const saveItem = async () => {
       try {
-        // Use colors array if it has items, otherwise use the current color input
         const colorsToSave = colors.length > 0 ? colors : (color.trim() ? [color.toLowerCase()] : []);
         
          await addItemToCloset({
@@ -53,8 +52,7 @@ export default function AddItemScreen() {
           colors: colorsToSave,
           season: seasonsSelected.length ? seasonsSelected : ['all'],
         });
-        
-        
+                
         alert("Item added successfully");
       } catch (error) {
         console.error(error);
@@ -62,7 +60,6 @@ export default function AddItemScreen() {
       }
     };
     
-
     const pickImage = async () => {
         const permissionResult =
             await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -113,25 +110,14 @@ export default function AddItemScreen() {
             : [...list, value]
         );
       }
-      
-      
-      
+               
     return (
         
-      <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        style={{ flex: 1, backgroundColor: '#F5F5F7' }}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingBottom: 40 }}
-      >
-    
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView style={{ flex: 1, backgroundColor: '#F5F5F7' }} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 40 }}>
         <View style={{backgroundColor: 'white'}}> 
             <Text style ={styles.header} >Add Item To Your Closet</Text>
         </View>
-
         <View style={styles.imageCard}>
             <ImageBackground source={image ? { uri: image } : undefined} style={styles.imageBackground}
               imageStyle={styles.imageBackgroundImage}>
@@ -266,7 +252,6 @@ export default function AddItemScreen() {
                       setTouched(prev => ({ ...prev, category: true })); setIsCategoryOpen(false); }}>
                         <Text style={styles.modalDone}>Done</Text>
                       </Pressable>
-
                     </View>
                   </View>
                 </Modal>
@@ -306,7 +291,6 @@ export default function AddItemScreen() {
                 ))}
               </View>
               {touched.color && !hasColor && (<Text style={styles.errorText}>Color is required</Text>)}
-
 
               <Text style={styles.formLabel}>Style</Text>
               <View style={styles.chipsRow}>
@@ -357,7 +341,6 @@ export default function AddItemScreen() {
       >
         <Text style={styles.saveButtonText}>Save to Closet</Text>
       </Pressable> )}
-
       </ScrollView>
 </KeyboardAvoidingView>
     )
