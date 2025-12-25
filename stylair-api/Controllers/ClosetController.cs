@@ -11,12 +11,20 @@ public class ClosetController : ControllerBase // ControllerBase is the base cla
         _service = service;
     }
 
-    [HttpPost("items")]
+    [HttpPost("item")]
     public IActionResult AddItem(AddItemRequest request)
     {
-        _service.AddItem(request);
-        return Ok(new { message = "Item added successfully" });
+        try
+        {
+            var item = _service.AddItem(request);
+            return Ok(new { message = "Item added successfully", item = item });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
+
     [HttpGet("items")]
     public IActionResult GetAllItems()
     {

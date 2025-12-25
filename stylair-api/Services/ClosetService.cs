@@ -7,13 +7,16 @@ public class ClosetService
         _store = store;
     }
 
-    public void AddItem(AddItemRequest request)
+    public OutfitItem AddItem(AddItemRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.itemName))
             throw new ArgumentException("Item name is required");
 
         if (string.IsNullOrWhiteSpace(request.itemCategory))
             throw new ArgumentException("Item category is required");
+
+        if (string.IsNullOrWhiteSpace(request.itemImage))
+            throw new ArgumentException("Item image is required");
 
         var item = new OutfitItem  //making outfititem
         {
@@ -27,6 +30,7 @@ public class ClosetService
         };
 
         _store.Add(item);
+        return item;
     }
     
     public List<OutfitItem> GetAllItems()
