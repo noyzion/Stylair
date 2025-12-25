@@ -7,6 +7,7 @@ import { styles } from '../../assets/styles/AddItemScreen.styles';
 import { TextInput } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { KeyboardAvoidingView, Platform } from 'react-native';
+import { addItemToCloset } from '../../services/closet.service';
 
 const BASE_URL = "http://192.168.1.186:5292";
 
@@ -18,31 +19,6 @@ export type Category = typeof CATEGORIES[number];
 export type Style = typeof STYLES[number];
 export type Season = typeof SEASONS[number];
 
-export async function addItemToCloset(item: {
-  itemName: string;
-  itemCategory: string;
-  itemImage: string;
-  style: string[];
-  colors: string[];
-  season: string;
-}) {
-
-  const response = await fetch(`${BASE_URL}/api/closet/items`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(item),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to add item");
-  }
-
-  return response.json();
-}
-
-
 type UserChoice = 'manual' | 'ai-image' | 'ai-product';
 
 export default function AddItemScreen() {
@@ -50,8 +26,6 @@ export default function AddItemScreen() {
     const [choice, setChoice] = useState<UserChoice | null>(null);
     const [subCategory, setSubCategory] = useState('');
     const [category, setCategory] = useState<Category | null>(null);
-    const [style, setStyle] = useState<Style>('casual');
-    const [season, setSeason] = useState<Season>('all');
     const [color, setColor] = useState<string>('');
     const [isCategoryOpen, setIsCategoryOpen] = useState(false);
     const [tempCategory, setTempCategory] = useState<Category | null>(null);
@@ -59,20 +33,27 @@ export default function AddItemScreen() {
     const [brand, setBrand] = useState('');
     const [sku, setSku] = useState('');
     const [colors, setColors] = useState<string[]>([]);
+    const [stylesSelected, setStylesSelected] = useState<Style[]>([]);
+    const [seasonsSelected, setSeasonsSelected] = useState<Season[]>([]);
 
-    const isFormValid = !!image && !!category && color.trim().length > 0;
+    const hasColor = colors.length > 0 || color.trim().length > 0;
+    const isFormValid = !!image && !!category && hasColor;
     const isProductValid = brand.trim().length > 0 && sku.trim().length > 0;
 
     const saveItem = async () => {
       try {
-        await addItemToCloset({
-          itemName: subCategory! || category!,
-          itemCategory: category!,    
+        // Use colors array if it has items, otherwise use the current color input
+        const colorsToSave = colors.length > 0 ? colors : (color.trim() ? [color.toLowerCase()] : []);
+        
+         await addItemToCloset({
+          itemName: subCategory || category!,
+          itemCategory: category!,
           itemImage: image!,
-          style: [style],            
-          colors: [color.toLowerCase()],
-          season: season          
+          style: stylesSelected.length ? stylesSelected : ['casual'],
+          colors: colorsToSave,
+          season: seasonsSelected.length ? seasonsSelected : ['all'],
         });
+        
         
         alert("Item added successfully");
       } catch (error) {
@@ -119,8 +100,22 @@ export default function AddItemScreen() {
                 setImage(result.assets[0].uri);
                 setTouched(prev => ({ ...prev, image: true }));
               }               
-    };
-
+      };
+    
+      function toggleValue<T>(
+        value: T,
+        list: T[],
+        setList: React.Dispatch<React.SetStateAction<T[]>>
+      ) {
+        setList(
+          list.includes(value)
+            ? list.filter(v => v !== value)
+            : [...list, value]
+        );
+      }
+      
+      
+      
     return (
         
       <KeyboardAvoidingView
@@ -284,101 +279,68 @@ export default function AddItemScreen() {
             <Text style={styles.formLabel}>Color *</Text>
               <View style={[styles.inputBox, touched.color && !color && styles.inputError,]}>
               <TextInput value={color} onChangeText={setColor} placeholder="e.g Blue"/>
-              <Pressable disabled={!color.trim()} onPress={() => { if (!color.trim()) return;
-                                                                  setColors(prev =>
-                                                                    prev.includes(color.toLowerCase())
-                                                                      ? prev
-                                                                      : [...prev, color.toLowerCase()]
-                                                                  );
-                                                                  setColor('');}}
-                                                   style={styles.addColorStyle}>
-                  <Ionicons name="add-circle-outline" size={18} color="white" />
-                  <Text style={{color: 'white',fontWeight: '600',marginLeft: 6, }}>
-                    Add Color
-                  </Text>
-                </Pressable>
-
-
               </View>
+              <Pressable 
+                disabled={!color.trim()} 
+                onPress={() => { 
+                  if (!color.trim()) return;
+                  setColors(prev =>
+                    prev.includes(color.toLowerCase())
+                      ? prev
+                      : [...prev, color.toLowerCase()]
+                  );
+                  setColor('');
+                }}
+                style={[styles.addColorStyle, !color.trim() && { opacity: 0.4 }]}>
+                <Ionicons name="add-circle-outline" size={18} color="white" />
+                <Text style={{color: 'white',fontWeight: '600',marginLeft: 6, }}>Add Color </Text>
+              </Pressable>
               <View style={styles.chipsRow}>
                 {colors.map(c => (
-                  <Pressable key={c} onPress={() =>
-                    setColors(prev => prev.filter(x => x !== c))
-                  }>
-                    <View style={styles.chip}>
-                      <Text>{c}</Text>
-                    </View>
-                  </Pressable>
+                  <View key={c} style={styles.colorChip}>
+                    <Text style={styles.colorChipText}>{c}</Text>
+                    <Pressable onPress={() => setColors(prev => prev.filter(x => x !== c))} hitSlop={8}>
+                      <Ionicons name="close" size={14} color="#666" />
+                    </Pressable>
+                  </View>
                 ))}
               </View>
+              {touched.color && !hasColor && (<Text style={styles.errorText}>Color is required</Text>)}
 
-              {touched.color && !color && (<Text style={styles.errorText}>Color is required</Text>)}
-      
-            <Text style={styles.formLabel}>Style</Text>
-            <View style={styles.chipsRow}>
-              <Pressable onPress={() => setStyle('casual')}>
-                <View style={[styles.chip, style === 'casual' && styles.chipSelected]}>
-                <Text  style={style === 'casual'  ? styles.chipTextSelected : styles.chipText}>Casual</Text>
-                </View>
-              </Pressable>
-              <Pressable onPress={() => setStyle('formal')}>
-                <View style={[styles.chip, style === 'formal' && styles.chipSelected]}>
-                <Text  style={style === 'formal'  ? styles.chipTextSelected : styles.chipText}>Formal</Text>
-                </View>
-              </Pressable>
-              <Pressable onPress={() => setStyle('sport')}>
-                <View style={[styles.chip, style === 'sport' && styles.chipSelected]}>
-                <Text  style={style === 'sport'  ? styles.chipTextSelected : styles.chipText}>Sport</Text>
-                </View>
-              </Pressable>
-              <Pressable onPress={() => setStyle('evening')}>
-                <View style={[styles.chip, style === 'evening' && styles.chipSelected]}>
-                <Text  style={style === 'evening'  ? styles.chipTextSelected : styles.chipText}>Evening</Text>
-                </View>
-              </Pressable>
-            </View>
-            <Text style={styles.formLabel}>Season</Text>
-            <View style={styles.chipsRow}>
 
-            <Pressable onPress={() => setSeason('summer')}>
-              <View style={[styles.chip, season === 'summer' && styles.chipSelected]}>
-                <Text style={season === 'summer' ? styles.chipTextSelected : styles.chipText}>
-                  Summer
-                </Text>
+              <Text style={styles.formLabel}>Style</Text>
+              <View style={styles.chipsRow}>
+                {STYLES.map(st => {const selected = stylesSelected.includes(st);
+                  return (
+                    <Pressable key={st} onPress={() => toggleValue(st, stylesSelected, setStylesSelected)}>
+                      <View style={[styles.chip, selected && styles.chipSelected]}>
+                        <Text style={selected ? styles.chipTextSelected : styles.chipText}>
+                          {st}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
               </View>
-            </Pressable>
-            <Pressable onPress={() => setSeason('winter')}>
-              <View style={[styles.chip, season === 'winter' && styles.chipSelected]}>
-                <Text style={season === 'winter' ? styles.chipTextSelected : styles.chipText}>
-                Winter
-                </Text>
+            
+              <Text style={styles.formLabel}>Season</Text>
+              <View style={styles.chipsRow}>
+                {SEASONS.map(se => {
+                  const selected = seasonsSelected.includes(se);
+                  return (
+                    <Pressable key={se} onPress={() => toggleValue(se, seasonsSelected, setSeasonsSelected)}>
+                      <View style={[styles.chip, selected && styles.chipSelected]}>
+                        <Text style={selected ? styles.chipTextSelected : styles.chipText}>
+                          {se}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
               </View>
-            </Pressable>
-            <Pressable onPress={() => setSeason('fall')}>
-              <View style={[styles.chip, season === 'fall' && styles.chipSelected]}>
-                <Text style={season === 'fall' ? styles.chipTextSelected : styles.chipText}>
-                Fall
-                </Text>
-              </View>
-            </Pressable>
-            <Pressable onPress={() => setSeason('spring')}>
-              <View style={[styles.chip, season === 'spring' && styles.chipSelected]}>
-                <Text style={season === 'spring' ? styles.chipTextSelected : styles.chipText}>
-                Spring
-                </Text>
-              </View>
-            </Pressable>
-            <Pressable onPress={() => setSeason('all')}>
-              <View style={[styles.chip, season === 'all' && styles.chipSelected]}>
-                <Text style={season === 'all' ? styles.chipTextSelected : styles.chipText}>
-                All
-                </Text>
-              </View>
-            </Pressable>
-            </View>
-                   
           </View>
         )}
+
        {choice === 'manual' && (
         <Pressable
         disabled={!isFormValid}

@@ -308,4 +308,22 @@ export const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  colorChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFEFFD',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  
+  colorChipText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#333',
+    marginRight: 6,
+  },
+  
 });
