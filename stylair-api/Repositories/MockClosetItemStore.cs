@@ -1,6 +1,6 @@
 public class MockClosetItemStore : IClosetItemStore
 {
-    private readonly List<OutfitItem> _items = new(); //our db
+    private readonly List<OutfitItem> _items = new(); //our db (for now)
 
     public void Add(OutfitItem item)
     {

@@ -7,7 +7,9 @@ type Props = {
   onGenerate: () => void;
 };
 
-export function AIImageCard({ disabled, onGenerate }: Props) {
+export function AIImageCard(props: Props) {
+    const disabled = props.disabled;
+    const onGenerate = props.onGenerate;
   return (
     <View style={styles.aiCard}>
       <View style={styles.aiIconWrapper}>
@@ -15,9 +17,7 @@ export function AIImageCard({ disabled, onGenerate }: Props) {
       </View>
 
       <Text style={styles.aiTitle}>AI will analyze your photo</Text>
-      <Text style={styles.aiDescription}>
-        Detect category, color, style, and more
-      </Text>
+      <Text style={styles.aiDescription}>Detect category, color, style, and more</Text>
 
       <Pressable disabled={disabled} onPress={onGenerate}>
         <View style={[styles.aiButton, disabled && { opacity: 0.5 }]}>

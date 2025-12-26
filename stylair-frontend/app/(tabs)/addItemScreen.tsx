@@ -126,10 +126,9 @@ export default function AddItemScreen() {
           {touched.image && !image && (
          <Text style={[styles.errorText, { textAlign: 'center', marginTop: 8 }]}>Image is required</Text>)}
           <UserChoiceSelector value={choice} onChange={setChoice}/>
-
           {choice === 'ai-image' && (
-                  <AIImageCard disabled={!image} onGenerate={() => {
-      // generateFromImage()
+           <AIImageCard disabled={!image} onGenerate={() => {
+               // generateFromImage()
           }}
         />
       )}
@@ -167,19 +166,11 @@ export default function AddItemScreen() {
         )}
 
        {choice === 'manual' && (
-        <Pressable
-        disabled={!isFormValid}
-        onPress={() => {
-          setTouched({ image: true, category: true, color: true });
-          if (!isFormValid) return;
-          saveItem()
-        }}
-        style={({ pressed }) => [
-          styles.saveButton,
-          !isFormValid && { opacity: 0.5 },
-          pressed && styles.saveButtonPressed,
-        ]}
-      >
+        <Pressable disabled={!isFormValid} onPress={() => { setTouched({ image: true, category: true, color: true });
+                                                            if (!isFormValid) return;
+                                                            saveItem()
+                                                          }}
+        style={({ pressed }) => [styles.saveButton,!isFormValid && { opacity: 0.5 }, pressed && styles.saveButtonPressed,]} >
         <Text style={styles.saveButtonText}>Save to Closet</Text>
       </Pressable> )}
       </ScrollView>

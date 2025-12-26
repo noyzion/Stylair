@@ -10,15 +10,15 @@ type Props = {
   onGenerate: () => void;
 };
 
-export function AIProductCard({
-  brand,
-  sku,
-  onBrandChange,
-  onSkuChange,
-  onGenerate,
-}: Props) {
-  const isValid = brand.trim().length > 0 && sku.trim().length > 0;
+export function AIProductCard(props : Props) {
+    const brand = props.brand;
+    const sku = props.sku;
+    const onBrandChange = props.onBrandChange;
+    const onSkuChange = props.onSkuChange;
+    const onGenerate = props.onGenerate;
 
+  const isValid = brand.trim().length > 0 && sku.trim().length > 0;
+    
   return (
     <View style={styles.aiCard}>
     <View style={styles.aiIconWrapper}>

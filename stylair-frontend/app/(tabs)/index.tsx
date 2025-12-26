@@ -10,9 +10,7 @@ import * as Location from 'expo-location';
 
 export default function HomeScreen() {
   const [tempC, setTempC] = useState<number | null>(null);
-  const [condition, setCondition] = useState<
-    'sun' | 'cloud' | 'rain' | 'storm' | 'snow' | 'wind' | 'hot'
-  >('sun');
+  const [condition, setCondition] = useState<'sun' | 'cloud' | 'rain' | 'storm' | 'snow' | 'wind' | 'hot' >('sun');
   const [isNight, setIsNight] = useState(false);
 
   useEffect(() => {

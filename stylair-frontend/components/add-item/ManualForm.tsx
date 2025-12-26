@@ -1,5 +1,4 @@
-import { View, Text, Pressable, Modal, TextInput } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import { View, Text, Pressable, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from '../../assets/styles/AddItemScreen.styles';
 import { Category, Style, Season, STYLES, SEASONS } from '../../app/(tabs)/addItemScreen';
@@ -22,9 +21,7 @@ type Props = {
   setColors: React.Dispatch<React.SetStateAction<string[]>>;
   setStylesSelected: React.Dispatch<React.SetStateAction<Style[]>>;
   setSeasonsSelected: React.Dispatch<React.SetStateAction<Season[]>>;
-  setTouched: React.Dispatch<
-    React.SetStateAction<{ image: boolean; category: boolean; color: boolean }>
-  >;
+  setTouched: React.Dispatch<React.SetStateAction<{ image: boolean; category: boolean; color: boolean }>>;
   setIsCategoryOpen: (v: boolean) => void;
   setTempCategory: (v: Category | null) => void;
 
@@ -38,29 +35,9 @@ type Props = {
 };
 
 export function ManualForm(props: Props) {
-  const {
-    category,
-    subCategory,
-    color,
-    colors,
-    stylesSelected,
-    seasonsSelected,
-    touched,
-    isCategoryOpen,
-    tempCategory,
-    setCategory,
-    setSubCategory,
-    setColor,
-    setColors,
-    setStylesSelected,
-    setSeasonsSelected,
-    setTouched,
-    setIsCategoryOpen,
-    setTempCategory,
-    toggleValue,
-    hasColor,
-  } = props;
-
+  const {category, subCategory, color,colors,stylesSelected,seasonsSelected, touched, isCategoryOpen,
+        tempCategory,setCategory,setSubCategory, setColor, setColors, setStylesSelected,setSeasonsSelected,
+        setTouched,setIsCategoryOpen, setTempCategory, toggleValue,  hasColor, } = props;
   return (
     <View style={styles.manualFormContainer}>
             
