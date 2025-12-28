@@ -27,8 +27,16 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Configure PostgreSQL database connection
+// ============================================
+// PostgreSQL Connection Configuration
+// ============================================
+// Read the connection string from appsettings.json file
+// The connection string contains: Host, Port, Database, Username, Password
 var connectionString = builder.Configuration.GetConnectionString("Postgres");
+
+// Register the DbContext in the Dependency Injection system
+// UseNpgsql - tells EF Core to use Npgsql (the PostgreSQL driver)
+// The DbContext will be automatically injected to anyone who needs it (like PostgresClosetItemStore)
 builder.Services.AddDbContext<StylairDbContext>(options =>
     options.UseNpgsql(connectionString));
 
