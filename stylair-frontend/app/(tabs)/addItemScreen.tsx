@@ -153,9 +153,7 @@ export default function AddItemScreen() {
          <Text style={[styles.errorText, { textAlign: 'center', marginTop: 8 }]}>Image is required</Text>)}
           <UserChoiceSelector value={choice} onChange={setChoice}/>
           {choice === 'ai-image' && (
-         <AIImageCard
-         disabled={!image}
-         onGenerate={() => {
+         <AIImageCard disabled={!image} onGenerate={() => {
            // כאן בעתיד יהיה API
            applyAIGeneratedData({imageUri: image!,category: 'top',subCategory: 't-shirt',colors: ['black'],styles: ['casual'],seasons: ['all'],});
          }}
