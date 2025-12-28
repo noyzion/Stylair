@@ -278,6 +278,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     position: "relative",
     backgroundColor: "rgba(240, 230, 255, 0.35)",
+    borderWidth: 1,
+    borderColor: "rgba(139, 92, 246, 0.25)",
     // Strong shadow only for the hero button
     ...Platform.select({
       ios: {
@@ -299,6 +301,8 @@ const styles = StyleSheet.create({
     color: "#1A1A1A",
     textAlign: "center",
     letterSpacing: 0.4,
+    lineHeight: 27,
+    includeFontPadding: false,
   },
   homeButton: {
     position: "absolute",
