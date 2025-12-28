@@ -1,12 +1,14 @@
-import { Image } from "expo-image";
-import { ThemedView } from "@/components/themed-view";
-import { ThemedText } from "@/components/themed-text";
-import { StyleSheet, Pressable, View } from "react-native";
-import { Link } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
-import WeatherBanner from "@/components/WeatherBanner";
 import { useEffect, useState } from "react";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
 import * as Location from "expo-location";
+import { Link } from "expo-router";
+import { Pressable, StyleSheet } from "react-native";
+
+import WeatherBanner from "@/components/WeatherBanner";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
 
 export default function HomeScreen() {
   const [tempC, setTempC] = useState<number | null>(null);
@@ -49,8 +51,9 @@ export default function HomeScreen() {
         }
       }
 
-      if (typeof code === "number")
+      if (typeof code === "number") {
         setCondition(mapWeatherCodeToCondition(code));
+      }
     })();
   }, []);
 
@@ -85,8 +88,23 @@ export default function HomeScreen() {
 
         <ThemedView style={styles.buttonsArea}>
           <Link href="/(tabs)/chooseTodaysLook" asChild>
-            <Pressable style={styles.purpleActionButton}>
-              <ThemedText style={styles.purpleActionButtonText}>
+            <Pressable style={styles.chooseWrap}>
+              <BlurView
+                intensity={55}
+                tint="light"
+                style={StyleSheet.absoluteFillObject}
+              />
+              <LinearGradient
+                colors={[
+                  "rgba(255,255,255,0.22)",
+                  "rgba(255,255,255,0.10)",
+                  "rgba(255,255,255,0.18)",
+                ]}
+                start={{ x: 0.15, y: 0 }}
+                end={{ x: 0.9, y: 1 }}
+                style={StyleSheet.absoluteFillObject}
+              />
+              <ThemedText style={styles.chooseText}>
                 Choose today's look
               </ThemedText>
             </Pressable>
@@ -103,9 +121,7 @@ export default function HomeScreen() {
 
             <Link href="/closet" asChild>
               <Pressable style={styles.actionButton}>
-                <ThemedText style={styles.actionButtonText}>
-                  My closet
-                </ThemedText>
+                <ThemedText style={styles.actionButtonText}>My closet</ThemedText>
               </Pressable>
             </Link>
 
@@ -140,13 +156,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "transparent",
   },
-  content: {
-    flex: 1,
-    justifyContent: "flex-start",
-    paddingTop: 50,
-    alignItems: "center",
-    backgroundColor: "transparent",
-  },
   subtitleContainer: {
     fontFamily: "Manrope-Regular",
     fontWeight: "700",
@@ -173,6 +182,13 @@ const styles = StyleSheet.create({
     shadowRadius: 15,
     shadowOffset: { width: 0, height: 10 },
   },
+  wrap: {
+    alignItems: "center",
+    position: "absolute",
+    top: 155,
+    marginBottom: 14,
+    marginLeft: -20,
+  },
   buttonsArea: {
     flex: 1,
     justifyContent: "center",
@@ -180,6 +196,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     marginTop: 420,
     gap: 10,
+    width: "100%",
   },
   otherButtonsArea: {
     flexDirection: "row",
@@ -187,6 +204,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     alignItems: "center",
     gap: 10,
+    width: "100%",
   },
   actionButton: {
     width: 120,
@@ -202,39 +220,36 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 10 },
   },
-  purpleActionButton: {
-    width: 200,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(179, 74, 244, 0.4)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.6)",
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
-  },
   actionButtonText: {
     fontFamily: "Manrope-Regular",
     fontWeight: "700",
-    fontSize: 20,
+    fontSize: 16,
     color: "#1A1A1A",
     textAlign: "center",
   },
-  purpleActionButtonText: {
-    fontFamily: "Manrope-Regular",
-    fontWeight: "700",
-    fontSize: 20,
-    color: "#1A1A1A",
-    textAlign: "center",
-  },
-  wrap: {
+  chooseWrap: {
+    width: 380,
+    height: 56,
+    borderRadius: 28,
+    overflow: "hidden",
     alignItems: "center",
-    position: "absolute",
-    top: 155,
-    marginBottom: 14,
-    marginLeft: -20,
+    justifyContent: "center",
+    position: "relative",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.38)",
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 4,
+    marginBottom: 6,
+  },
+  chooseText: {
+    fontFamily: "Manrope-Regular",
+    fontWeight: "800",
+    fontSize: 20,
+    color: "rgba(25,25,28,0.80)",
+    textAlign: "center",
   },
 });
