@@ -279,7 +279,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgb(186, 138, 255)',
+    backgroundColor: 'rgb(108, 99, 255)',
     paddingVertical: 14,
     paddingHorizontal: 26,
     borderRadius: 14,

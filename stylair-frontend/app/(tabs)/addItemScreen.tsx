@@ -111,6 +111,32 @@ export default function AddItemScreen() {
                 : [...list, value]
             );
       }
+
+      const applyAIGeneratedData = (data: {
+        imageUri: string;
+        category: Category;
+        subCategory?: string;
+        colors: string[];
+        styles: Style[];
+        seasons: Season[];
+      }) => {
+        setImage(data.imageUri);
+        setCategory(data.category);
+        setSubCategory(data.subCategory || '');
+        setColors(data.colors);
+        setColor(data.colors[0] ?? '');
+        setStylesSelected(data.styles);
+        setSeasonsSelected(data.seasons);
+      
+        setTouched({
+          image: true,
+          category: true,
+          color: true,
+        });
+      
+        setChoice('manual');
+      };
+      
                
     return (
         
@@ -127,15 +153,21 @@ export default function AddItemScreen() {
          <Text style={[styles.errorText, { textAlign: 'center', marginTop: 8 }]}>Image is required</Text>)}
           <UserChoiceSelector value={choice} onChange={setChoice}/>
           {choice === 'ai-image' && (
-           <AIImageCard disabled={!image} onGenerate={() => {
-               // generateFromImage()
-          }}
-        />
+         <AIImageCard
+         disabled={!image}
+         onGenerate={() => {
+           // כאן בעתיד יהיה API
+           applyAIGeneratedData({imageUri: image!,category: 'top',subCategory: 't-shirt',colors: ['black'],styles: ['casual'],seasons: ['all'],});
+         }}
+       />       
       )}
 
       {choice === 'ai-product' && (
         <AIProductCard brand={brand} sku={sku} onBrandChange={setBrand} onSkuChange={setSku} onGenerate={() => {
             // generateFromBrandAndSKU()
+            applyAIGeneratedData({imageUri: image!,category: 'top',subCategory: 't-shirt',colors: ['black'],styles: ['casual'],seasons: ['all'],});
+            setBrand('');
+            setSku('');
           }}
         />
       )}
