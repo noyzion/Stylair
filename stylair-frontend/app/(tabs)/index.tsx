@@ -1,13 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import * as Location from "expo-location";
 import { Link } from "expo-router";
-import { Pressable, StyleSheet, Platform, View } from "react-native";
-import { IconSymbol } from "@/components/ui/icon-symbol";
+import { Pressable, StyleSheet, Platform, View, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-
 import WeatherBanner from "@/components/WeatherBanner";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -15,9 +13,45 @@ import { ThemedView } from "@/components/themed-view";
 export default function HomeScreen() {
   const [tempC, setTempC] = useState<number | null>(null);
   const [condition, setCondition] = useState<
-    "sun" | "cloud" | "rain" | "storm" | "snow" | "wind" | "hot"
-  >("sun");
+    "sun" | "cloud" | "rain" | "storm" | "snow" | "wind" | "hot" >("sun");
   const [isNight, setIsNight] = useState(false);
+  
+  // Animation values
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const logoTranslateY = useRef(new Animated.Value(-20)).current;
+  const backgroundIconRotation = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Logo animation
+    Animated.parallel([
+      Animated.timing(logoOpacity, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(logoTranslateY, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Background icon gentle sway - subtle oscillation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(backgroundIconRotation, {
+          toValue: 1,
+          duration: 8000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(backgroundIconRotation, {
+          toValue: 0,
+          duration: 8000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -68,15 +102,34 @@ export default function HomeScreen() {
     >
       <ThemedView style={styles.container}>
         
-        <Image
+        <Animated.Image
           source={require("@/assets/images/Shirt.png")}
-          style={styles.backgroundIcon}
+          style={[
+            styles.backgroundIcon,
+            {
+              transform: [
+                {
+                  rotate: backgroundIconRotation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['-5deg', '5deg'],
+                  }),
+                },
+              ],
+            },
+          ]}
         />
 
-        <Image
-          source={require("@/assets/images/logoName.png")}
-          style={styles.logo}
-        />
+        <Animated.View
+          style={{
+            opacity: logoOpacity,
+            transform: [{ translateY: logoTranslateY }],
+          }}
+        >
+          <Image
+            source={require("@/assets/images/logoName.png")}
+            style={styles.logo}
+          />
+        </Animated.View>
 
         <ThemedText type="subtitle" style={styles.subtitleContainer}>
           your digital closet
@@ -196,7 +249,7 @@ const styles = StyleSheet.create({
   },
   backgroundIcon: {
     position: "absolute",
-    top: 210,
+    top: 190,
     opacity: 1,
     width: 420,
     height: 480,
