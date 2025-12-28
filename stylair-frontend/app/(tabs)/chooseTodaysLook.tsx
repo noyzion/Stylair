@@ -14,6 +14,8 @@ import {
 import { Image } from "expo-image";
 import { Pressable } from "react-native";
 import { API_ENDPOINTS } from "@/constants/config"; //import the API_ENDPOINTS from the config file
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { Link } from "expo-router";
 
 // Types matching the backend models
 interface OutfitItem {
@@ -91,6 +93,13 @@ export default function TodayLookScreen() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+      {/* Home icon button */}
+      <Link href="/(tabs)" asChild>
+        <Pressable style={styles.homeButton}>
+          <IconSymbol name="house.fill" size={24} color="#1A1A1A" />
+        </Pressable>
+      </Link>
+      
       <ScrollView
         style={{ flex: 1, backgroundColor: "#F5F5F7" }}
         keyboardShouldPersistTaps="handled"
@@ -384,5 +393,28 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 15,
     fontWeight: "500",
+  },
+  homeButton: {
+    position: "absolute",
+    top: 50,
+    left: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
 });

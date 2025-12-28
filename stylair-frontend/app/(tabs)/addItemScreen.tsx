@@ -9,6 +9,8 @@ import { UserChoiceSelector, UserChoice } from '../../components/add-item/UserCh
 import { AIImageCard } from '../../components/add-item/AIImageCard';
 import { AIProductCard } from '../../components/add-item/AIProductCard';
 import { ManualForm } from '../../components/add-item/ManualForm';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Link } from 'expo-router';
 
 export const CATEGORIES = ['top', 'bottom', 'dress', 'shoes'] as const;
 export const STYLES = ['casual', 'formal', 'sport', 'evening'] as const;
@@ -141,6 +143,12 @@ export default function AddItemScreen() {
     return (
         
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <Link href="/(tabs)" asChild>
+          <Pressable style={styles.homeButton}>
+            <IconSymbol name="house.fill" size={24} color='rgb(108, 99, 255)' />
+          </Pressable>
+        </Link>
+        
       <ScrollView style={{ flex: 1, backgroundColor: '#F5F5F7' }} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 40 }}>
         
         <View style={{backgroundColor: 'white'}}> 

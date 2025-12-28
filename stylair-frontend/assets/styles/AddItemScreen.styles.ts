@@ -1,4 +1,4 @@
-import { Modal, StyleSheet } from 'react-native';
+import { Modal, StyleSheet, Platform } from 'react-native';
 
 export const styles = StyleSheet.create({
   header: {
@@ -325,5 +325,16 @@ export const styles = StyleSheet.create({
     color: '#333',
     marginRight: 6,
   },
-  
+  homeButton: {
+    position: 'absolute',
+    top: 65,
+    left: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
 });
