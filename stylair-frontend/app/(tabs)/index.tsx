@@ -5,11 +5,12 @@ import { BlurView } from "expo-blur";
 import * as Location from "expo-location";
 import { Link } from "expo-router";
 import { Pressable, StyleSheet, Platform, View } from "react-native";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { Ionicons } from "@expo/vector-icons";
 
 import WeatherBanner from "@/components/WeatherBanner";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { IconSymbol } from "@/components/ui/icon-symbol";
 
 export default function HomeScreen() {
   const [tempC, setTempC] = useState<number | null>(null);
@@ -118,9 +119,11 @@ export default function HomeScreen() {
                   end={{ x: 1, y: 0 }}
                   style={StyleSheet.absoluteFillObject}
                 />
-                <ThemedText style={styles.chooseText}>
-                  Choose today's look
-                </ThemedText>
+                <View style={styles.chooseButtonContent}>
+                  <ThemedText style={styles.chooseText}>
+                    Choose today's look
+                  </ThemedText>
+                </View>
               </Pressable>
             </Link>
           </View>
@@ -128,20 +131,23 @@ export default function HomeScreen() {
           <ThemedView style={styles.otherButtonsArea}>
             <Link href="/(tabs)/addItemScreen" asChild>
               <Pressable style={styles.actionButton}>
+                <Ionicons name="add-circle-outline" size={20} color="#4A4A4A" />
                 <ThemedText style={styles.actionButtonText}>
-                  Add item to closet
+                  Add item
                 </ThemedText>
               </Pressable>
             </Link>
 
             <Link href="/closet" asChild>
               <Pressable style={styles.actionButton}>
+                <Ionicons name="shirt-outline" size={20} color="#4A4A4A" />
                 <ThemedText style={styles.actionButtonText}>My closet</ThemedText>
               </Pressable>
             </Link>
 
             <Link href="/archive" asChild>
               <Pressable style={styles.actionButton}>
+                <Ionicons name="archive-outline" size={20} color="#4A4A4A" />
                 <ThemedText style={styles.actionButtonText}>Archive</ThemedText>
               </Pressable>
             </Link>
@@ -218,22 +224,25 @@ const styles = StyleSheet.create({
   },
   otherButtonsArea: {
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "space-between",
     backgroundColor: "transparent",
     alignItems: "center",
-    gap: 12,
-    width: "100%",
-    paddingHorizontal: 20,
+    gap: 10,
+    width: 400,
+    alignSelf: "center",
   },
   actionButton: {
-    width: 120,
-    height: 55,
-    borderRadius: 27,
+    flex: 1,
+    height: 58,
+    borderRadius: 29,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "rgba(255,255,255,0.30)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.55)",
+    gap: 0,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
     // Minimal shadow for static buttons
     ...Platform.select({
       ios: {
@@ -253,6 +262,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#1A1A1A",
     textAlign: "center",
+    marginTop: 2,
+    marginLeft: 4,
   },
   chooseWrapContainer: {
     width: 420,
@@ -293,6 +304,15 @@ const styles = StyleSheet.create({
         shadowColor: "#8B5CF6",
       },
     }),
+  },
+  chooseButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  chooseIcon: {
+    marginTop: -2,
   },
   chooseText: {
     fontFamily: "Manrope-Regular",

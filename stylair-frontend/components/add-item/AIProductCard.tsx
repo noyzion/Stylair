@@ -1,5 +1,7 @@
-import { View, Text, Pressable, TextInput } from 'react-native';
+import { View, Text, Pressable, TextInput, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { styles } from '../../assets/styles/AddItemScreen.styles';
 
 type Props = {
@@ -32,11 +34,17 @@ export function AIProductCard(props : Props) {
     <View style={styles.inputBox}>
       <TextInput value={sku} onChangeText={onSkuChange} placeholder="e.g. AB123456, 501-ORIGINAL" style={{ padding: 0 }}/>
     </View>
-    <Pressable disabled={!isValid} onPress={() => {// generateFromBrandAndSKU()
-      }}>
-      <View style={[styles.aiButton,!isValid && { opacity: 0.5},]}>
+    <Pressable disabled={!isValid} onPress={onGenerate}>
+      <View style={[styles.aiButton, !isValid && { opacity: 0.5 }]}>
+        <BlurView intensity={75} tint="light" style={StyleSheet.absoluteFillObject} />
+        <LinearGradient
+          colors={['rgba(108, 99, 255, 0.8)', 'rgba(139, 92, 246, 0.9)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={StyleSheet.absoluteFillObject}
+        />
         <Ionicons name="sparkles-outline" size={18} color="white" />
-        <Text style={styles.aiButtonText}>Generate Details </Text>
+        <Text style={styles.aiButtonText}>Generate Details</Text>
       </View>
     </Pressable>
   </View>
