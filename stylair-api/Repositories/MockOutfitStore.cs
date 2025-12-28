@@ -15,7 +15,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://example.com/images/pants-001.jpg",
             style = new List<string> { "formal", "elegant" },
             colors = new List<string> { "black" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         new OutfitItem
         {
@@ -25,7 +25,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://example.com/images/shirt-001.jpg",
             style = new List<string> { "formal", "elegant" },
             colors = new List<string> { "white" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         new OutfitItem
         {
@@ -35,7 +35,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://example.com/images/shoes-001.jpg",
             style = new List<string> { "formal", "elegant" },
             colors = new List<string> { "black" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         // Outfit 2 - Party/Casual
         new OutfitItem
@@ -46,7 +46,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://example.com/images/pants-002.jpg",
             style = new List<string> { "casual", "trendy", "stylish" },
             colors = new List<string> { "blue" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         new OutfitItem
         {
@@ -56,7 +56,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://example.com/images/shirt-002.jpg",
             style = new List<string> { "casual", "trendy", "stylish" },
             colors = new List<string> { "black" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         new OutfitItem
         {
@@ -66,7 +66,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://example.com/images/shoes-002.jpg",
             style = new List<string> { "casual", "trendy", "stylish" },
             colors = new List<string> { "white" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         // Outfit 3 - Gym/Sporty
         new OutfitItem
@@ -77,7 +77,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://example.com/images/pants-003.jpg",
             style = new List<string> { "sporty", "athletic", "comfortable" },
             colors = new List<string> { "gray" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         new OutfitItem
         {
@@ -87,7 +87,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://example.com/images/shirt-003.jpg",
             style = new List<string> { "sporty", "athletic", "comfortable" },
             colors = new List<string> { "black", "white" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         new OutfitItem
         {
@@ -97,7 +97,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://example.com/images/shoes-003.jpg",
             style = new List<string> { "sporty", "athletic", "comfortable" },
             colors = new List<string> { "black", "white" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         // Outfit 4 - Casual/Day
         new OutfitItem
@@ -108,7 +108,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://example.com/images/pants-004.jpg",
             style = new List<string> { "casual", "comfortable", "relaxed" },
             colors = new List<string> { "black" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         new OutfitItem
         {
@@ -118,7 +118,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://example.com/images/shirt-004.jpg",
             style = new List<string> { "casual", "comfortable", "relaxed" },
             colors = new List<string> { "red" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         new OutfitItem
         {
@@ -128,7 +128,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://example.com/images/shoes-004.jpg",
             style = new List<string> { "casual", "comfortable", "relaxed" },
             colors = new List<string> { "white", "black" },
-            season = "all"
+            season = new List<string> { "all" }
         }
     };
 
@@ -185,13 +185,13 @@ public class MockOutfitStore : IOutfitStore
                 }
             }
 
-            // Check season: if criteria season is "all" or item season is "all", accept. Otherwise, must match exactly
+            // Check season: if criteria season is "all" or item season contains "all", accept. Otherwise, must match
             bool seasonMatch = false;
-            if (criteria.season == "all" || item.season == "all")
+            if (criteria.season == "all" || item.season.Contains("all"))
             {
                 seasonMatch = true;
             }
-            else if (item.season == criteria.season)
+            else if (item.season.Contains(criteria.season))
             {
                 seasonMatch = true;
             }
