@@ -18,7 +18,8 @@ Stylair is a smart mobile application for managing a personal digital wardrobe, 
 ### Backend
 - .NET / C#
 - Web API
-- AWS - Lambda, DynamoDB, S3
+- PostgresSQL
+- AWS - S3
 
 ## 📱 Main Screens
 - Add Item (Camera / Gallery)
