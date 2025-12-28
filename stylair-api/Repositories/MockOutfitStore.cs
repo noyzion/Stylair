@@ -15,7 +15,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://img.fantaskycdn.com/c8c46555a0b4065388bf6f215d3da15e_2056x.jpeg",
             style = new List<string> { "formal", "elegant" },
             colors = new List<string> { "black" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         new OutfitItem
         {
@@ -25,7 +25,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://img.fantaskycdn.com/e7a42c5533fe64d3f3b0f372dd97c99d_2056x.jpeg",
             style = new List<string> { "formal", "elegant" },
             colors = new List<string> { "white" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         new OutfitItem
         {
@@ -35,7 +35,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://dressbetty.com/cdn/shop/files/New-Black-Loafers-Men-Pu-Leather-Shoes-Breathable-Slip-On-Solid-Casual-Shoes-Handmade-Free-Shipping_3b49780e-135b-4c73-8798-aa99e6354ba9_1000x.webp?v=1737713975",
             style = new List<string> { "formal", "elegant" },
             colors = new List<string> { "black" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         // Outfit 2 - Party/Casual
         new OutfitItem
@@ -46,7 +46,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://www.stylesock.com/cdn/shop/files/583f05540935e6dd526e12d45f3dd107_1080x.jpg?v=1735033750",
             style = new List<string> { "casual", "trendy", "stylish" },
             colors = new List<string> { "blue" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         new OutfitItem
         {
@@ -56,7 +56,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://i.pinimg.com/1200x/d0/6a/c3/d06ac3895924a6ec86110b32a978d73c.jpg",
             style = new List<string> { "casual", "trendy", "stylish" },
             colors = new List<string> { "black" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         new OutfitItem
         {
@@ -66,7 +66,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://i.pinimg.com/736x/60/74/96/6074966515b26c175318601cceea9355.jpg",
             style = new List<string> { "casual", "trendy", "stylish" },
             colors = new List<string> { "white" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         // Outfit 3 - Gym/Sporty
         new OutfitItem
@@ -77,7 +77,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://i.pinimg.com/1200x/64/eb/0e/64eb0eca84084947f8adbb2fd3647763.jpg",
             style = new List<string> { "sporty", "athletic", "comfortable" },
             colors = new List<string> { "gray" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         new OutfitItem
         {
@@ -87,7 +87,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://i.pinimg.com/1200x/1a/5d/28/1a5d2855e18faf0af503c908cf1219da.jpg",
             style = new List<string> { "sporty", "athletic", "comfortable" },
             colors = new List<string> { "black", "white" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         new OutfitItem
         {
@@ -97,7 +97,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://i.pinimg.com/1200x/40/8c/1d/408c1d9cabb050f24cb27303efdc63e9.jpg",
             style = new List<string> { "sporty", "athletic", "comfortable" },
             colors = new List<string> { "black", "white" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         // Outfit 4 - Casual/Day
         new OutfitItem
@@ -108,7 +108,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://www.stylesock.com/cdn/shop/files/b5c8c74179c91fbb61977ad6118232d0_1080x.jpg?v=1732602149",
             style = new List<string> { "casual", "comfortable", "relaxed" },
             colors = new List<string> { "black" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         new OutfitItem
         {
@@ -118,7 +118,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://i.pinimg.com/736x/4d/82/16/4d8216c98f228c1c37015712cd61875d.jpg",
             style = new List<string> { "casual", "comfortable", "relaxed" },
             colors = new List<string> { "red" },
-            season = "all"
+            season = new List<string> { "all" }
         },
         new OutfitItem
         {
@@ -128,7 +128,7 @@ public class MockOutfitStore : IOutfitStore
             itemImage = "https://i.pinimg.com/1200x/b4/e1/ae/b4e1ae36942164cf6ced78a52028a53a.jpg",
             style = new List<string> { "casual", "comfortable", "relaxed" },
             colors = new List<string> { "white", "black" },
-            season = "all"
+            season = new List<string> { "all" }
         }
     };
 
@@ -185,13 +185,13 @@ public class MockOutfitStore : IOutfitStore
                 }
             }
 
-            // Check season: if criteria season is "all" or item season is "all", accept. Otherwise, must match exactly
+            // Check season: if criteria season is "all" or item season contains "all", accept. Otherwise, must match
             bool seasonMatch = false;
-            if (criteria.season == "all" || item.season == "all")
+            if (criteria.season == "all" || item.season.Contains("all"))
             {
                 seasonMatch = true;
             }
-            else if (item.season == criteria.season)
+            else if (item.season.Contains(criteria.season))
             {
                 seasonMatch = true;
             }

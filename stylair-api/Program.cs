@@ -22,6 +22,8 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddScoped<OutfitRecommendationService>();
 builder.Services.AddScoped<IOutfitStore, MockOutfitStore>();
+builder.Services.AddSingleton<IClosetItemStore, MockClosetItemStore>();
+builder.Services.AddScoped<ClosetService>();
 
 var app = builder.Build();
 
@@ -35,7 +37,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors(); // Enable CORS
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.MapControllers();
 
 // var summaries = new[]
