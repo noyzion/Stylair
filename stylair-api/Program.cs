@@ -8,6 +8,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
+
+// Add CORS to allow requests from the frontend
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 builder.Services.AddScoped<OutfitRecommendationService>();
 builder.Services.AddScoped<IOutfitStore, MockOutfitStore>();
 
@@ -22,6 +34,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors(); // Enable CORS
 app.UseHttpsRedirection();
 app.MapControllers();
 
