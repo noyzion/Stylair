@@ -32,7 +32,21 @@ builder.Services.AddCors(options =>
 // ============================================
 // Read the connection string from appsettings.json file
 // The connection string contains: Host, Port, Database, Username, Password
+// DB_PASSWORD environment variable will replace ${DB_PASSWORD} in the connection string
 var connectionString = builder.Configuration.GetConnectionString("Postgres");
+if (connectionString != null && connectionString.Contains("${DB_PASSWORD}"))
+{
+    var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
+    if (string.IsNullOrEmpty(dbPassword))
+    {
+        Console.WriteLine("❌ DB_PASSWORD environment variable is not set!");
+        Console.WriteLine("   Please set it with: export DB_PASSWORD=\"your_password\"");
+        Console.WriteLine("   The application will not start without this variable.");
+        throw new InvalidOperationException("DB_PASSWORD environment variable is required but not set. Please set it before running the application.");
+    }
+    Console.WriteLine("✅ DB_PASSWORD environment variable found");
+    connectionString = connectionString.Replace("${DB_PASSWORD}", dbPassword);
+}
 
 // Register the DbContext in the Dependency Injection system
 // UseNpgsql - tells EF Core to use Npgsql (the PostgreSQL driver)
@@ -68,6 +82,10 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         Console.WriteLine($"❌ Database connection failed: {ex.Message}");
+        if (ex.InnerException != null)
+        {
+            Console.WriteLine($"   Inner exception: {ex.InnerException.Message}");
+        }
         // Don't throw - let the app start anyway, connection will be tested on first request
     }
 }
