@@ -20,13 +20,13 @@ public class ClosetService
 
         var item = new OutfitItem  //making outfititem
         {
-            itemId = Guid.NewGuid().ToString(),  //id - backend decision 
-            itemName = request.itemName,
-            itemCategory = request.itemCategory,
-            itemImage = request.itemImage,
-            style = request.style,
-            colors = request.colors,
-            season = request.season
+            ItemId = Guid.NewGuid(),  //id - backend decision 
+            ItemName = request.itemName,
+            ItemCategory = request.itemCategory,
+            ItemImage = request.itemImage,
+            Style = request.style ?? new List<string>(),
+            Colors = request.colors ?? new List<string>(),
+            Season = request.season ?? new List<string>()
         };
 
         _store.Add(item);

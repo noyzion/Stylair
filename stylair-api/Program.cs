@@ -1,4 +1,7 @@
 using System.ComponentModel;
+using Microsoft.EntityFrameworkCore;
+using stylair_api.Data;
+using stylair_api.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,7 +10,11 @@ var builder = WebApplication.CreateBuilder(args);
 //builder.Services.AddOpenApi(); ////maybe delete
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    });
 
 // Add CORS to allow requests from the frontend
 builder.Services.AddCors(options =>
@@ -20,13 +27,50 @@ builder.Services.AddCors(options =>
     });
 });
 
+// ============================================
+// PostgreSQL Connection Configuration
+// ============================================
+// Read the connection string from appsettings.json file
+// The connection string contains: Host, Port, Database, Username, Password
+var connectionString = builder.Configuration.GetConnectionString("Postgres");
+
+// Register the DbContext in the Dependency Injection system
+// UseNpgsql - tells EF Core to use Npgsql (the PostgreSQL driver)
+// The DbContext will be automatically injected to anyone who needs it (like PostgresClosetItemStore)
+builder.Services.AddDbContext<StylairDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+// Register services
 builder.Services.AddScoped<OutfitRecommendationService>();
 builder.Services.AddScoped<IOutfitStore, MockOutfitStore>();
-builder.Services.AddSingleton<IClosetItemStore, MockClosetItemStore>();
+builder.Services.AddScoped<IClosetItemStore, PostgresClosetItemStore>();
 builder.Services.AddScoped<ClosetService>();
 
 var app = builder.Build();
 
+// Test database connection on startup
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<StylairDbContext>();
+    try
+    {
+        // Just test the connection without creating tables
+        var canConnect = dbContext.Database.CanConnect();
+        if (canConnect)
+        {
+            Console.WriteLine("✅ Database connection successful!");
+        }
+        else
+        {
+            Console.WriteLine("⚠️ Database connection test returned false");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ Database connection failed: {ex.Message}");
+        // Don't throw - let the app start anyway, connection will be tested on first request
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

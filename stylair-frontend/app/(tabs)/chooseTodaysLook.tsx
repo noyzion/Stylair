@@ -13,7 +13,11 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { Pressable } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
 import { API_ENDPOINTS } from "@/constants/config"; //import the API_ENDPOINTS from the config file
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { Link } from "expo-router";
 
 // Types matching the backend models
 interface OutfitItem {
@@ -87,25 +91,46 @@ export default function TodayLookScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <LinearGradient
+      colors={['#E6F0FF', '#F0E6FF', '#FFE3F1']}
+      start={{ x: 0, y: 0.35 }}
+      end={{ x: 1, y: 0.65 }}
+      style={styles.gradientContainer}
     >
-      <ScrollView
-        style={{ flex: 1, backgroundColor: "#F5F5F7" }}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={
-          outfits.length > 0 || loading || error
-            ? styles.scrollContentWithResults
-            : styles.scrollContent
-        }
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        {/* Show header and input in center only if there are no results yet */}
-        {outfits.length === 0 && !loading && !error && (
-          <View style={styles.headerContainer}>
-            <Text style={styles.header}>
-              Let's find the perfect outfit for today...
-            </Text>
+        {/* Home icon button */}
+        <Link href="/(tabs)" asChild>
+          <Pressable style={styles.homeButton} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <IconSymbol name="house.fill" size={24} color="rgb(108, 99, 255)" />
+          </Pressable>
+        </Link>
+        
+        {/* Logo */}
+        <View style={styles.logoContainer}>
+          <Image
+            source={require("@/assets/images/logoName.png")}
+            style={styles.logo}
+          />
+        </View>
+        
+        <ScrollView
+          style={styles.scrollView}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={
+            outfits.length > 0 || loading || error
+              ? styles.scrollContentWithResults
+              : styles.scrollContent
+          }
+        >
+          {/* Show header and input in center only if there are no results yet */}
+          {outfits.length === 0 && !loading && !error && (
+            <View style={styles.headerContainer}>
+              <Text style={styles.header}>
+                Let's find the perfect outfit for today...
+              </Text>
 
             {/* Chat input - Centered in initial state */}
             <View style={styles.inputContainer}>
@@ -212,18 +237,58 @@ export default function TodayLookScreen() {
           </TouchableOpacity>
         </View>
       </Modal>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
+  gradientContainer: {
+    flex: 1,
+  },
+  logoContainer: {
+    alignItems: "center",
+    marginTop: 60,
+    marginBottom: 20,
+  },
+  logo: {
+    width: 150,
+    height: 75,
+    resizeMode: "contain",
+  },
+  homeButton: {
+    position: 'absolute',
+    top: 76,
+    left: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  scrollView: {
+    flex: 1,
+  },
   scrollContent: {
     flexGrow: 1,
   },
   scrollContentWithResults: {
     flexGrow: 1,
     paddingHorizontal: 20,
-    paddingTop: 70,
+    paddingTop: 20,
     paddingBottom: 100, // Space for input at bottom
   },
   headerContainer: {
@@ -244,16 +309,23 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   outfitCard: {
-    backgroundColor: "rgba(255,255,255,0.35)",
+    backgroundColor: "rgba(240, 230, 255, 0.40)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.6)",
-    borderRadius: 32,
+    borderColor: "rgba(139, 92, 246, 0.25)",
+    borderRadius: 16,
     padding: 20,
     marginBottom: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
+    ...Platform.select({
+      ios: {
+        shadowColor: '#8B5CF6',
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   occasionLabel: {
     fontFamily: "Manrope-bold",

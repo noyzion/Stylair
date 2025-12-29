@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import {View, Text, ScrollView, Pressable} from 'react-native';
+import {View, Text, ScrollView, Pressable, StyleSheet} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { styles } from '../../assets/styles/AddItemScreen.styles';
 import { KeyboardAvoidingView, Platform } from 'react-native';
@@ -9,6 +9,11 @@ import { UserChoiceSelector, UserChoice } from '../../components/add-item/UserCh
 import { AIImageCard } from '../../components/add-item/AIImageCard';
 import { AIProductCard } from '../../components/add-item/AIProductCard';
 import { ManualForm } from '../../components/add-item/ManualForm';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Link } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import { Image } from 'expo-image';
 
 export const CATEGORIES = ['top', 'bottom', 'dress', 'shoes'] as const;
 export const STYLES = ['casual', 'formal', 'sport', 'evening'] as const;
@@ -139,13 +144,33 @@ export default function AddItemScreen() {
       
                
     return (
-        
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView style={{ flex: 1, backgroundColor: '#F5F5F7' }} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 40 }}>
-        
-        <View style={{backgroundColor: 'white'}}> 
-            <Text style ={styles.header} >Add Item To Your Closet</Text>
-        </View>
+      <LinearGradient
+        colors={['#E6F0FF', '#F0E6FF', '#FFE3F1']}
+        start={{ x: 0, y: 0.35 }}
+        end={{ x: 1, y: 0.65 }}
+        style={styles.gradientContainer}
+      >
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          {/* Home icon button */}
+          <Link href="/(tabs)" asChild>
+            <Pressable style={styles.homeButton} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <IconSymbol name="house.fill" size={24} color='rgb(108, 99, 255)' />
+            </Pressable>
+          </Link>
+          
+          {/* Logo */}
+          <View style={styles.logoContainer}>
+            <Image
+              source={require("@/assets/images/logoName.png")}
+              style={styles.logo}
+            />
+          </View>
+          
+          <ScrollView 
+            style={styles.scrollView} 
+            keyboardShouldPersistTaps="handled" 
+            contentContainerStyle={styles.scrollContent}
+          >
 
         <ImagePickerCard image={image} onPickImage={pickImage} onTakeImage={takeImage}/>
 
@@ -196,15 +221,32 @@ export default function AddItemScreen() {
         )}
 
        {choice === 'manual' && (
-        <Pressable disabled={!isFormValid} onPress={() => { setTouched({ image: true, category: true, color: true });
-                                                            if (!isFormValid) return;
-                                                            saveItem()
-                                                          }}
-        style={({ pressed }) => [styles.saveButton,!isFormValid && { opacity: 0.5 }, pressed && styles.saveButtonPressed,]} >
-        <Text style={styles.saveButtonText}>Save to Closet</Text>
-      </Pressable> )}
+        <Pressable 
+          disabled={!isFormValid} 
+          onPress={() => { 
+            setTouched({ image: true, category: true, color: true });
+            if (!isFormValid) return;
+            saveItem();
+          }}
+          style={({ pressed }) => [
+            styles.saveButton,
+            !isFormValid && styles.saveButtonDisabled,
+            pressed && styles.saveButtonPressed,
+          ]}
+        >
+          <BlurView intensity={75} tint="light" style={StyleSheet.absoluteFillObject} />
+          <LinearGradient
+            colors={['rgba(255, 255, 255, 0.30)', 'rgba(240, 230, 255, 0.70)', 'rgba(255, 255, 255, 0.30)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={StyleSheet.absoluteFillObject}
+          />
+          <Text style={styles.saveButtonText}>Save to Closet</Text>
+        </Pressable> 
+      )}
       </ScrollView>
-</KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
     )
 }
 

@@ -1,24 +1,26 @@
-import { Modal, StyleSheet } from 'react-native';
+import { Modal, StyleSheet, Platform } from 'react-native';
 
 export const styles = StyleSheet.create({
-  header: {
-    fontFamily: 'Manrope-bold',
-    fontSize: 25,            
-    fontWeight: '700',
-    color: 'rgb(108, 99, 255)',
-    marginTop: 70,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
   uploadPhotoButton: {
-    backgroundColor: 'rgb(108, 99, 255)',
+    backgroundColor: 'rgba(108, 99, 255, 0.8)',
     paddingVertical: 14,
     paddingHorizontal: 22,
-    borderRadius: 20,        
+    borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 6,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#8B5CF6',
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   photoButtonsRow: {
     flexDirection: 'row',
@@ -37,22 +39,29 @@ export const styles = StyleSheet.create({
     color: '#1A1A1A',      
     fontSize: 17,
     fontWeight: '500',
-    marginTop: 22,
+    marginTop: 8,
   },
   imageCard: {
-    height: 280,
+    height: 320,
     marginHorizontal: 20,
-    marginTop: 20,
+    marginTop: 0,
+    marginBottom: 30,
     borderRadius: 32,
-    backgroundColor: 'rgba(255,255,255,0.35)',
-    borderWidth: 4,
-    borderColor: 'rgba(255,255,255,0.6)',
-    shadowColor: '#000',
-    shadowOpacity: 0.30,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
-  
+    backgroundColor: 'rgba(240, 230, 255, 0.40)',
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.25)',
     overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#8B5CF6',
+        shadowOpacity: 0.15,
+        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 8 },
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
   },
   imageBackground: {
     flex: 1,
@@ -64,7 +73,7 @@ export const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255,255,255,0.55)',
+    backgroundColor: 'rgba(240, 230, 255, 0.3)',
   },
   cardContent: {
     justifyContent: 'center',
@@ -72,6 +81,7 @@ export const styles = StyleSheet.create({
   },
   columnCardsUserChoice: {
     marginTop: 10,
+    marginBottom: 30,
     paddingHorizontal: 20,
     gap: 14,
   },
@@ -79,20 +89,25 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 18,
-    borderRadius: 32, 
-    
-    backgroundColor: 'rgba(255,255,255,0.35)',
+    borderRadius: 16,
+    backgroundColor: 'rgba(240, 230, 255, 0.40)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.6)',
-  
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
+    borderColor: 'rgba(139, 92, 246, 0.25)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#8B5CF6',
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   optionSelected: {
-    backgroundColor: 'rgba(255,255,255,0.55)',
-    borderColor: 'rgb(108, 99, 255)',
+    backgroundColor: 'rgba(240, 230, 255, 0.60)',
+    borderColor: 'rgba(139, 92, 246, 0.5)',
   },
   iconContainer: {
     width: 38,
@@ -116,19 +131,25 @@ export const styles = StyleSheet.create({
     marginTop: 4,
   },
   manualFormContainer: {
-    marginTop: 26,
+    marginTop: 30,
+    marginBottom: 30,
     marginHorizontal: 20,
     padding: 20,
-    borderRadius: 32,
-  
-    backgroundColor: 'rgba(255,255,255,0.45)',
+    borderRadius: 16,
+    backgroundColor: 'rgba(240, 230, 255, 0.40)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.6)',
-  
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
+    borderColor: 'rgba(139, 92, 246, 0.25)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#8B5CF6',
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   formLabel: {
     fontSize: 14,
@@ -139,11 +160,22 @@ export const styles = StyleSheet.create({
   },
   inputBox: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 10,
+    borderColor: 'rgba(139, 92, 246, 0.25)',
+    borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    
+    paddingVertical: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#8B5CF6',
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   
   chipsRow: {
@@ -156,13 +188,14 @@ export const styles = StyleSheet.create({
   chip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(139, 92, 246, 0.25)',
+    backgroundColor: 'rgba(240, 230, 255, 0.30)',
   },
   
   chipSelected: {
-    backgroundColor: 'rgb(108, 99, 255)',
+    backgroundColor: 'rgba(108, 99, 255, 0.8)',
     borderColor: 'rgb(108, 99, 255)',
   },
   
@@ -222,39 +255,71 @@ export const styles = StyleSheet.create({
     borderColor: '#D32F2F',
   },
   saveButton: {
-    marginTop: 24,
-    alignSelf: 'center',
-    width: '100%',
-    paddingVertical: 16,
-    borderRadius: 14,
-    backgroundColor: 'rgb(108, 99, 255)',
-    alignItems: 'center',
+    height: 56,
+    borderRadius: 16,
+    overflow: 'hidden',
     justifyContent: 'center',
-  },  
-  saveButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
+    alignItems: 'center',
+    backgroundColor: 'rgba(240, 230, 255, 0.40)',
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.25)',
+    marginHorizontal: 24,
+    marginTop: 24,
+    marginBottom: 24,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#8B5CF6',
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 6 },
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  saveButtonDisabled: {
+    opacity: 0.5,
   },
   saveButtonPressed: {
     opacity: 0.85,
     transform: [{ scale: 0.98 }],
   },
+  saveButtonText: {
+    fontFamily: 'Manrope-Regular',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1A1A1A',
+  },
   aiCard: {
     marginTop: 20,
+    marginBottom: 30,
     marginHorizontal: 20,
     paddingVertical: 28,
     paddingHorizontal: 20,
-    borderRadius: 20,
-    backgroundColor: '#FAF7FF',
+    borderRadius: 16,
+    backgroundColor: 'rgba(240, 230, 255, 0.40)',
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.25)',
     alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#8B5CF6',
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   
   aiIconWrapper: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: 'rgba(108, 99, 255, 0.12)',
+    backgroundColor: 'rgba(108, 99, 255, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -263,13 +328,13 @@ export const styles = StyleSheet.create({
   aiTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111',
+    color: '#1A1A1A',
     textAlign: 'center',
   },
   
   aiDescription: {
     fontSize: 13,
-    color: '#666',
+    color: '#6B6B6B',
     textAlign: 'center',
     marginTop: 6,
     marginBottom: 20,
@@ -279,12 +344,23 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgb(108, 99, 255)',
+    backgroundColor: 'rgba(108, 99, 255, 0.8)',
     paddingVertical: 14,
     paddingHorizontal: 26,
-    borderRadius: 14,
+    borderRadius: 16,
     gap: 8,
     marginTop: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#8B5CF6',
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   
   aiButtonText: {
@@ -325,5 +401,47 @@ export const styles = StyleSheet.create({
     color: '#333',
     marginRight: 6,
   },
-  
+  homeButton: {
+    position: 'absolute',
+    top: 76,
+    left: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  gradientContainer: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 40,
+    paddingTop: 20,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginTop: 60,
+    marginBottom: 20,
+  },
+  logo: {
+    width: 150,
+    height: 75,
+    resizeMode: 'contain',
+  },
 });
