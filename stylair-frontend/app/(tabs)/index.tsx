@@ -98,11 +98,11 @@ export default function HomeScreen() {
       start={{ x: 0, y: 0.35 }}
       end={{ x: 1, y: 0.65 }}
       style={styles.gradientContainer}>
-       {!isLoggedIn && <Pressable style={styles.homeButton} onPress={() => {}}>
-          <Ionicons name="log-in-outline" size={24} color="#6C63FF" />
+       {isLoggedIn && <Pressable style={styles.personButton} onPress={() => {}}>
+          <Ionicons name="log-in-outline" size={26} color="#1A1A1A" />
         </Pressable> }
-        {isLoggedIn && <Pressable style={styles.homeButton} onPress={() => {}}>
-          <Ionicons name="person-circle-outline" size={24} color="#6C63FF" />
+        {!isLoggedIn && <Pressable style={styles.personButton} onPress={() => {}}>
+          <Ionicons name="person-circle-outline" size={26} color="#1A1A1A" />
         </Pressable> }
       <ThemedView style={styles.container}>
         <Animated.Image
@@ -387,6 +387,31 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  personButton:
+  {
+    position: "absolute",
+    top: 75,
+    left: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    opacity: 0.8,
     backgroundColor: "rgba(255, 255, 255, 0.25)",
     justifyContent: "center",
     alignItems: "center",
