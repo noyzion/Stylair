@@ -293,10 +293,10 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start",
     alignItems: "center",
     paddingHorizontal: 20,
-    minHeight: 600,
+    paddingTop: 200,
   },
   header: {
     fontFamily: "Manrope-bold",
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flexDirection: "row",
-    marginTop: 30,
+    marginTop: 25,
     width: "100%",
     padding: 16,
     borderRadius: 32,

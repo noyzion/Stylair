@@ -14,6 +14,7 @@ import { Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
+import { Ionicons } from '@expo/vector-icons';
 
 export const CATEGORIES = ['top', 'bottom', 'dress', 'shoes'] as const;
 export const STYLES = ['casual', 'formal', 'sport', 'evening'] as const;
@@ -236,11 +237,12 @@ export default function AddItemScreen() {
         >
           <BlurView intensity={75} tint="light" style={StyleSheet.absoluteFillObject} />
           <LinearGradient
-            colors={['rgba(255, 255, 255, 0.30)', 'rgba(240, 230, 255, 0.70)', 'rgba(255, 255, 255, 0.30)']}
+            colors={['rgba(108, 99, 255, 0.8)', 'rgba(139, 92, 246, 0.9)']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={StyleSheet.absoluteFillObject}
           />
+          <Ionicons name="checkmark-circle-outline" size={16} color="white" />
           <Text style={styles.saveButtonText}>Save to Closet</Text>
         </Pressable> 
       )}

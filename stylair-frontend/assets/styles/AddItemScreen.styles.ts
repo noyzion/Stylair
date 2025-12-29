@@ -2,7 +2,6 @@ import { Modal, StyleSheet, Platform } from 'react-native';
 
 export const styles = StyleSheet.create({
   uploadPhotoButton: {
-    backgroundColor: 'rgba(108, 99, 255, 0.8)',
     paddingVertical: 14,
     paddingHorizontal: 22,
     borderRadius: 16,
@@ -10,6 +9,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 6,
+    overflow: 'hidden',
     ...Platform.select({
       ios: {
         shadowColor: '#8B5CF6',
@@ -81,7 +81,7 @@ export const styles = StyleSheet.create({
   },
   columnCardsUserChoice: {
     marginTop: 10,
-    marginBottom: 30,
+    marginBottom: 20,
     paddingHorizontal: 20,
     gap: 14,
   },
@@ -131,8 +131,8 @@ export const styles = StyleSheet.create({
     marginTop: 4,
   },
   manualFormContainer: {
-    marginTop: 30,
-    marginBottom: 30,
+    marginTop: 20,
+    marginBottom: 20,
     marginHorizontal: 20,
     padding: 20,
     borderRadius: 16,
@@ -255,26 +255,25 @@ export const styles = StyleSheet.create({
     borderColor: '#D32F2F',
   },
   saveButton: {
-    height: 56,
+    paddingVertical: 14,
+    paddingHorizontal: 22,
     borderRadius: 16,
     overflow: 'hidden',
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(240, 230, 255, 0.40)',
-    borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.25)',
+    justifyContent: 'center',
     marginHorizontal: 24,
-    marginTop: 24,
+    marginTop: 0,
     marginBottom: 24,
     ...Platform.select({
       ios: {
         shadowColor: '#8B5CF6',
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
       },
       android: {
-        elevation: 8,
+        elevation: 4,
       },
     }),
   },
@@ -286,10 +285,10 @@ export const styles = StyleSheet.create({
     transform: [{ scale: 0.98 }],
   },
   saveButtonText: {
-    fontFamily: 'Manrope-Regular',
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1A1A1A',
+    color: 'white',
+    fontSize: 15,
+    fontWeight: '500',
+    marginLeft: 8,
   },
   aiCard: {
     marginTop: 20,
@@ -344,12 +343,12 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(108, 99, 255, 0.8)',
     paddingVertical: 14,
     paddingHorizontal: 26,
     borderRadius: 16,
     gap: 8,
     marginTop: 10,
+    overflow: 'hidden',
     ...Platform.select({
       ios: {
         shadowColor: '#8B5CF6',
