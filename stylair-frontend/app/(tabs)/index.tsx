@@ -14,7 +14,7 @@ export default function HomeScreen() {
   const [tempC, setTempC] = useState<number | null>(null);
   const [condition, setCondition] = useState<"sun" | "cloud" | "rain" | "storm" | "snow" | "wind" | "hot" >("sun");
   const [isNight, setIsNight] = useState(false);
-  
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   // Animation values
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const logoTranslateY = useRef(new Animated.Value(-20)).current;
@@ -97,10 +97,14 @@ export default function HomeScreen() {
       colors={["#E6F0FF", "#F0E6FF", "#FFE3F1"]}
       start={{ x: 0, y: 0.35 }}
       end={{ x: 1, y: 0.65 }}
-      style={styles.gradientContainer}
-    >
+      style={styles.gradientContainer}>
+       {!isLoggedIn && <Pressable style={styles.homeButton} onPress={() => {}}>
+          <Ionicons name="log-in-outline" size={24} color="#6C63FF" />
+        </Pressable> }
+        {isLoggedIn && <Pressable style={styles.homeButton} onPress={() => {}}>
+          <Ionicons name="person-circle-outline" size={24} color="#6C63FF" />
+        </Pressable> }
       <ThemedView style={styles.container}>
-        
         <Animated.Image
           source={require("@/assets/images/Shirt.png")}
           style={[
