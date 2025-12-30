@@ -11,8 +11,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CognitoUser } from "amazon-cognito-identity-js";
 import { userPool } from "@/services/auth/cognito";
 
-export default function VerifyEmail({ email }: { email: string }) {
-    const { email: emailParam } = useLocalSearchParams();
+export default function VerifyEmail() {
+    const { email: emailParam } = useLocalSearchParams<{ email: string }>();
     const [code, setCode] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");

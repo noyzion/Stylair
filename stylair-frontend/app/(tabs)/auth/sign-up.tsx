@@ -9,7 +9,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { userPool } from "@/services/auth/cognito";
-import { CognitoUserAttribute, CognitoUser ,AuthenticationDetails} from "amazon-cognito-identity-js";
+import { CognitoUserAttribute } from "amazon-cognito-identity-js";
 
 export default function SignUp() {
     const [firstName, setFirstName] = useState("");

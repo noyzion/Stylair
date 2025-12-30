@@ -21,36 +21,40 @@ export default function Login() {
 
     const handleLogin = () => {
         if (!email || !password) {
-            setError("Please enter both email and password");
-            return;
+          setError("Please enter both email and password");
+          return;
         }
-
-        setIsLoading(true);
+      
         setError("");
-
+        setIsLoading(true);
+      
+        setTimeout(() => {
+          loginWithCognito();
+        }, 0);
+      };
+      const loginWithCognito = () => {
         const authenticationDetails = new AuthenticationDetails({
-            Username: email,
-            Password: password,
+          Username: email,
+          Password: password,
         });
-
+      
         const cognitoUser = new CognitoUser({
-            Username: email,
-            Pool: userPool,
+          Username: email,
+          Pool: userPool,
         });
-
+      
         cognitoUser.authenticateUser(authenticationDetails, {
-            onSuccess: (result) => {
-                setIsLoading(false);
-                // Success - navigate to home
-                router.push("/(tabs)");
-            },
-            onFailure: (err) => {
-                setIsLoading(false);
-                setError(err.message || "Login failed");
-            },
+          onSuccess: () => {
+            setIsLoading(false);
+            router.push("/(tabs)");
+          },
+          onFailure: (err) => {
+            setIsLoading(false);
+            setError(err.message || "Login failed");
+          },
         });
-    };
-
+      };
+      
     return (
         <LinearGradient colors={["#E6F0FF", "#F0E6FF", "#FFE3F1"]}
             start={{ x: 0, y: 0.35 }}
