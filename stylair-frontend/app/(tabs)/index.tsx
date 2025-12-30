@@ -136,7 +136,7 @@ export default function HomeScreen() {
           </Pressable>
         ) : (
           <Pressable style={styles.personButton} onPress={() => router.push("/(tabs)/auth/login")}>
-            <Ionicons name="log-in-outline" size={26} color="#1A1A1A" />
+            <Ionicons name="person-circle-outline" size={26} color="#1A1A1A" />
           </Pressable>
         )}
       <ThemedView style={styles.container}>
