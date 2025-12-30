@@ -12,7 +12,8 @@ import { userPool } from "@/services/auth/cognito";
 import { CognitoUserAttribute, CognitoUser ,AuthenticationDetails} from "amazon-cognito-identity-js";
 
 export default function SignUp() {
-    const [name, setName] = useState("");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,8 +28,11 @@ export default function SignUp() {
           }
           setIsLoading(true);
           setError("");
+            const fullName = `${firstName} ${lastName}`.trim();
             const attributeList = [
-            new CognitoUserAttribute({ Name: "name", Value: name }),
+            new CognitoUserAttribute({ Name: "name", Value: fullName }),
+            new CognitoUserAttribute({ Name: "given_name", Value: firstName }),
+            new CognitoUserAttribute({ Name: "family_name", Value: lastName }),
             new CognitoUserAttribute({ Name: "email", Value: email })
           ];
           userPool.signUp(email, password, attributeList, [], (err, result) => {
@@ -66,8 +70,15 @@ export default function SignUp() {
                         <View style={styles.inputContainer}>
                             <Ionicons name="person-outline" size={20} color="#6C63FF" style={styles.inputIcon} />
                             <TextInput style={styles.input}
-                                placeholder="Full Name" placeholderTextColor="#999" value={name}
-                                onChangeText={setName} autoCapitalize="words" />
+                                placeholder="First Name" placeholderTextColor="#999" value={firstName}
+                                onChangeText={setFirstName} autoCapitalize="words" />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Ionicons name="person-outline" size={20} color="#6C63FF" style={styles.inputIcon} />
+                            <TextInput style={styles.input}
+                                placeholder="Last Name" placeholderTextColor="#999" value={lastName}
+                                onChangeText={setLastName} autoCapitalize="words" />
                         </View>
 
                         <View style={styles.inputContainer}>
@@ -92,9 +103,9 @@ export default function SignUp() {
                         {error && <ThemedText style={styles.errorText}>{error}</ThemedText>}
 
                         <Pressable 
-                            style={[styles.loginButton, (isLoading || !name || !email || !password || !confirmPassword) && styles.disabledButton]} 
+                            style={[styles.loginButton, (isLoading || !firstName || !lastName || !email || !password || !confirmPassword) && styles.disabledButton]} 
                             onPress={handleSignUp}
-                            disabled={isLoading || !name || !email || !password || !confirmPassword}>
+                            disabled={isLoading || !firstName || !lastName || !email || !password || !confirmPassword}>
                             <BlurView intensity={75} tint="light" style={StyleSheet.absoluteFillObject} />
                             <LinearGradient
                                 colors={['rgba(108, 99, 255, 0.8)', 'rgba(139, 92, 246, 0.9)']}
