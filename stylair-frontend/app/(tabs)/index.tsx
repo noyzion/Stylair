@@ -1,26 +1,56 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import * as Location from "expo-location";
-import { Link } from "expo-router";
+import { Link, useRouter, useFocusEffect} from "expo-router";
 import { Pressable, StyleSheet, Platform, View, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import WeatherBanner from "@/components/WeatherBanner";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { getCurrentUser, getUserName, isAuthenticated, logout } from "@/services/auth/auth.service";
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [tempC, setTempC] = useState<number | null>(null);
   const [condition, setCondition] = useState<
     "sun" | "cloud" | "rain" | "storm" | "snow" | "wind" | "hot"
   >("sun");
   const [isNight, setIsNight] = useState(false);
-
+  const [userName, setUserName] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   // Animation values
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const logoTranslateY = useRef(new Animated.Value(-20)).current;
   const backgroundIconRotation = useRef(new Animated.Value(0)).current;
+
+  const checkAuthStatus = useCallback(async () => {
+    const isAuth = await isAuthenticated();
+    setIsLoggedIn(isAuth);
+    if (isAuth) {
+      const userName = await getUserName();
+      setUserName(userName);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, [checkAuthStatus]);
+
+  // Re-check auth status when the screen gains focus (e.g., after login)
+  useFocusEffect(
+    useCallback(() => {
+      checkAuthStatus();
+    }, [checkAuthStatus])
+  );
+
+  const handleLogout = useCallback(async () => {
+    await logout();
+    setIsLoggedIn(false);
+    setUserName(null);
+    router.push("/(tabs)/auth/login");
+  }, [router]);
 
   useEffect(() => {
     // Logo animation
@@ -99,8 +129,16 @@ export default function HomeScreen() {
       colors={["#E6F0FF", "#F0E6FF", "#FFE3F1"]}
       start={{ x: 0, y: 0.35 }}
       end={{ x: 1, y: 0.65 }}
-      style={styles.gradientContainer}
-    >
+      style={styles.gradientContainer}>
+       {isLoggedIn ? (
+          <Pressable style={styles.personButton} onPress={handleLogout}>
+            <Ionicons name="log-out-outline" size={26} color="#1A1A1A" />
+          </Pressable>
+        ) : (
+          <Pressable style={styles.personButton} onPress={() => router.push("/(tabs)/auth/login")}>
+            <Ionicons name="log-in-outline" size={26} color="#1A1A1A" />
+          </Pressable>
+        )}
       <ThemedView style={styles.container}>
         <Animated.Image
           source={require("@/assets/images/Shirt.png")}
@@ -132,8 +170,12 @@ export default function HomeScreen() {
         </Animated.View>
 
         <ThemedText type="subtitle" style={styles.subtitleContainer}>
-          your digital closet
-        </ThemedText>
+        {isLoggedIn && userName
+          ? `Welcome back, ${userName}`
+          : "your digital closet"}
+      </ThemedText>
+
+
 
         <WeatherBanner
           style={styles.wrap}
@@ -243,6 +285,8 @@ const styles = StyleSheet.create({
     top: 140,
     alignSelf: "center",
     color: "#1A1A1A",
+    textAlign: "center",
+    width: "90%",
   },
   logo: {
     width: 200,
@@ -386,6 +430,31 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  personButton:
+  {
+    position: "absolute",
+    top: 75,
+    left: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    opacity: 0.8,
     backgroundColor: "rgba(255, 255, 255, 0.25)",
     justifyContent: "center",
     alignItems: "center",
