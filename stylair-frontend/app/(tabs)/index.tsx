@@ -3,7 +3,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import * as Location from "expo-location";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { Pressable, StyleSheet, Platform, View, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import WeatherBanner from "@/components/WeatherBanner";
@@ -11,6 +11,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [tempC, setTempC] = useState<number | null>(null);
   const [condition, setCondition] = useState<"sun" | "cloud" | "rain" | "storm" | "snow" | "wind" | "hot" >("sun");
   const [isNight, setIsNight] = useState(false);
@@ -101,7 +102,7 @@ export default function HomeScreen() {
        {isLoggedIn && <Pressable style={styles.personButton} onPress={() => {}}>
           <Ionicons name="log-in-outline" size={26} color="#1A1A1A" />
         </Pressable> }
-        {!isLoggedIn && <Pressable style={styles.personButton} onPress={() => {}}>
+         {!isLoggedIn && <Pressable style={styles.personButton} onPress={() => router.push("/auth/login")}>
           <Ionicons name="person-circle-outline" size={26} color="#1A1A1A" />
         </Pressable> }
       <ThemedView style={styles.container}>
