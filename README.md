@@ -61,12 +61,12 @@ Stylair is a smart mobile application for managing a personal digital wardrobe, 
    
    **Windows (PowerShell):**
    ```powershell
-   $env:DB_PASSWORD="your_database_password"
+   $env:DB_PASSWORD="nOyzion@2033"
    ```
    
    **Mac/Linux:**
    ```bash
-   export DB_PASSWORD="your_database_password"
+   export DB_PASSWORD="nOyzion@2033"
    ```
 
 2. **Run the API**
