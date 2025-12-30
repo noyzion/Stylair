@@ -42,11 +42,13 @@ export default function ForgotPassword() {
                                 onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
                         </View>     
                        
-                        <Pressable style={styles.loginButton} onPress={() => router.push("/auth/verify-email")}>
+                        <Pressable style={styles.loginButton} onPress={() => router.push("/(tabs)/auth/verify-email")}>
                             <BlurView intensity={75} tint="light" style={StyleSheet.absoluteFillObject} />
                             <LinearGradient
-                                colors={["rgba(255, 255, 255, 0.30)", "rgba(240, 230, 255, 0.65)", "rgba(255, 255, 255, 0.30)"]}
-                                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFillObject} />
+                                colors={['rgba(108, 99, 255, 0.8)', 'rgba(139, 92, 246, 0.9)']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={StyleSheet.absoluteFillObject} />
                             <ThemedText style={styles.loginButtonText}>Send Code</ThemedText>
                         </Pressable>
                         <Pressable onPress={() => router.push("/auth/login")} style={styles.backButton}>
@@ -158,34 +160,32 @@ const styles = StyleSheet.create({
         fontFamily: "Manrope-Regular",
     },
     loginButton: {
-        height: 56,
-        borderRadius: 28,
-        overflow: "hidden",
+        paddingVertical: 14,
+        paddingHorizontal: 22,
+        borderRadius: 16,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
         marginTop: 8,
         marginBottom: 12,
         width: "100%",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "rgba(240, 230, 255, 0.35)",
-        borderWidth: 1,
-        borderColor: "rgba(139, 92, 246, 0.25)",
+        overflow: "hidden",
         ...Platform.select({
             ios: {
                 shadowColor: "#8B5CF6",
-                shadowOpacity: 0.3,
-                shadowRadius: 20,
-                shadowOffset: { width: 0, height: 10 },
+                shadowOpacity: 0.2,
+                shadowRadius: 8,
+                shadowOffset: { width: 0, height: 4 },
             },
             android: {
-                elevation: 8,
+                elevation: 4,
             },
         }),
     },
     loginButtonText: {
-        fontSize: 18,
-        fontWeight: "700",
-        color: "#1A1A1A",
-        fontFamily: "Manrope-Regular",
+        fontSize: 15,
+        fontWeight: "500",
+        color: "white",
     },
     backButton: {
         flexDirection: "row",
