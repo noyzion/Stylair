@@ -56,7 +56,7 @@ builder.Services.AddDbContext<StylairDbContext>(options =>
 
 // Register services
 builder.Services.AddScoped<OutfitRecommendationService>();
-builder.Services.AddScoped<IOutfitStore, MockOutfitStore>();
+builder.Services.AddScoped<IOutfitStore, PostgresClosetItemStore>();
 builder.Services.AddScoped<IClosetItemStore, PostgresClosetItemStore>();
 builder.Services.AddScoped<ClosetService>();
 

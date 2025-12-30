@@ -229,15 +229,33 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
   },
   
+  pickerContainer: {
+    marginVertical: 20,
+    height: 200,
+    overflow: 'hidden',
+  },
+  picker: {
+    width: '100%',
+    height: 200,
+  },
+  pickerItem: {
+    fontSize: 16,
+    color: '#1A1A1A',
+  },
+  modalButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+  },
   modalClose: {
     textAlign: 'center',
     color: 'rgb(108, 99, 255)',
-    marginTop: 10,
     fontSize: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
   },
   modalDone: {
-    marginTop: 16,
-    alignSelf: 'center',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 20,

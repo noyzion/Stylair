@@ -8,3 +8,13 @@ export type AddClosetItemRequest = { //making new type, we can use it in other f
   colors: string[];
   season: Season[];
 };
+
+export interface OutfitItem {
+  itemId: string;
+  itemName: string;
+  itemCategory: string;
+  itemImage: string;
+  style: string[];
+  colors: string[];
+  season: string[];
+}

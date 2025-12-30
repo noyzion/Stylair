@@ -12,9 +12,11 @@ import { ThemedView } from "@/components/themed-view";
 
 export default function HomeScreen() {
   const [tempC, setTempC] = useState<number | null>(null);
-  const [condition, setCondition] = useState<"sun" | "cloud" | "rain" | "storm" | "snow" | "wind" | "hot" >("sun");
+  const [condition, setCondition] = useState<
+    "sun" | "cloud" | "rain" | "storm" | "snow" | "wind" | "hot"
+  >("sun");
   const [isNight, setIsNight] = useState(false);
-  
+
   // Animation values
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const logoTranslateY = useRef(new Animated.Value(-20)).current;
@@ -100,7 +102,6 @@ export default function HomeScreen() {
       style={styles.gradientContainer}
     >
       <ThemedView style={styles.container}>
-        
         <Animated.Image
           source={require("@/assets/images/Shirt.png")}
           style={[
@@ -110,7 +111,7 @@ export default function HomeScreen() {
                 {
                   rotate: backgroundIconRotation.interpolate({
                     inputRange: [0, 1],
-                    outputRange: ['-5deg', '5deg'],
+                    outputRange: ["-5deg", "5deg"],
                   }),
                 },
               ],
@@ -190,10 +191,12 @@ export default function HomeScreen() {
               </Pressable>
             </Link>
 
-            <Link href="/closet" asChild>
+            <Link href="/(tabs)/myClosetScreen" asChild>
               <Pressable style={styles.actionButton}>
                 <Ionicons name="shirt-outline" size={20} color="#4A4A4A" />
-                <ThemedText style={styles.actionButtonText}>My closet</ThemedText>
+                <ThemedText style={styles.actionButtonText}>
+                  My closet
+                </ThemedText>
               </Pressable>
             </Link>
 

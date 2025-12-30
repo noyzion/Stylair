@@ -3,29 +3,21 @@ using stylair_api.Data;
 
 namespace stylair_api.Repositories;
 
-/// <summary>
 /// PostgresClosetItemStore - This is the Repository that connects to PostgreSQL
 /// It implements IClosetItemStore and uses StylairDbContext to perform database operations
-/// </summary>
-public class PostgresClosetItemStore : IClosetItemStore
+public class PostgresClosetItemStore : IClosetItemStore, IOutfitStore
 {
-    /// <summary>
     /// _context - This is the DbContext that connects us to PostgreSQL
     /// It is injected through Dependency Injection in Program.cs
-    /// </summary>
     private readonly StylairDbContext _context;
 
-    /// <summary>
     /// Constructor - Receives the DbContext through Dependency Injection
-    /// </summary>
     public PostgresClosetItemStore(StylairDbContext context)
     {
         _context = context;
     }
 
-    /// <summary>
     /// Add - Adds a new item to the database
-    /// </summary>
     public void Add(OutfitItem item)
     {
         try
@@ -35,13 +27,13 @@ public class PostgresClosetItemStore : IClosetItemStore
             {
                 item.ItemId = Guid.NewGuid();
             }
-            
+
             // Set the creation time (if not set, the database will insert it automatically)
             item.CreatedAt = DateTime.Now;
-            
+
             // Add the item to the DbSet (this doesn't save to database yet)
             _context.ClosetItems.Add(item);
-            
+
             // Save changes to the database - this is where the actual operation happens in PostgreSQL
             // EF Core translates this to SQL: INSERT INTO closet_items ...
             _context.SaveChanges();
@@ -59,9 +51,7 @@ public class PostgresClosetItemStore : IClosetItemStore
         }
     }
 
-    /// <summary>
     /// GetAll - Gets all items from the database
-    /// </summary>
     public List<OutfitItem> GetAll()
     {
         // EF Core translates this to SQL: SELECT * FROM closet_items ORDER BY created_at DESC
@@ -70,6 +60,116 @@ public class PostgresClosetItemStore : IClosetItemStore
         return _context.ClosetItems
             .OrderByDescending(x => x.CreatedAt)
             .ToList();
+    }
+
+    public bool IsClosetEmpty()
+    {
+        return _context.ClosetItems.Count() == 0;
+    }
+
+    public OutfitRecommendationResponse GetOutfitByCriteria(OutfitCriteria criteria)
+    {
+        List<OutfitItem> items = _context.ClosetItems.ToList();
+        var returnedOutfit = new OutfitRecommendationResponse();
+
+        // Filter items based on criteria (style, colors, season)
+        // Go through all items and check if they match the criteria
+        List<OutfitItem> filteredItems = new List<OutfitItem>();
+
+        foreach (var item in items)
+        {
+            // Check style: if criteria has no styles, accept all. Otherwise, check if item has matching style
+            bool styleMatch = true;
+            if (criteria.style.Count > 0)
+            {
+                styleMatch = false;
+                foreach (var itemStyle in item.style)
+                {
+                    foreach (var requestedStyle in criteria.style)
+                    {
+                        if (itemStyle == requestedStyle)
+                        {
+                            styleMatch = true;
+                            break;
+                        }
+                    }
+                    if (styleMatch) break;
+                }
+            }
+
+            // Check colors: if criteria has no colors, accept all. Otherwise, check if item has matching color
+            bool colorMatch = true;
+            if (criteria.colors.Count > 0)
+            {
+                colorMatch = false;
+                foreach (var itemColor in item.colors)
+                {
+                    foreach (var requestedColor in criteria.colors)
+                    {
+                        if (itemColor.ToLower() == requestedColor.ToLower())
+                        {
+                            colorMatch = true;
+                            break;
+                        }
+                    }
+                    if (colorMatch) break;
+                }
+            }
+
+            // Check season: if criteria season is "all" or item season contains "all", accept. Otherwise, must match
+            bool seasonMatch = false;
+            if (criteria.season == "all" || item.season.Contains("all"))
+            {
+                seasonMatch = true;
+            }
+            else if (item.season.Contains(criteria.season))
+            {
+                seasonMatch = true;
+            }
+
+            // If all three conditions match, add this item to filtered list
+            if (styleMatch && colorMatch && seasonMatch)
+            {
+                filteredItems.Add(item);
+            }
+        }
+
+        // Group items by category to ensure we have one of each type (bottom, top, shoes)
+        // Find one item from each category (bottom, top, shoes)
+        OutfitItem? bottomItem = null;
+        OutfitItem? topItem = null;
+        OutfitItem? shoesItem = null;
+
+        foreach (var item in filteredItems)
+        {
+            if (item.itemCategory == "bottom" && bottomItem == null)
+            {
+                bottomItem = item;
+            }
+            else if (item.itemCategory == "top" && topItem == null)
+            {
+                topItem = item;
+            }
+            else if (item.itemCategory == "shoes" && shoesItem == null)
+            {
+                shoesItem = item;
+            }
+        }
+
+        // Add one item from each category if we found them
+        if (bottomItem != null)
+            returnedOutfit.items.Add(bottomItem);
+        if (topItem != null)
+            returnedOutfit.items.Add(topItem);
+        if (shoesItem != null)
+            returnedOutfit.items.Add(shoesItem);
+
+        if (returnedOutfit.items.Count == 0)
+        {
+            returnedOutfit.reasonText = "there are no matching items in the closet";
+        }
+
+        return returnedOutfit;
     }
 }
 
