@@ -39,12 +39,9 @@ if (connectionString != null && connectionString.Contains("${DB_PASSWORD}"))
     var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
     if (string.IsNullOrEmpty(dbPassword))
     {
-        Console.WriteLine("❌ DB_PASSWORD environment variable is not set!");
-        Console.WriteLine("   Please set it with: export DB_PASSWORD=\"your_password\"");
-        Console.WriteLine("   The application will not start without this variable.");
         throw new InvalidOperationException("DB_PASSWORD environment variable is required but not set. Please set it before running the application.");
     }
-    Console.WriteLine("✅ DB_PASSWORD environment variable found");
+    Console.WriteLine($"✅ DB_PASSWORD environment variable found: {dbPassword}");
     connectionString = connectionString.Replace("${DB_PASSWORD}", dbPassword);
 }
 
@@ -70,7 +67,6 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<StylairDbContext>();
     try
     {
-        // Just test the connection without creating tables
         var canConnect = dbContext.Database.CanConnect();
         if (canConnect)
         {
@@ -78,17 +74,12 @@ using (var scope = app.Services.CreateScope())
         }
         else
         {
-            Console.WriteLine("⚠️ Database connection test returned false");
+            Console.WriteLine("❌ Database connection failed: CanConnect() returned false");
         }
     }
     catch (Exception ex)
     {
         Console.WriteLine($"❌ Database connection failed: {ex.Message}");
-        if (ex.InnerException != null)
-        {
-            Console.WriteLine($"   Inner exception: {ex.InnerException.Message}");
-        }
-        // Don't throw - let the app start anyway, connection will be tested on first request
     }
 }
 
