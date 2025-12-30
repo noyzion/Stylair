@@ -77,5 +77,34 @@ public class PostgresSavedOutfitStore : ISavedOutfitStore
             throw;
         }
     }
+
+    /// DeleteOutfitsContainingItem - Deletes all outfits that contain the given item image
+    public void DeleteOutfitsContainingItem(string itemImage)
+    {
+        try
+        {
+            foreach (var outfit in _context.SavedOutfits)
+            {
+                foreach (var item in outfit.Items)
+                {
+                    if (item.ItemImage == itemImage)
+                    {
+                        _context.SavedOutfits.Remove(outfit);
+                    }
+                }
+            }
+            _context.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in PostgresSavedOutfitStore.DeleteOutfitsContainingItem: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            }
+            throw;
+        }
+    }
 }
 

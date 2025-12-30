@@ -1,10 +1,12 @@
 public class ClosetService
 {
     private readonly IClosetItemStore _store; //know how to save items
+    private readonly ISavedOutfitStore _savedOutfitStore; //know how to save outfits
 
-    public ClosetService(IClosetItemStore store)
+    public ClosetService(IClosetItemStore store, ISavedOutfitStore savedOutfitStore)
     {
         _store = store;
+        _savedOutfitStore = savedOutfitStore;
     }
 
     public OutfitItem AddItem(AddItemRequest request)
@@ -44,6 +46,6 @@ public class ClosetService
             throw new ArgumentException("Item image is required");
 
         _store.Delete(itemImage);
+        _savedOutfitStore.DeleteOutfitsContainingItem(itemImage);
     }
-
 }
