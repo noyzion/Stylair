@@ -12,16 +12,24 @@ import { CognitoUser } from "amazon-cognito-identity-js";
 import { userPool } from "@/services/auth/cognito";
 
 export default function VerifyEmail() {
-    const { email: emailParam } = useLocalSearchParams<{ email: string }>();
+    const { email: emailParam, type } = useLocalSearchParams<{ email: string; type?: string }>();
     const [code, setCode] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
     const router = useRouter();
     const insets = useSafeAreaInsets();
 
+    // Check if this is for password reset or email verification
+    const isPasswordReset = type === "password-reset";
+
     const handleVerify = () => {
         if (!code) {
             setError("Please enter the verification code");
+            return;
+        }
+
+        if (!emailParam) {
+            setError("Email is required");
             return;
         }
 
@@ -33,20 +41,32 @@ export default function VerifyEmail() {
             Pool: userPool,
         });
 
-        cognitoUser.confirmRegistration(code, true, (err, result) => {
+        if (isPasswordReset) {
+            // For password reset, just verify the code and go to new password screen
+            // The actual password confirmation happens in new-password screen
+            router.push(`/(tabs)/auth/new-password?email=${emailParam}&code=${code}`);
             setIsLoading(false);
+        } else {
+            // For email verification after sign-up
+            cognitoUser.confirmRegistration(code, true, (err, result) => {
+                setIsLoading(false);
 
-            if (err) {
-                setError(err.message || "Verification failed");
-                return;
-            }
+                if (err) {
+                    setError(err.message || "Verification failed");
+                    return;
+                }
 
-            // Success - navigate to login
-            router.push("/(tabs)/auth/login");
-        });
+                // Success - navigate to login
+                router.push("/(tabs)/auth/login");
+            });
+        }
     };
 
     const handleResendCode = () => {
+        if (!emailParam) {
+            setError("Email is required");
+            return;
+        }
 
         setIsLoading(true);
         setError("");
@@ -56,16 +76,31 @@ export default function VerifyEmail() {
             Pool: userPool,
         });
 
-        cognitoUser.resendConfirmationCode((err, result) => {
-            setIsLoading(false);
+        if (isPasswordReset) {
+            // For password reset, use forgotPassword again
+            cognitoUser.forgotPassword({
+                onSuccess: () => {
+                    setIsLoading(false);
+                    setError("");
+                },
+                onFailure: (err) => {
+                    setIsLoading(false);
+                    setError(err.message || "Failed to resend code");
+                },
+            });
+        } else {
+            // For email verification, resend confirmation code
+            cognitoUser.resendConfirmationCode((err, result) => {
+                setIsLoading(false);
 
-            if (err) {
-                setError(err.message || "Failed to resend code");
-                return;
-            }
+                if (err) {
+                    setError(err.message || "Failed to resend code");
+                    return;
+                }
 
-            setError(""); 
-        });
+                setError(""); 
+            });
+        }
     };
 
     return (

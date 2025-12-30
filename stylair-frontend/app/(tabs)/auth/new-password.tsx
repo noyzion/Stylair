@@ -5,16 +5,57 @@ import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { CognitoUser } from "amazon-cognito-identity-js";
+import { userPool } from "@/services/auth/cognito";
 
 export default function NewPassword() {
+    const { email: emailParam, code: codeParam } = useLocalSearchParams<{ email: string; code: string }>();
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const router = useRouter();
     const insets = useSafeAreaInsets();
+
+    const handleSubmit = () => {
+        if (!password || !confirmPassword) {
+            setError("Please enter both passwords");
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            setError("Passwords don't match");
+            return;
+        }
+
+        if (!emailParam || !codeParam) {
+            setError("Email and code are required");
+            return;
+        }
+
+        setIsLoading(true);
+        setError("");
+
+        const cognitoUser = new CognitoUser({
+            Username: emailParam as string,
+            Pool: userPool,
+        });
+
+        cognitoUser.confirmPassword(codeParam as string, password, {
+            onSuccess: () => {
+                setIsLoading(false);
+                router.push("/(tabs)/auth/login");
+            },
+            onFailure: (err) => {
+                setIsLoading(false);
+                setError(err.message || "Failed to reset password");
+            },
+        });
+    };
 
     return (
         <LinearGradient colors={["#E6F0FF", "#F0E6FF", "#FFE3F1"]}
@@ -40,27 +81,32 @@ export default function NewPassword() {
                         <View style={styles.inputContainer}>
                             <Ionicons name="lock-closed-outline" size={20} color="#6C63FF" style={styles.inputIcon} />
                             <TextInput style={styles.input}
-                                placeholder="password" placeholderTextColor="#999" value={password}
-                                onChangeText={setPassword} keyboardType="numeric" autoCapitalize="none" />
+                                placeholder="New Password" placeholderTextColor="#999" value={password}
+                                onChangeText={setPassword} secureTextEntry autoCapitalize="none" />
                             
                         </View>    
                         <View style={styles.inputContainer}>
                           <Ionicons name="refresh-outline" size={20} color="#6C63FF" style={styles.inputIcon} />
                             <TextInput style={styles.input}
-                                placeholder="confirm password" placeholderTextColor="#999" value={confirmPassword}
-                                onChangeText={setConfirmPassword} keyboardType="numeric" autoCapitalize="none" />
+                                placeholder="Confirm Password" placeholderTextColor="#999" value={confirmPassword}
+                                onChangeText={setConfirmPassword} secureTextEntry autoCapitalize="none" />
                         </View>
+
+                        {error && <ThemedText style={styles.errorText}>{error}</ThemedText>}
+
                         <Pressable 
-                            style={[styles.loginButton, (!password || !confirmPassword) && styles.disabledButton]} 
-                            onPress={() => router.push("/auth/login")}
-                            disabled={!password || !confirmPassword}>
+                            style={[styles.loginButton, (isLoading || !password || !confirmPassword) && styles.disabledButton]} 
+                            onPress={handleSubmit}
+                            disabled={isLoading || !password || !confirmPassword}>
                             <BlurView intensity={75} tint="light" style={StyleSheet.absoluteFillObject} />
                             <LinearGradient
                                 colors={['rgba(108, 99, 255, 0.8)', 'rgba(139, 92, 246, 0.9)']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 0 }}
                                 style={StyleSheet.absoluteFillObject} />
-                            <ThemedText style={styles.loginButtonText}>Submit</ThemedText>
+                            <ThemedText style={styles.loginButtonText}>
+                                {isLoading ? "Resetting..." : "Submit"}
+                            </ThemedText>
                         </Pressable>
                     </ThemedView>
                 </ScrollView>
@@ -209,6 +255,14 @@ const styles = StyleSheet.create({
         fontWeight: "600",
         color: "#6C63FF",
         marginLeft: 8,
+        fontFamily: "Manrope-Regular",
+    },
+    errorText: {
+        color: "#FF3B30",
+        fontSize: 14,
+        marginTop: 8,
+        marginBottom: 8,
+        textAlign: "center",
         fontFamily: "Manrope-Regular",
     },
     forgotPasswordButton: {

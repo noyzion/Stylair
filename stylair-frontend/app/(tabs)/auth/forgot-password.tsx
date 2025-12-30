@@ -8,11 +8,41 @@ import { ThemedView } from "@/components/themed-view";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { CognitoUser } from "amazon-cognito-identity-js";
+import { userPool } from "@/services/auth/cognito";
 
 export default function ForgotPassword() {
     const [email, setEmail] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
     const router = useRouter();
     const insets = useSafeAreaInsets();
+
+    const handleForgotPassword = () => {
+        if (!email) {
+            setError("Please enter your email");
+            return;
+        }
+
+        setIsLoading(true);
+        setError("");
+
+        const cognitoUser = new CognitoUser({
+            Username: email,
+            Pool: userPool,
+        });
+
+        cognitoUser.forgotPassword({
+            onSuccess: (data) => {
+                setIsLoading(false);
+                router.push(`/(tabs)/auth/verify-email?email=${email}&type=password-reset`);
+            },
+            onFailure: (err) => {
+                setIsLoading(false);
+                setError(err.message || "Failed to send reset code");
+            },
+        });
+    };
 
     return (
         <LinearGradient colors={["#E6F0FF", "#F0E6FF", "#FFE3F1"]}
@@ -41,18 +71,22 @@ export default function ForgotPassword() {
                                 placeholder="Email" placeholderTextColor="#999" value={email}
                                 onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
                         </View>     
+
+                        {error && <ThemedText style={styles.errorText}>{error}</ThemedText>}
                        
                         <Pressable 
-                            style={[styles.loginButton, !email && styles.disabledButton]} 
-                            onPress={() => router.push(`/(tabs)/auth/verify-email?email=${email}`)}
-                            disabled={!email}>
+                            style={[styles.loginButton, (isLoading || !email) && styles.disabledButton]} 
+                            onPress={handleForgotPassword}
+                            disabled={isLoading || !email}>
                             <BlurView intensity={75} tint="light" style={StyleSheet.absoluteFillObject} />
                             <LinearGradient
                                 colors={['rgba(108, 99, 255, 0.8)', 'rgba(139, 92, 246, 0.9)']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 0 }}
                                 style={StyleSheet.absoluteFillObject} />
-                            <ThemedText style={styles.loginButtonText}>Send Code</ThemedText>
+                            <ThemedText style={styles.loginButtonText}>
+                                {isLoading ? "Sending..." : "Send Code"}
+                            </ThemedText>
                         </Pressable>
                         <Pressable onPress={() => router.push("/auth/login")} style={styles.backButton}>
                             <Ionicons name="arrow-back-outline" size={20} color="#6C63FF" />
@@ -207,6 +241,13 @@ const styles = StyleSheet.create({
         marginLeft: 8,
         fontFamily: "Manrope-Regular",
     },
-
+    errorText: {
+        color: "#FF3B30",
+        fontSize: 14,
+        marginTop: 8,
+        marginBottom: 8,
+        textAlign: "center",
+        fontFamily: "Manrope-Regular",
+    },
 });
 
