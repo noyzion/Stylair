@@ -48,18 +48,9 @@ Stylair is a smart mobile application for managing a personal digital wardrobe, 
    export const API_BASE_URL = "http://YOUR_LOCAL_IP:5292";
    ```
    > **Note:** Use your local machine's IP address (not localhost) if testing on a physical device.
-
-3. **Configure AWS Cognito**
-   
-   Edit `stylair-frontend/services/auth/cognito.ts`:
-   ```typescript
-   export const poolData = {
-     UserPoolId: 'YOUR_USER_POOL_ID',
-     ClientId: 'YOUR_CLIENT_ID',
-   };
    ```
 
-4. **Start the app**
+3. **Start the app**
    ```bash
    npm start
    ```
@@ -70,19 +61,15 @@ Stylair is a smart mobile application for managing a personal digital wardrobe, 
    
    **Windows (PowerShell):**
    ```powershell
-   $env:DB_PASSWORD="your_database_password"
+   $env:DB_PASSWORD="nOyzion2033"
    ```
    
    **Mac/Linux:**
    ```bash
-   export DB_PASSWORD="your_database_password"
+   export DB_PASSWORD="nOyzion2033"
    ```
 
-2. **Configure database**
-   
-   Edit `stylair-api/appsettings.json` with your PostgreSQL connection string.
-
-3. **Run the API**
+2. **Run the API**
    ```bash
    cd stylair-api
    dotnet run
@@ -103,19 +90,10 @@ Stylair is a smart mobile application for managing a personal digital wardrobe, 
 - **API Port:** Default is `5292`
 - **Database:** PostgreSQL via Supabase
 - **Authentication:** AWS Cognito
-- **CORS:** Already configured for frontend access
 
 ## 📝 Environment Variables
 
 - `DB_PASSWORD` - PostgreSQL database password (required for backend)
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
 
 ---
 
