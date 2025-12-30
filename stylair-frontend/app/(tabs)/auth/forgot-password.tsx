@@ -42,7 +42,10 @@ export default function ForgotPassword() {
                                 onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
                         </View>     
                        
-                        <Pressable style={styles.loginButton} onPress={() => router.push("/(tabs)/auth/verify-email")}>
+                        <Pressable 
+                            style={[styles.loginButton, !email && styles.disabledButton]} 
+                            onPress={() => router.push(`/(tabs)/auth/verify-email?email=${email}`)}
+                            disabled={!email}>
                             <BlurView intensity={75} tint="light" style={StyleSheet.absoluteFillObject} />
                             <LinearGradient
                                 colors={['rgba(108, 99, 255, 0.8)', 'rgba(139, 92, 246, 0.9)']}
@@ -186,6 +189,9 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: "500",
         color: "white",
+    },
+    disabledButton: {
+        opacity: 0.6,
     },
     backButton: {
         flexDirection: "row",

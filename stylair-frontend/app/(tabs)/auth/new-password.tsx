@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function NewPassword() {
     const [password, setPassword] = useState("");
-    const [verifyPassword, setVerifyPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
 
     const router = useRouter();
     const insets = useSafeAreaInsets();
@@ -47,10 +47,13 @@ export default function NewPassword() {
                         <View style={styles.inputContainer}>
                           <Ionicons name="refresh-outline" size={20} color="#6C63FF" style={styles.inputIcon} />
                             <TextInput style={styles.input}
-                                placeholder="verify new password" placeholderTextColor="#999" value={verifyPassword}
-                                onChangeText={setVerifyPassword} keyboardType="numeric" autoCapitalize="none" />
+                                placeholder="confirm password" placeholderTextColor="#999" value={confirmPassword}
+                                onChangeText={setConfirmPassword} keyboardType="numeric" autoCapitalize="none" />
                         </View>
-                        <Pressable style={styles.loginButton} onPress={() => router.push("/auth/login")}>
+                        <Pressable 
+                            style={[styles.loginButton, (!password || !confirmPassword) && styles.disabledButton]} 
+                            onPress={() => router.push("/auth/login")}
+                            disabled={!password || !confirmPassword}>
                             <BlurView intensity={75} tint="light" style={StyleSheet.absoluteFillObject} />
                             <LinearGradient
                                 colors={['rgba(108, 99, 255, 0.8)', 'rgba(139, 92, 246, 0.9)']}
@@ -190,6 +193,9 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: "500",
         color: "white",
+    },
+    disabledButton: {
+        opacity: 0.6,
     },
     backButton: {
         flexDirection: "row",

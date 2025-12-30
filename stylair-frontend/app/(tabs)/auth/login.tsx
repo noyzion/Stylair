@@ -8,16 +8,47 @@ import { ThemedView } from "@/components/themed-view";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { CognitoUser, AuthenticationDetails } from "amazon-cognito-identity-js";
+import { userPool } from "@/services/auth/cognito";
 
 export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
     const router = useRouter();
     const insets = useSafeAreaInsets();
 
     const handleLogin = () => {
-        // TODO: Add login logic
-        console.log("Login:", email, password);
+        if (!email || !password) {
+            setError("Please enter both email and password");
+            return;
+        }
+
+        setIsLoading(true);
+        setError("");
+
+        const authenticationDetails = new AuthenticationDetails({
+            Username: email,
+            Password: password,
+        });
+
+        const cognitoUser = new CognitoUser({
+            Username: email,
+            Pool: userPool,
+        });
+
+        cognitoUser.authenticateUser(authenticationDetails, {
+            onSuccess: (result) => {
+                setIsLoading(false);
+                // Success - navigate to home
+                router.push("/(tabs)");
+            },
+            onFailure: (err) => {
+                setIsLoading(false);
+                setError(err.message || "Login failed");
+            },
+        });
     };
 
     return (
@@ -58,16 +89,23 @@ export default function Login() {
                             <ThemedText style={styles.forgotPasswordButtonText}>Forgot password?</ThemedText>
                         </Pressable>
 
-                        <Pressable style={styles.loginButton} onPress={handleLogin}>
+                        {error && <ThemedText style={styles.errorText}>{error}</ThemedText>}
+
+                        <Pressable 
+                            style={[styles.loginButton, (isLoading || !email || !password) && styles.disabledButton]} 
+                            onPress={handleLogin}
+                            disabled={isLoading || !email || !password}>
                             <BlurView intensity={75} tint="light" style={StyleSheet.absoluteFillObject} />
                             <LinearGradient
                                 colors={['rgba(108, 99, 255, 0.8)', 'rgba(139, 92, 246, 0.9)']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 0 }}
                                 style={StyleSheet.absoluteFillObject} />
-                            <ThemedText style={styles.loginButtonText}>Sign In</ThemedText>
+                            <ThemedText style={styles.loginButtonText}>
+                                {isLoading ? "Signing in..." : "Sign In"}
+                            </ThemedText>
                         </Pressable>
-                        <Pressable onPress={() => router.push("/auth/sign-up")} style={styles.backButton}>
+                            <Pressable onPress={() => router.push("/(tabs)/auth/sign-up")} style={styles.backButton}>
                             <ThemedText style={styles.backButtonText}>Dont have an account? Sign up </ThemedText>
                             <Ionicons name="arrow-forward-outline" size={20} color="#6C63FF" />
                         </Pressable>
@@ -234,6 +272,17 @@ const styles = StyleSheet.create({
         fontWeight: "400",
         color: "#6C63FF",
         fontFamily: "Manrope-Regular",
+    },
+    errorText: {
+        color: "#FF3B30",
+        fontSize: 14,
+        marginTop: 8,
+        marginBottom: 8,
+        textAlign: "center",
+        fontFamily: "Manrope-Regular",
+    },
+    disabledButton: {
+        opacity: 0.6,
     },
 });
 

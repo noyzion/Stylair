@@ -5,14 +5,68 @@ import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { CognitoUser } from "amazon-cognito-identity-js";
+import { userPool } from "@/services/auth/cognito";
 
-export default function VerifyEmail() {
+export default function VerifyEmail({ email }: { email: string }) {
+    const { email: emailParam } = useLocalSearchParams();
     const [code, setCode] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
     const router = useRouter();
     const insets = useSafeAreaInsets();
+
+    const handleVerify = () => {
+        if (!code) {
+            setError("Please enter the verification code");
+            return;
+        }
+
+        setIsLoading(true);
+        setError("");
+
+        const cognitoUser = new CognitoUser({
+            Username: emailParam as string,
+            Pool: userPool,
+        });
+
+        cognitoUser.confirmRegistration(code, true, (err, result) => {
+            setIsLoading(false);
+
+            if (err) {
+                setError(err.message || "Verification failed");
+                return;
+            }
+
+            // Success - navigate to login
+            router.push("/(tabs)/auth/login");
+        });
+    };
+
+    const handleResendCode = () => {
+
+        setIsLoading(true);
+        setError("");
+
+        const cognitoUser = new CognitoUser({
+            Username: emailParam as string,
+            Pool: userPool,
+        });
+
+        cognitoUser.resendConfirmationCode((err, result) => {
+            setIsLoading(false);
+
+            if (err) {
+                setError(err.message || "Failed to resend code");
+                return;
+            }
+
+            setError(""); 
+        });
+    };
 
     return (
         <LinearGradient colors={["#E6F0FF", "#F0E6FF", "#FFE3F1"]}
@@ -41,17 +95,25 @@ export default function VerifyEmail() {
                                 placeholder="Verification Code" placeholderTextColor="#999" value={code}
                                 onChangeText={setCode} keyboardType="numeric" autoCapitalize="none" />
                         </View>     
-                        <Pressable onPress={() => {}} style={styles.forgotPasswordButton}>
+                        <Pressable onPress={handleResendCode} style={styles.forgotPasswordButton} disabled={isLoading}>
                             <ThemedText style={styles.forgotPasswordButtonText}>Resend Code</ThemedText>
                         </Pressable>
-                        <Pressable style={styles.loginButton} onPress={() => router.push("/auth/new-password")}>
+
+                        {error && <ThemedText style={styles.errorText}>{error}</ThemedText>}
+
+                        <Pressable 
+                            style={[styles.loginButton, (isLoading || !code) && styles.disabledButton]} 
+                            onPress={handleVerify}
+                            disabled={isLoading || !code}>
                             <BlurView intensity={75} tint="light" style={StyleSheet.absoluteFillObject} />
                             <LinearGradient
                                 colors={['rgba(108, 99, 255, 0.8)', 'rgba(139, 92, 246, 0.9)']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 0 }}
                                 style={StyleSheet.absoluteFillObject} />
-                            <ThemedText style={styles.loginButtonText}>Submit</ThemedText>
+                            <ThemedText style={styles.loginButtonText}>
+                                {isLoading ? "Verifying..." : "Submit"}
+                            </ThemedText>
                         </Pressable>
                         
                         <Pressable onPress={() => router.push("/auth/login")} style={styles.backButton}>
@@ -217,6 +279,17 @@ const styles = StyleSheet.create({
         fontWeight: "400",
         color: "#6C63FF",
         fontFamily: "Manrope-Regular",
+    },
+    errorText: {
+        color: "#FF3B30",
+        fontSize: 14,
+        marginTop: 8,
+        marginBottom: 8,
+        textAlign: "center",
+        fontFamily: "Manrope-Regular",
+    },
+    disabledButton: {
+        opacity: 0.6,
     },
 });
 
