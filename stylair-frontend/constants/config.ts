@@ -9,5 +9,6 @@ export const API_BASE_URL = "http://192.168.1.183:5292"; // Replace with your lo
 
 export const API_ENDPOINTS = {
   OUTFIT_RECOMMENDATION: `${API_BASE_URL}/api/outfit/recommendation`,
+  SAVE_OUTFIT: `${API_BASE_URL}/api/saved-outfits`,
 };
 

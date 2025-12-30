@@ -43,4 +43,34 @@ public class ClosetController : ControllerBase // ControllerBase is the base cla
         return Ok(items);
     }
 
+    [HttpDelete("item/{itemImage}")]
+    public IActionResult DeleteItem(string itemImage)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(itemImage))
+            {
+                return BadRequest(new { message = "Item image is required" });
+            }
+
+            var decodedItemImage = Uri.UnescapeDataString(itemImage);
+            _service.DeleteItem(decodedItemImage);
+            return Ok(new { message = "Item deleted successfully" });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting item: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            }
+            return StatusCode(500, new { message = $"Failed to delete item: {ex.Message}" });
+        }
+    }
+
 }

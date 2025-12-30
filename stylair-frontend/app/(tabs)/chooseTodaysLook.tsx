@@ -18,17 +18,10 @@ import { BlurView } from "expo-blur";
 import { API_ENDPOINTS } from "@/constants/config"; //import the API_ENDPOINTS from the config file
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Link } from "expo-router";
+import { saveOutfit } from "../../services/closet.service";
+import { OutfitItem } from "../../types/closet";
 
 // Types matching the backend models
-interface OutfitItem {
-  itemId: string;
-  itemName: string;
-  itemCategory: string;
-  itemImage: string;
-  style: string[];
-  colors: string[];
-  season: string;
-}
 
 interface OutfitRecommendation {
   occasionLabel: string;
@@ -44,6 +37,12 @@ export default function TodayLookScreen() {
   const [outfits, setOutfits] = useState<OutfitRecommendation[]>([]); //list of outfits and function to set it (inital empty list)
   const [loading, setLoading] = useState(false); //loading state and function to set it (inital false)
   const [error, setError] = useState<string | null>(null); //error state and function to set it (inital null)
+  const [savingOutfitIndex, setSavingOutfitIndex] = useState<number | null>(
+    null
+  ); //track which outfit is being saved
+  const [savedOutfitIndices, setSavedOutfitIndices] = useState<Set<number>>(
+    new Set()
+  ); //track which outfits have already been saved
 
   // Handle keyboard show/hide to adjust input position
   useEffect(() => {
@@ -84,15 +83,40 @@ export default function TodayLookScreen() {
       setOutfits(data.outfits);
       setMessage(""); //clear the message
       setLoading(false);
+      // Clear saved indices when new outfits are loaded
+      setSavedOutfitIndices(new Set());
     } catch (error) {
       setError(error instanceof Error ? error.message : "An error occurred");
       setLoading(false);
     }
   };
 
+  const handleSaveOutfit = async (
+    outfit: OutfitRecommendation,
+    index: number
+  ) => {
+    // Don't save if already saved
+    if (savedOutfitIndices.has(index)) {
+      return;
+    }
+
+    setSavingOutfitIndex(index); // set the index of the outfit being saved
+    try {
+      await saveOutfit(outfit);
+      // Add index to saved set
+      setSavedOutfitIndices((prev) => new Set(prev).add(index));
+      // Show success message (you can use alert or a toast notification)
+      alert("Outfit saved successfully!");
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to save outfit");
+    } finally {
+      setSavingOutfitIndex(null);
+    }
+  };
+
   return (
     <LinearGradient
-      colors={['#E6F0FF', '#F0E6FF', '#FFE3F1']}
+      colors={["#E6F0FF", "#F0E6FF", "#FFE3F1"]}
       start={{ x: 0, y: 0.35 }}
       end={{ x: 1, y: 0.65 }}
       style={styles.gradientContainer}
@@ -103,11 +127,14 @@ export default function TodayLookScreen() {
       >
         {/* Home icon button */}
         <Link href="/(tabs)" asChild>
-          <Pressable style={styles.homeButton} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Pressable
+            style={styles.homeButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <IconSymbol name="house.fill" size={24} color="rgb(108, 99, 255)" />
           </Pressable>
         </Link>
-        
+
         {/* Logo */}
         <View style={styles.logoContainer}>
           <Image
@@ -115,7 +142,7 @@ export default function TodayLookScreen() {
             style={styles.logo}
           />
         </View>
-        
+
         <ScrollView
           style={styles.scrollView}
           keyboardShouldPersistTaps="handled"
@@ -132,111 +159,140 @@ export default function TodayLookScreen() {
                 Let's find the perfect outfit for today...
               </Text>
 
-            {/* Chat input - Centered in initial state */}
-            <View style={styles.inputContainer}>
-              <TextInput
-                value={message}
-                onChangeText={setMessage}
-                placeholder="Type your message..."
-                placeholderTextColor="#999"
-                style={styles.input}
-              />
-              <Pressable onPress={handleSend} style={styles.sendButton}>
-                <Text style={styles.sendButtonText}>Send</Text>
-              </Pressable>
-            </View>
-          </View>
-        )}
-
-        {/* Results */}
-        {loading && <Text style={styles.loadingText}>Loading...</Text>}
-        {error && <Text style={styles.errorText}>Error: {error}</Text>}
-        {outfits.length > 0 && (
-          <View style={styles.resultsContainer}>
-            {outfits.map((outfit, index) => (
-              <View key={index} style={styles.outfitCard}>
-                <Text style={styles.occasionLabel}>{outfit.occasionLabel}</Text>
-                <Text style={styles.reasonText}>{outfit.reasonText}</Text>
-
-                {/* Items images */}
-                {outfit.items && outfit.items.length > 0 && (
-                  <View style={styles.itemsContainer}>
-                    {outfit.items.map((item, itemIndex) => (
-                      <TouchableOpacity
-                        key={itemIndex}
-                        onPress={() => setSelectedImage(item.itemImage)}
-                        activeOpacity={0.8}
-                      >
-                        <Image
-                          source={{ uri: item.itemImage }}
-                          style={styles.itemImage}
-                          contentFit="cover"
-                        />
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
+              {/* Chat input - Centered in initial state */}
+              <View style={styles.inputContainer}>
+                <TextInput
+                  value={message}
+                  onChangeText={setMessage}
+                  placeholder="Type your message..."
+                  placeholderTextColor="#999"
+                  style={styles.input}
+                />
+                <Pressable onPress={handleSend} style={styles.sendButton}>
+                  <Text style={styles.sendButtonText}>Send</Text>
+                </Pressable>
               </View>
-            ))}
+            </View>
+          )}
+
+          {/* Results */}
+          {loading && <Text style={styles.loadingText}>Loading...</Text>}
+          {error && <Text style={styles.errorText}>Error: {error}</Text>}
+          {outfits.length > 0 && (
+            <View style={styles.resultsContainer}>
+              {outfits.map((outfit, index) => (
+                <View key={index} style={styles.outfitCard}>
+                  <Text style={styles.occasionLabel}>
+                    {outfit.occasionLabel}
+                  </Text>
+                  <Text style={styles.reasonText}>{outfit.reasonText}</Text>
+
+                  {/* Items images */}
+                  {outfit.items && outfit.items.length > 0 && (
+                    <View style={styles.itemsContainer}>
+                      {outfit.items.map((item, itemIndex) => (
+                        <TouchableOpacity
+                          key={itemIndex}
+                          onPress={() => setSelectedImage(item.itemImage)}
+                          activeOpacity={0.8}
+                        >
+                          <Image
+                            source={{ uri: item.itemImage }}
+                            style={styles.itemImage}
+                            contentFit="cover"
+                          />
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+
+                  {/* Save button - only show if outfit has items */}
+                  {outfit.items && outfit.items.length > 0 && (
+                    <Pressable
+                      onPress={() => handleSaveOutfit(outfit, index)}
+                      disabled={
+                        savingOutfitIndex === index ||
+                        savedOutfitIndices.has(index)
+                      }
+                      style={[
+                        styles.saveOutfitButton,
+                        (savingOutfitIndex === index ||
+                          savedOutfitIndices.has(index)) &&
+                          styles.saveOutfitButtonDisabled,
+                        savedOutfitIndices.has(index) &&
+                          styles.saveOutfitButtonSaved,
+                      ]}
+                    >
+                      <Text style={styles.saveOutfitButtonText}>
+                        {savingOutfitIndex === index
+                          ? "Saving..."
+                          : savedOutfitIndices.has(index)
+                          ? "Saved ✓"
+                          : "Save to Archive"}
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
+        </ScrollView>
+
+        {/* Chat input - Fixed at bottom only when there are results */}
+        {(outfits.length > 0 || loading || error) && (
+          <View
+            style={[
+              styles.inputContainerFixed,
+              { bottom: keyboardHeight > 0 ? keyboardHeight + 10 : 20 },
+            ]}
+          >
+            <TextInput
+              value={message}
+              onChangeText={setMessage}
+              placeholder="Type your message..."
+              placeholderTextColor="#999"
+              style={styles.input}
+            />
+            <Pressable onPress={handleSend} style={styles.sendButton}>
+              <Text style={styles.sendButtonText}>Send</Text>
+            </Pressable>
           </View>
         )}
-      </ScrollView>
 
-      {/* Chat input - Fixed at bottom only when there are results */}
-      {(outfits.length > 0 || loading || error) && (
-        <View
-          style={[
-            styles.inputContainerFixed,
-            { bottom: keyboardHeight > 0 ? keyboardHeight + 10 : 20 },
-          ]}
+        {/* Modal for enlarged image */}
+        <Modal
+          visible={selectedImage !== null}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setSelectedImage(null)}
         >
-          <TextInput
-            value={message}
-            onChangeText={setMessage}
-            placeholder="Type your message..."
-            placeholderTextColor="#999"
-            style={styles.input}
-          />
-          <Pressable onPress={handleSend} style={styles.sendButton}>
-            <Text style={styles.sendButtonText}>Send</Text>
-          </Pressable>
-        </View>
-      )}
-
-      {/* Modal for enlarged image */}
-      <Modal
-        visible={selectedImage !== null}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setSelectedImage(null)}
-      >
-        <View style={styles.modalContainer}>
-          <TouchableOpacity
-            style={styles.modalBackdrop}
-            activeOpacity={1}
-            onPress={() => setSelectedImage(null)}
-          />
-          {selectedImage && (
+          <View style={styles.modalContainer}>
             <TouchableOpacity
+              style={styles.modalBackdrop}
               activeOpacity={1}
-              onPress={(e) => e.stopPropagation()}
-              style={styles.imageWrapper}
+              onPress={() => setSelectedImage(null)}
+            />
+            {selectedImage && (
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={(e) => e.stopPropagation()}
+                style={styles.imageWrapper}
+              >
+                <Image
+                  source={{ uri: selectedImage }}
+                  style={styles.enlargedImage}
+                  contentFit="contain"
+                />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setSelectedImage(null)}
             >
-              <Image
-                source={{ uri: selectedImage }}
-                style={styles.enlargedImage}
-                contentFit="contain"
-              />
+              <Text style={styles.closeButtonText}>✕</Text>
             </TouchableOpacity>
-          )}
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setSelectedImage(null)}
-          >
-            <Text style={styles.closeButtonText}>✕</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
+          </View>
+        </Modal>
       </KeyboardAvoidingView>
     </LinearGradient>
   );
@@ -257,19 +313,19 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
   },
   homeButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 76,
     left: 20,
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
+    justifyContent: "center",
+    alignItems: "center",
     zIndex: 10,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOpacity: 0.1,
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 4 },
@@ -317,7 +373,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     ...Platform.select({
       ios: {
-        shadowColor: '#8B5CF6',
+        shadowColor: "#8B5CF6",
         shadowOpacity: 0.1,
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 4 },
@@ -352,6 +408,26 @@ const styles = StyleSheet.create({
     height: 110,
     borderRadius: 12,
     backgroundColor: "#E5E5E5",
+  },
+  saveOutfitButton: {
+    marginTop: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    backgroundColor: "rgb(108, 99, 255)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  saveOutfitButtonDisabled: {
+    opacity: 0.6,
+  },
+  saveOutfitButtonSaved: {
+    backgroundColor: "#10B981",
+  },
+  saveOutfitButtonText: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "600",
   },
   modalContainer: {
     flex: 1,

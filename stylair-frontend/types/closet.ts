@@ -18,3 +18,11 @@ export interface OutfitItem {
   colors: string[];
   season: string[];
 }
+
+export interface SavedOutfit {
+  outfitId: string;
+  occasionLabel: string;
+  reasonText: string;
+  items: OutfitItem[];
+  createdAt: string;
+}

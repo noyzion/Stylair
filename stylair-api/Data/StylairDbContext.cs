@@ -24,6 +24,11 @@ public class StylairDbContext : DbContext
     public DbSet<OutfitItem> ClosetItems { get; set; }
 
     /// <summary>
+    /// DbSet - This represents the saved_outfits table in the database
+    /// </summary>
+    public DbSet<SavedOutfit> SavedOutfits { get; set; }
+
+    /// <summary>
     /// OnModelCreating - This function is called once during DbContext initialization
     /// Here we define the mapping between the C# model and the PostgreSQL table structure
     /// </summary>
@@ -36,39 +41,39 @@ public class StylairDbContext : DbContext
         {
             // Define the table name in the database (without this, EF Core would look for "ClosetItems")
             entity.ToTable("closet_items");
-            
+
             // Define the primary key - item_image is the only primary key
             // This means each row must be unique by item_image
             entity.HasKey(e => e.ItemImage);
-            
+
             // Map item_id column - UUID in the database
             // This is not the primary key, just a regular column
             entity.Property(e => e.ItemId)
                 .HasColumnName("item_id")  // Column name in PostgreSQL (snake_case)
                 .HasColumnType("uuid");  // Data type in the database
-            
+
             // Map item_name column - required text
             entity.Property(e => e.ItemName)
                 .HasColumnName("item_name")  // Column name in PostgreSQL
                 .IsRequired();  // Required - cannot be null
-            
+
             // Map item_category column - required text
             entity.Property(e => e.ItemCategory)
                 .HasColumnName("item_category")  // Column name in PostgreSQL
                 .IsRequired();  // Required - cannot be null
-            
+
             // Map item_image column - required text (this is the primary key)
             entity.Property(e => e.ItemImage)
                 .HasColumnName("item_image")  // Column name in PostgreSQL
                 .IsRequired();  // Required - cannot be null
-            
+
             // Define JSON options - used for converting List<string> to JSONB
             var jsonOptions = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,  // Property names in camelCase
                 WriteIndented = false  // Compact JSON (no spaces)
             };
-            
+
             // Map style column - JSONB in database, List<string> in C#
             // HasConversion automatically converts:
             // - When saving: List<string> → JSON string → JSONB
@@ -81,7 +86,7 @@ public class StylairDbContext : DbContext
                     v => v == null || v.Count == 0 ? "[]" : JsonSerializer.Serialize(v, jsonOptions),
                     // Conversion when reading from database: if empty, return empty list, otherwise parse from JSON
                     v => string.IsNullOrEmpty(v) ? new List<string>() : JsonSerializer.Deserialize<List<string>>(v, jsonOptions) ?? new List<string>());
-            
+
             // Map colors column - JSONB in database, List<string> in C#
             entity.Property(e => e.Colors)
                 .HasColumnName("colors")
@@ -89,7 +94,7 @@ public class StylairDbContext : DbContext
                 .HasConversion(
                     v => v == null || v.Count == 0 ? "[]" : JsonSerializer.Serialize(v, jsonOptions),
                     v => string.IsNullOrEmpty(v) ? new List<string>() : JsonSerializer.Deserialize<List<string>>(v, jsonOptions) ?? new List<string>());
-            
+
             // Map season column - JSONB in database, List<string> in C#
             entity.Property(e => e.Season)
                 .HasColumnName("season")
@@ -97,7 +102,7 @@ public class StylairDbContext : DbContext
                 .HasConversion(
                     v => v == null || v.Count == 0 ? "[]" : JsonSerializer.Serialize(v, jsonOptions),
                     v => string.IsNullOrEmpty(v) ? new List<string>() : JsonSerializer.Deserialize<List<string>>(v, jsonOptions) ?? new List<string>());
-            
+
             // Map created_at column - timestamp in database, DateTime in C#
             entity.Property(e => e.CreatedAt)
                 .HasColumnName("created_at")
@@ -108,6 +113,58 @@ public class StylairDbContext : DbContext
                     // Conversion when reading: set as Unspecified (no timezone)
                     v => DateTime.SpecifyKind(v, DateTimeKind.Unspecified))
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");  // If no value is specified, PostgreSQL will insert current time
+        });
+
+        // Define the mapping for the saved_outfits table
+        modelBuilder.Entity<SavedOutfit>(entity =>
+        {
+            entity.ToTable("saved_outfits");
+
+            // Define the primary key
+            entity.HasKey(e => e.OutfitId);
+
+            // Map outfit_id column - UUID in the database
+            entity.Property(e => e.OutfitId)
+                .HasColumnName("outfit_id")
+                .HasColumnType("uuid");
+
+            // Map occasion_label column - required text
+            entity.Property(e => e.OccasionLabel)
+                .HasColumnName("occasion_label")
+                .IsRequired();
+
+            // Map reason_text column - required text
+            entity.Property(e => e.ReasonText)
+                .HasColumnName("reason_text")
+                .IsRequired();
+
+            // Define JSON options for Items conversion
+            var jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = false
+            };
+
+            // Map items column - JSONB in database, List<OutfitItem> in C#
+            entity.Property(e => e.Items)
+                .HasColumnName("items")
+                .HasColumnType("jsonb")
+                .HasConversion(
+                    // Conversion when saving: List<OutfitItem> → JSON string → JSONB
+                    v => v == null || v.Count == 0 ? "[]" : JsonSerializer.Serialize(v, jsonOptions),
+                    // Conversion when reading: JSONB → JSON string → List<OutfitItem>
+                    v => string.IsNullOrEmpty(v) || v == "[]"
+                        ? new List<OutfitItem>()
+                        : JsonSerializer.Deserialize<List<OutfitItem>>(v, jsonOptions) ?? new List<OutfitItem>());
+
+            // Map created_at column - timestamp in database, DateTime in C#
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasColumnType("timestamp without time zone")
+                .HasConversion(
+                    v => v.Kind == DateTimeKind.Utc ? v.ToLocalTime() : v,
+                    v => DateTime.SpecifyKind(v, DateTimeKind.Unspecified))
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
     }
 }

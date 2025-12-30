@@ -8,12 +8,16 @@ import {
   Modal,
   StyleSheet,
   Pressable,
+  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image as ExpoImage } from "expo-image";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Link, useFocusEffect } from "expo-router";
-import { getAllItemsFromCloset } from "../../services/closet.service";
+import {
+  getAllItemsFromCloset,
+  deleteItemFromCloset,
+} from "../../services/closet.service";
 import { OutfitItem } from "../../types/closet";
 
 export default function MyClosetScreen() {
@@ -21,6 +25,7 @@ export default function MyClosetScreen() {
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<OutfitItem | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Load items function
   const loadItems = useCallback(async () => {
@@ -41,6 +46,38 @@ export default function MyClosetScreen() {
       loadItems();
     }, [loadItems])
   );
+
+  const handleDeleteItem = async () => {
+    if (!selectedItem) return;
+
+    // Confirm deletion
+    Alert.alert("Delete Item", "Are you sure you want to delete this item?", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          setDeleting(true);
+          try {
+            await deleteItemFromCloset(selectedItem.itemImage);
+            setModalVisible(false);
+            // Reload items after deletion
+            loadItems();
+          } catch (error) {
+            Alert.alert(
+              "Error",
+              error instanceof Error ? error.message : "Failed to delete item"
+            );
+          } finally {
+            setDeleting(false);
+          }
+        },
+      },
+    ]);
+  };
 
   // Group items by category
   const itemsByCategory = {
@@ -210,12 +247,26 @@ export default function MyClosetScreen() {
                     </Text>
                   </View>
                 )}
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Text style={styles.closeButtonText}>Close</Text>
-                </TouchableOpacity>
+                <View style={styles.modalButtonsRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.deleteButton,
+                      deleting && styles.deleteButtonDisabled,
+                    ]}
+                    onPress={handleDeleteItem}
+                    disabled={deleting}
+                  >
+                    <Text style={styles.deleteButtonText}>
+                      {deleting ? "Deleting..." : "Delete"}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={() => setModalVisible(false)}
+                  >
+                    <Text style={styles.closeButtonText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
               </>
             )}
           </View>
@@ -367,12 +418,36 @@ const styles = StyleSheet.create({
     color: "#1A1A1A",
     flex: 1,
   },
-  closeButton: {
+  modalButtonsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
     marginTop: 20,
+    width: "100%",
+  },
+  deleteButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 20,
+    backgroundColor: "#EF4444",
+    alignItems: "center",
+  },
+  deleteButtonDisabled: {
+    opacity: 0.6,
+  },
+  deleteButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  closeButton: {
+    flex: 1,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 20,
     backgroundColor: "rgb(108, 99, 255)",
+    alignItems: "center",
   },
   closeButtonText: {
     color: "white",

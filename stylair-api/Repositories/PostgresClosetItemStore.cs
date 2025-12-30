@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using stylair_api.Data;
+using System.Linq;
 
 namespace stylair_api.Repositories;
 
@@ -60,6 +61,34 @@ public class PostgresClosetItemStore : IClosetItemStore, IOutfitStore
         return _context.ClosetItems
             .OrderByDescending(x => x.CreatedAt)
             .ToList();
+    }
+
+    /// Delete - Deletes an item from the database by itemImage (primary key)
+    public void Delete(string itemImage)
+    {
+        try
+        {
+            var item = _context.ClosetItems.Find(itemImage);
+            if (item != null)
+            {
+                _context.ClosetItems.Remove(item);
+                _context.SaveChanges();
+            }
+            else
+            {
+                throw new ArgumentException($"Item with image '{itemImage}' not found");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in PostgresClosetItemStore.Delete: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            }
+            throw;
+        }
     }
 
     public bool IsClosetEmpty()

@@ -59,6 +59,8 @@ builder.Services.AddScoped<OutfitRecommendationService>();
 builder.Services.AddScoped<IOutfitStore, PostgresClosetItemStore>();
 builder.Services.AddScoped<IClosetItemStore, PostgresClosetItemStore>();
 builder.Services.AddScoped<ClosetService>();
+builder.Services.AddScoped<ISavedOutfitStore, PostgresSavedOutfitStore>();
+builder.Services.AddScoped<SavedOutfitService>();
 
 var app = builder.Build();
 

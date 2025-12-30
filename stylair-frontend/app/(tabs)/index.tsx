@@ -200,7 +200,7 @@ export default function HomeScreen() {
               </Pressable>
             </Link>
 
-            <Link href="/archive" asChild>
+            <Link href="/(tabs)/ArchiveScreen" asChild>
               <Pressable style={styles.actionButton}>
                 <Ionicons name="archive-outline" size={20} color="#4A4A4A" />
                 <ThemedText style={styles.actionButtonText}>Archive</ThemedText>

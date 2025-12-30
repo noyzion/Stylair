@@ -32,10 +32,18 @@ public class ClosetService
         _store.Add(item);
         return item;
     }
-    
+
     public List<OutfitItem> GetAllItems()
     {
         return _store.GetAll();
+    }
+
+    public void DeleteItem(string itemImage)
+    {
+        if (string.IsNullOrWhiteSpace(itemImage))
+            throw new ArgumentException("Item image is required");
+
+        _store.Delete(itemImage);
     }
 
 }
