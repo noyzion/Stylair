@@ -36,6 +36,7 @@ export default function VerifyEmail() {
         if (isPasswordReset) {
             router.push(`/(tabs)/auth/new-password?email=${emailParam}&code=${code}`);
             setIsLoading(false);
+            setCode(""); // Clear the code from the screen
         } else {
             cognitoUser.confirmRegistration(code, true, (err, result) => {
                 setIsLoading(false);
@@ -44,6 +45,7 @@ export default function VerifyEmail() {
                     setError(err.message || "Verification failed");
                     return;
                 }
+                setCode(""); // Clear the code from the screen
                 router.push("/(tabs)/auth/login");
             });
         }
@@ -64,6 +66,7 @@ export default function VerifyEmail() {
                 onSuccess: () => {
                     setIsLoading(false);
                     setError("");
+                    setCode(""); // Clear the code from the screen
                 },
                 onFailure: (err) => {
                     setIsLoading(false);
@@ -79,7 +82,8 @@ export default function VerifyEmail() {
                     return;
                 }
 
-                setError(""); 
+                setError("");
+                setCode(""); // Clear the code from the screen
             });
         }
     };
