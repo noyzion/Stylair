@@ -1,50 +1,122 @@
-# Welcome to your Expo app 👋
+# 👗 Stylair
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Stylair is a smart mobile application for managing a personal digital wardrobe, combining a clean user experience with AI-powered clothing tagging and outfit recommendations.
 
-## Get started
+## ✨ Features
 
-1. Install dependencies
+- 📸 **Upload Clothes** - Add items via camera or gallery
+- 🏷️ **Smart Tagging** - Automatic categorization: clothing type, color, season, formality
+- 👚 **Digital Wardrobe** - Manage your personal closet with ease
+- 🤖 **AI Outfit Recommendations** - Get personalized outfit suggestions based on weather
+- 🔐 **User Authentication** - Secure login and registration with AWS Cognito
+- ☁️ **Cloud Storage** - All your wardrobe data stored securely
 
+## 🛠️ Tech Stack
+
+### Frontend
+- React Native with Expo
+- TypeScript
+- Expo Router
+- AWS Cognito for authentication
+
+### Backend
+- .NET 9.0 / C#
+- ASP.NET Core Web API
+- PostgreSQL (Supabase)
+- Entity Framework Core
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v18+)
+- .NET 9.0 SDK
+- PostgreSQL database (or Supabase account)
+- AWS Cognito user pool
+
+### Frontend Setup
+
+1. **Install dependencies**
    ```bash
+   cd stylair-frontend
    npm install
    ```
 
-2. Start the app
+2. **Configure API URL**
+   
+   Edit `stylair-frontend/constants/config.ts`:
+   ```typescript
+   export const API_BASE_URL = "http://YOUR_LOCAL_IP:5292";
+   ```
+   > **Note:** Use your local machine's IP address (not localhost) if testing on a physical device.
 
-   ```bash
-   npx expo start
+3. **Configure AWS Cognito**
+   
+   Edit `stylair-frontend/services/auth/cognito.ts`:
+   ```typescript
+   export const poolData = {
+     UserPoolId: 'YOUR_USER_POOL_ID',
+     ClientId: 'YOUR_CLIENT_ID',
+   };
    ```
 
-In the output, you'll find options to open the app in a
+4. **Start the app**
+   ```bash
+   npm start
+   ```
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Backend Setup
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+1. **Set environment variable**
+   
+   **Windows (PowerShell):**
+   ```powershell
+   $env:DB_PASSWORD="your_database_password"
+   ```
+   
+   **Mac/Linux:**
+   ```bash
+   export DB_PASSWORD="your_database_password"
+   ```
 
-## Get a fresh project
+2. **Configure database**
+   
+   Edit `stylair-api/appsettings.json` with your PostgreSQL connection string.
 
-When you're ready, run:
+3. **Run the API**
+   ```bash
+   cd stylair-api
+   dotnet run
+   ```
+   
+   API will be available at `http://localhost:5292`
 
-```bash
-npm run reset-project
-```
+## 📱 Main Screens
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- **Home** - Welcome screen with weather-based recommendations
+- **Add Item** - Upload and tag clothing items
+- **Choose Today's Look** - AI-powered outfit recommendations
+- **My Closet** - View and manage your wardrobe
+- **Archive** - View archived items
 
-## Learn more
+## 🔧 Configuration
 
-To learn more about developing your project with Expo, look at the following resources:
+- **API Port:** Default is `5292`
+- **Database:** PostgreSQL via Supabase
+- **Authentication:** AWS Cognito
+- **CORS:** Already configured for frontend access
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## 📝 Environment Variables
 
-## Join the community
+- `DB_PASSWORD` - PostgreSQL database password (required for backend)
 
-Join our community of developers creating universal apps.
+## 🤝 Contributing
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+---
+
+**Note:** Make sure to configure your API URL and Cognito credentials before running the application.
