@@ -28,25 +28,26 @@ export default function Login() {
         setError("");
         setIsLoading(true);
       
-        setTimeout(() => {
+        requestAnimationFrame(() => {
           loginWithCognito();
-        }, 0);
+        });
       };
+      
       const loginWithCognito = () => {
         const authenticationDetails = new AuthenticationDetails({
-          Username: email,
+          Username: email.trim().toLowerCase(),
           Password: password,
         });
       
         const cognitoUser = new CognitoUser({
-          Username: email,
+          Username: email.trim().toLowerCase(),
           Pool: userPool,
         });
       
         cognitoUser.authenticateUser(authenticationDetails, {
           onSuccess: () => {
             setIsLoading(false);
-            router.push("/(tabs)");
+            router.replace("/(tabs)");
           },
           onFailure: (err) => {
             setIsLoading(false);
@@ -55,6 +56,7 @@ export default function Login() {
         });
       };
       
+
     return (
         <LinearGradient colors={["#E6F0FF", "#F0E6FF", "#FFE3F1"]}
             start={{ x: 0, y: 0.35 }}
@@ -80,13 +82,19 @@ export default function Login() {
                             <Ionicons name="mail-outline" size={20} color="#6C63FF" style={styles.inputIcon} />
                             <TextInput style={styles.input}
                                 placeholder="Email" placeholderTextColor="#999" value={email}
-                                onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+                                onChangeText={(v) => {
+                                    setEmail(v);
+                                    setError("");
+                                }} keyboardType="email-address" autoCapitalize="none" />
                         </View>
 
                         <View style={styles.inputContainer}>
                             <Ionicons name="lock-closed-outline" size={20} color="#6C63FF" style={styles.inputIcon} />
                             <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#999" value={password}
-                                onChangeText={setPassword} secureTextEntry autoCapitalize="none"/>
+                                onChangeText={(v) => {
+                                    setPassword(v);
+                                    setError("");
+                                }} secureTextEntry autoCapitalize="none"/>
                         </View>
 
                         <Pressable onPress={() => router.push("/auth/forgot-password")} style={styles.forgotPasswordButton}>

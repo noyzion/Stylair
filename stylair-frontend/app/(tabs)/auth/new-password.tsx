@@ -82,14 +82,20 @@ export default function NewPassword() {
                             <Ionicons name="lock-closed-outline" size={20} color="#6C63FF" style={styles.inputIcon} />
                             <TextInput style={styles.input}
                                 placeholder="New Password" placeholderTextColor="#999" value={password}
-                                onChangeText={setPassword} secureTextEntry autoCapitalize="none" />
+                                onChangeText={(v) => {
+                                    setPassword(v);
+                                    setError("");
+                                }} secureTextEntry autoCapitalize="none" />
                             
                         </View>    
                         <View style={styles.inputContainer}>
                           <Ionicons name="refresh-outline" size={20} color="#6C63FF" style={styles.inputIcon} />
                             <TextInput style={styles.input}
                                 placeholder="Confirm Password" placeholderTextColor="#999" value={confirmPassword}
-                                onChangeText={setConfirmPassword} secureTextEntry autoCapitalize="none" />
+                                onChangeText={(v) => {
+                                    setConfirmPassword(v);
+                                    setError("");
+                                }} secureTextEntry autoCapitalize="none" />
                         </View>
 
                         {error && <ThemedText style={styles.errorText}>{error}</ThemedText>}

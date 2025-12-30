@@ -18,8 +18,6 @@ export default function VerifyEmail() {
     const [error, setError] = useState("");
     const router = useRouter();
     const insets = useSafeAreaInsets();
-
-    // Check if this is for password reset or email verification
     const isPasswordReset = type === "password-reset";
 
     const handleVerify = () => {
@@ -27,12 +25,6 @@ export default function VerifyEmail() {
             setError("Please enter the verification code");
             return;
         }
-
-        if (!emailParam) {
-            setError("Email is required");
-            return;
-        }
-
         setIsLoading(true);
         setError("");
 
@@ -42,12 +34,9 @@ export default function VerifyEmail() {
         });
 
         if (isPasswordReset) {
-            // For password reset, just verify the code and go to new password screen
-            // The actual password confirmation happens in new-password screen
             router.push(`/(tabs)/auth/new-password?email=${emailParam}&code=${code}`);
             setIsLoading(false);
         } else {
-            // For email verification after sign-up
             cognitoUser.confirmRegistration(code, true, (err, result) => {
                 setIsLoading(false);
 
@@ -55,18 +44,12 @@ export default function VerifyEmail() {
                     setError(err.message || "Verification failed");
                     return;
                 }
-
-                // Success - navigate to login
                 router.push("/(tabs)/auth/login");
             });
         }
     };
 
     const handleResendCode = () => {
-        if (!emailParam) {
-            setError("Email is required");
-            return;
-        }
 
         setIsLoading(true);
         setError("");
@@ -77,7 +60,6 @@ export default function VerifyEmail() {
         });
 
         if (isPasswordReset) {
-            // For password reset, use forgotPassword again
             cognitoUser.forgotPassword({
                 onSuccess: () => {
                     setIsLoading(false);
@@ -89,7 +71,6 @@ export default function VerifyEmail() {
                 },
             });
         } else {
-            // For email verification, resend confirmation code
             cognitoUser.resendConfirmationCode((err, result) => {
                 setIsLoading(false);
 
@@ -128,7 +109,10 @@ export default function VerifyEmail() {
                             <Ionicons name="lock-closed-outline" size={20} color="#6C63FF" style={styles.inputIcon} />
                             <TextInput style={styles.input}
                                 placeholder="Verification Code" placeholderTextColor="#999" value={code}
-                                onChangeText={setCode} keyboardType="numeric" autoCapitalize="none" />
+                                onChangeText={(v) => {
+                                    setCode(v);
+                                    setError("");
+                                }} keyboardType="numeric" autoCapitalize="none" />
                         </View>     
                         <Pressable onPress={handleResendCode} style={styles.forgotPasswordButton} disabled={isLoading}>
                             <ThemedText style={styles.forgotPasswordButtonText}>Resend Code</ThemedText>

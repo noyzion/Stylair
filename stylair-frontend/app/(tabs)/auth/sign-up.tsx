@@ -71,33 +71,48 @@ export default function SignUp() {
                             <Ionicons name="person-outline" size={20} color="#6C63FF" style={styles.inputIcon} />
                             <TextInput style={styles.input}
                                 placeholder="First Name" placeholderTextColor="#999" value={firstName}
-                                onChangeText={setFirstName} autoCapitalize="words" />
+                                onChangeText={(v) => {
+                                    setFirstName(v);
+                                    setError("");
+                                }} autoCapitalize="words" />
                         </View>
 
                         <View style={styles.inputContainer}>
                             <Ionicons name="person-outline" size={20} color="#6C63FF" style={styles.inputIcon} />
                             <TextInput style={styles.input}
                                 placeholder="Last Name" placeholderTextColor="#999" value={lastName}
-                                onChangeText={setLastName} autoCapitalize="words" />
+                                onChangeText={(v) => {
+                                    setLastName(v);
+                                    setError("");
+                                }} autoCapitalize="words" />
                         </View>
 
                         <View style={styles.inputContainer}>
                             <Ionicons name="mail-outline" size={20} color="#6C63FF" style={styles.inputIcon} />
                             <TextInput style={styles.input}
                                 placeholder="Email" placeholderTextColor="#999" value={email}
-                                onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+                                onChangeText={(v) => {
+                                    setEmail(v);
+                                    setError("");
+                                }} keyboardType="email-address" autoCapitalize="none" />
                         </View>
 
                         <View style={styles.inputContainer}>
                             <Ionicons name="lock-closed-outline" size={20} color="#6C63FF" style={styles.inputIcon} />
                             <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#999" value={password}
-                                onChangeText={setPassword} secureTextEntry autoCapitalize="none"/>
+                                onChangeText={(v) => {
+                                    setPassword(v);
+                                    setError("");
+                                }} secureTextEntry autoCapitalize="none"/>
                         </View>
 
                         <View style={styles.inputContainer}>
                             <Ionicons name="refresh-outline" size={20} color="#6C63FF" style={styles.inputIcon} />
                             <TextInput style={styles.input} placeholder="Confirm Password" placeholderTextColor="#999" value={confirmPassword}
-                                onChangeText={setConfirmPassword} secureTextEntry autoCapitalize="none"/>
+                                onChangeText={(v) => {
+                                    setConfirmPassword(v);
+                                    setError("");
+                                }} secureTextEntry autoCapitalize="none"/>
                         </View>
 
                         {error && <ThemedText style={styles.errorText}>{error}</ThemedText>}

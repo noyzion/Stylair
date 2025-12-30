@@ -69,7 +69,10 @@ export default function ForgotPassword() {
                             <Ionicons name="mail-outline" size={20} color="#6C63FF" style={styles.inputIcon} />
                             <TextInput style={styles.input}
                                 placeholder="Email" placeholderTextColor="#999" value={email}
-                                onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+                                onChangeText={(v) => {
+                                    setEmail(v);
+                                    setError("");
+                                }} keyboardType="email-address" autoCapitalize="none" />
                         </View>     
 
                         {error && <ThemedText style={styles.errorText}>{error}</ThemedText>}
