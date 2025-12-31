@@ -97,7 +97,7 @@ export default function Login() {
                                 }} secureTextEntry autoCapitalize="none"/>
                         </View>
 
-                        <Pressable onPress={() => router.push("/auth/forgot-password")} style={styles.forgotPasswordButton}>
+                        <Pressable onPress={() => router.push("/(tabs)/auth/forgot-password")} style={styles.forgotPasswordButton}>
                             <ThemedText style={styles.forgotPasswordButtonText}>Forgot password?</ThemedText>
                         </Pressable>
 

@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using stylair_api.Extensions;
 using stylair_api.Services;
 
+[Authorize] // 👈 דורש authentication לכל ה-endpoints
 [ApiController]
 [Route("api/closet")]
 public class ClosetController : ControllerBase // ControllerBase is the base class for all controllers
@@ -17,7 +20,8 @@ public class ClosetController : ControllerBase // ControllerBase is the base cla
     {
         try
         {
-            var item = await _service.AddItemAsync(request);
+            var userId = User.GetUserId(); // 👈 מקבלים את ה-user ID מה-token
+            var item = await _service.AddItemAsync(request, userId);
             return Ok(new { message = "Item added successfully", item = item });
         }
         catch (ArgumentException ex)
@@ -40,7 +44,8 @@ public class ClosetController : ControllerBase // ControllerBase is the base cla
     [HttpGet("items")]
     public IActionResult GetAllItems()
     {
-        var items = _service.GetAllItems();
+        var userId = User.GetUserId(); // 👈 מקבלים את ה-user ID מה-token
+        var items = _service.GetAllItems(userId);
         return Ok(items);
     }
 
@@ -54,8 +59,9 @@ public class ClosetController : ControllerBase // ControllerBase is the base cla
                 return BadRequest(new { message = "Item image is required" });
             }
 
+            var userId = User.GetUserId(); // 👈 מקבלים את ה-user ID מה-token
             var decodedItemImage = Uri.UnescapeDataString(itemImage);
-            await _service.DeleteItemAsync(decodedItemImage);
+            await _service.DeleteItemAsync(decodedItemImage, userId);
             return Ok(new { message = "Item deleted successfully" });
         }
         catch (ArgumentException ex)

@@ -11,6 +11,7 @@ public class OutfitItem
     public List<string> Colors { get; set; } = new();
     public List<string> Season { get; set; } = new();
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string UserId { get; set; } = string.Empty; // User ID from Cognito (email or sub)
     
     // Backward compatibility properties for JSON serialization
     [NotMapped]

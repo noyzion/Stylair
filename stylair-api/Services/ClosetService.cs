@@ -13,7 +13,7 @@ public class ClosetService
         _storageService = storageService;
     }
 
-    public async Task<OutfitItem> AddItemAsync(AddItemRequest request)
+    public async Task<OutfitItem> AddItemAsync(AddItemRequest request, string userId)
     {
         if (string.IsNullOrWhiteSpace(request.itemName))
             throw new ArgumentException("Item name is required");
@@ -35,26 +35,27 @@ public class ClosetService
             ItemImage = imageUrl, // Store the Supabase Storage URL instead of base64/URI
             Style = request.style ?? new List<string>(),
             Colors = request.colors ?? new List<string>(),
-            Season = request.season ?? new List<string>()
+            Season = request.season ?? new List<string>(),
+            UserId = userId // 👈 שמירת user_id
         };
 
-        _store.Add(item);
+        _store.Add(item, userId);
         return item;
     }
 
-    public List<OutfitItem> GetAllItems()
+    public List<OutfitItem> GetAllItems(string userId)
     {
-        return _store.GetAll();
+        return _store.GetAll(userId);
     }
 
-    public async Task DeleteItemAsync(string itemImage)
+    public async Task DeleteItemAsync(string itemImage, string userId)
     {
         if (string.IsNullOrWhiteSpace(itemImage))
             throw new ArgumentException("Item image is required");
 
-        // Delete from database first
-        _store.Delete(itemImage);
-        _savedOutfitStore.DeleteOutfitsContainingItem(itemImage);
+        // Delete from database first (this also verifies ownership)
+        _store.Delete(itemImage, userId);
+        _savedOutfitStore.DeleteOutfitsContainingItem(itemImage, userId);
 
         // Delete from Supabase Storage (if it's a Supabase URL)
         if (itemImage.Contains("supabase.co/storage"))

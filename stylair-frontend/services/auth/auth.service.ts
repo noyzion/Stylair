@@ -57,3 +57,28 @@ export const logout = async () => {
     }
     currentUser.signOut();
 };
+
+/// <summary>
+/// Gets the JWT token from the current Cognito session
+/// This token is used to authenticate API requests
+/// </summary>
+export const getJwtToken = async (): Promise<string | null> => {
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+        return null;
+    }
+
+    return new Promise((resolve) => {
+        currentUser.getSession((err: any, session: any) => {
+            if (err || !session || !session.isValid()) {
+                resolve(null);
+                return;
+            }
+            
+            // Get the ID token (contains user claims like email, sub, etc.)
+            const idToken = session.getIdToken();
+            const jwtToken = idToken.getJwtToken();
+            resolve(jwtToken);
+        });
+    });
+};

@@ -14,7 +14,7 @@ public class PostgresSavedOutfitStore : ISavedOutfitStore
     }
 
     /// Add - Saves a new outfit to the database
-    public void Add(SavedOutfit outfit)
+    public void Add(SavedOutfit outfit, string userId)
     {
         try
         {
@@ -23,6 +23,9 @@ public class PostgresSavedOutfitStore : ISavedOutfitStore
             {
                 outfit.OutfitId = Guid.NewGuid();
             }
+
+            // Set the user ID (required for multi-user support)
+            outfit.UserId = userId;
 
             // Set the creation time
             outfit.CreatedAt = DateTime.UtcNow;
@@ -45,26 +48,36 @@ public class PostgresSavedOutfitStore : ISavedOutfitStore
         }
     }
 
-    /// GetAll - Gets all saved outfits from the database
-    public List<SavedOutfit> GetAll()
+    /// GetAll - Gets all saved outfits from the database for a specific user
+    public List<SavedOutfit> GetAll(string userId)
     {
-        // Order by newest first
+        // Filter by user_id and order by newest first
         return _context.SavedOutfits
+            .Where(x => x.UserId == userId) // 👈 סינון לפי user_id
             .OrderByDescending(x => x.CreatedAt)
             .ToList();
     }
 
     /// Delete - Deletes an outfit from the database by outfitId
-    public void Delete(Guid outfitId)
+    /// Also verifies that the user owns the outfit before deleting
+    public void Delete(Guid outfitId, string userId)
     {
         try
         {
             var outfit = _context.SavedOutfits.Find(outfitId);
-            if (outfit != null)
+            if (outfit == null)
             {
-                _context.SavedOutfits.Remove(outfit);
-                _context.SaveChanges();
+                throw new ArgumentException($"Outfit with ID '{outfitId}' not found");
             }
+            
+            // Verify that the user owns this outfit
+            if (outfit.UserId != userId)
+            {
+                throw new UnauthorizedAccessException("You don't have permission to delete this outfit. It belongs to another user.");
+            }
+            
+            _context.SavedOutfits.Remove(outfit);
+            _context.SaveChanges();
         }
         catch (Exception ex)
         {
@@ -78,20 +91,20 @@ public class PostgresSavedOutfitStore : ISavedOutfitStore
         }
     }
 
-    /// DeleteOutfitsContainingItem - Deletes all outfits that contain the given item image
-    public void DeleteOutfitsContainingItem(string itemImage)
+    /// DeleteOutfitsContainingItem - Deletes all outfits that contain the given item image (for a specific user)
+    public void DeleteOutfitsContainingItem(string itemImage, string userId)
     {
         try
         {
-            foreach (var outfit in _context.SavedOutfits)
+            // Filter by user_id first, then check if outfit contains the item
+            var outfitsToDelete = _context.SavedOutfits
+                .Where(x => x.UserId == userId) // 👈 סינון לפי user_id
+                .Where(outfit => outfit.Items.Any(item => item.ItemImage == itemImage))
+                .ToList();
+            
+            foreach (var outfit in outfitsToDelete)
             {
-                foreach (var item in outfit.Items)
-                {
-                    if (item.ItemImage == itemImage)
-                    {
-                        _context.SavedOutfits.Remove(outfit);
-                    }
-                }
+                _context.SavedOutfits.Remove(outfit);
             }
             _context.SaveChanges();
         }

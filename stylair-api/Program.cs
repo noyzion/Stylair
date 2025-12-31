@@ -1,5 +1,8 @@
 using System.ComponentModel;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using stylair_api.Data;
 using stylair_api.Repositories;
 using stylair_api.Services;
@@ -27,6 +30,48 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
+
+// ============================================
+// JWT Authentication Configuration
+// ============================================
+var cognitoAuthority = builder.Configuration["Cognito:Authority"] 
+    ?? throw new InvalidOperationException("Cognito:Authority is required in appsettings.json");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.Authority = cognitoAuthority;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = false, // Cognito doesn't require audience validation for ID tokens
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        // Cognito uses RS256, so we need to fetch the signing keys from the well-known endpoint
+        // This is handled automatically by the JwtBearer middleware
+    };
+    
+    // Handle token validation events
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine($"Authentication failed: {context.Exception.Message}");
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine($"Token validated for user: {context.Principal?.Identity?.Name}");
+            return Task.CompletedTask;
+        }
+    };
+});
+
+builder.Services.AddAuthorization();
 
 // ============================================
 // PostgreSQL Connection Configuration
@@ -96,6 +141,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors(); // Enable CORS
 //app.UseHttpsRedirection();
+
+// Authentication & Authorization middleware (must be before MapControllers)
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapControllers();
 
 // var summaries = new[]
