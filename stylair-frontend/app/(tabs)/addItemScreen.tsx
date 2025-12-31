@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
 import { styles } from "../../assets/styles/AddItemScreen.styles";
 import { KeyboardAvoidingView, Platform } from "react-native";
 import { addItemToCloset } from "../../services/closet.service";
@@ -29,6 +30,7 @@ export type Season = (typeof SEASONS)[number];
 
 export default function AddItemScreen() {
   const [image, setImage] = useState<string | null>(null);
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [choice, setChoice] = useState<UserChoice | null>(null);
   const [subCategory, setSubCategory] = useState("");
   const [category, setCategory] = useState<Category | null>(null);
@@ -50,21 +52,51 @@ export default function AddItemScreen() {
   const isFormValid = !!image && !!category && hasColor;
   const isProductValid = brand.trim().length > 0 && sku.trim().length > 0;
 
+  const convertImageUriToBase64 = async (uri: string): Promise<string> => {
+    try {
+      // Use expo-file-system to read the file as base64
+      // In newer versions, we can use readAsStringAsync with base64 encoding
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: 'base64',
+      });
+      // Return as data URI format
+      return `data:image/jpeg;base64,${base64}`;
+    } catch (error) {
+      console.error("Error converting image URI to base64:", error);
+      throw error;
+    }
+  };
+
   const saveItem = async () => {
     try {
+      if (!image) {
+        alert("Please select an image");
+        return;
+      }
+
+      // Use the base64 we already have, or convert from URI if needed
+      let base64Image: string;
+      if (imageBase64) {
+        base64Image = imageBase64;
+      } else {
+        // Convert URI to base64 if we don't have it already
+        base64Image = await convertImageUriToBase64(image);
+      }
+
       const colorsToSave =
         colors.length > 0 ? colors : color.trim() ? [color.toLowerCase()] : [];
 
       await addItemToCloset({
         itemName: subCategory || category!,
         itemCategory: category!,
-        itemImage: image!,
+        itemImage: base64Image,
         style: stylesSelected.length ? stylesSelected : ["casual"],
         colors: colorsToSave,
         season: seasonsSelected.length ? seasonsSelected : ["all"],
       });
       alert("Item added successfully");
       setImage(null);
+      setImageBase64(null);
       setChoice(null);
       setCategory(null);
       setSubCategory("");
@@ -91,10 +123,16 @@ export default function AddItemScreen() {
       mediaTypes: ["images"],
       allowsEditing: true,
       quality: 1,
+      base64: true, // Get base64 directly from ImagePicker
     });
     if (!result.canceled) {
-      console.log(result.assets[0].uri);
-      setImage(result.assets[0].uri);
+      const asset = result.assets[0];
+      console.log(asset.uri);
+      setImage(asset.uri);
+      // Store base64 if available
+      if (asset.base64) {
+        setImageBase64(`data:image/jpeg;base64,${asset.base64}`);
+      }
       setTouched((prev) => ({ ...prev, image: true }));
     }
   };
@@ -110,9 +148,15 @@ export default function AddItemScreen() {
       mediaTypes: ["images"],
       allowsEditing: true,
       quality: 1,
+      base64: true, // Get base64 directly from ImagePicker
     });
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      const asset = result.assets[0];
+      setImage(asset.uri);
+      // Store base64 if available
+      if (asset.base64) {
+        setImageBase64(`data:image/jpeg;base64,${asset.base64}`);
+      }
       setTouched((prev) => ({ ...prev, image: true }));
     }
   };
@@ -127,7 +171,7 @@ export default function AddItemScreen() {
     );
   }
 
-  const applyAIGeneratedData = (data: {
+  const applyAIGeneratedData = async (data: {
     imageUri: string;
     category: Category;
     subCategory?: string;
@@ -150,6 +194,11 @@ export default function AddItemScreen() {
     });
 
     setChoice("manual");
+    
+    // Convert the image URI to base64 if needed
+    // Note: If the imageUri is already from ImagePicker with base64, we should store it
+    // For now, we'll need to convert it when saving, or store base64 separately
+    // This is a limitation - we might need to refetch the image with base64 option
   };
 
   return (

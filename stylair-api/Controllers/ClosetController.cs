@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using stylair_api.Services;
 
 [ApiController]
 [Route("api/closet")]
@@ -12,11 +13,11 @@ public class ClosetController : ControllerBase // ControllerBase is the base cla
     }
 
     [HttpPost("item")]
-    public IActionResult AddItem(AddItemRequest request)
+    public async Task<IActionResult> AddItem(AddItemRequest request)
     {
         try
         {
-            var item = _service.AddItem(request);
+            var item = await _service.AddItemAsync(request);
             return Ok(new { message = "Item added successfully", item = item });
         }
         catch (ArgumentException ex)
@@ -44,7 +45,7 @@ public class ClosetController : ControllerBase // ControllerBase is the base cla
     }
 
     [HttpDelete("item/{itemImage}")]
-    public IActionResult DeleteItem(string itemImage)
+    public async Task<IActionResult> DeleteItem(string itemImage)
     {
         try
         {
@@ -54,7 +55,7 @@ public class ClosetController : ControllerBase // ControllerBase is the base cla
             }
 
             var decodedItemImage = Uri.UnescapeDataString(itemImage);
-            _service.DeleteItem(decodedItemImage);
+            await _service.DeleteItemAsync(decodedItemImage);
             return Ok(new { message = "Item deleted successfully" });
         }
         catch (ArgumentException ex)

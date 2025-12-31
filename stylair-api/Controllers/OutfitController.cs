@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using stylair_api.Services;
 
 [ApiController]
 [Route("api/outfit")]

@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Microsoft.EntityFrameworkCore;
 using stylair_api.Data;
 using stylair_api.Repositories;
+using stylair_api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +46,7 @@ if (connectionString != null && connectionString.Contains("${DB_PASSWORD}"))
     connectionString = connectionString.Replace("${DB_PASSWORD}", dbPassword);
 }
 
+
 // Register the DbContext in the Dependency Injection system
 // UseNpgsql - tells EF Core to use Npgsql (the PostgreSQL driver)
 // The DbContext will be automatically injected to anyone who needs it (like PostgresClosetItemStore)
@@ -58,6 +60,7 @@ builder.Services.AddScoped<IClosetItemStore, PostgresClosetItemStore>();
 builder.Services.AddScoped<ClosetService>();
 builder.Services.AddScoped<ISavedOutfitStore, PostgresSavedOutfitStore>();
 builder.Services.AddScoped<SavedOutfitService>();
+builder.Services.AddScoped<SupabaseStorageService>();
 
 var app = builder.Build();
 
