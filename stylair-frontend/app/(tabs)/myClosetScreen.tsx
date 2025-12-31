@@ -84,6 +84,8 @@ export default function MyClosetScreen() {
     top: items.filter((item) => item.itemCategory === "top"),
     bottom: items.filter((item) => item.itemCategory === "bottom"),
     shoes: items.filter((item) => item.itemCategory === "shoes"),
+    accessories: items.filter((item) => item.itemCategory === "accessories"),
+    dress: items.filter((item) => item.itemCategory === "dress"),
   };
 
   const CategorySection = ({
@@ -174,7 +176,9 @@ export default function MyClosetScreen() {
                   categoryItems={itemsByCategory.top}
                 />
                 {(itemsByCategory.bottom.length > 0 ||
-                  itemsByCategory.shoes.length > 0) && (
+                  itemsByCategory.shoes.length > 0 ||
+                  itemsByCategory.accessories.length > 0 ||
+                  itemsByCategory.dress.length > 0) && (
                   <View style={styles.divider} />
                 )}
               </>
@@ -185,15 +189,40 @@ export default function MyClosetScreen() {
                   title="Bottom"
                   categoryItems={itemsByCategory.bottom}
                 />
-                {itemsByCategory.shoes.length > 0 && (
+                {(itemsByCategory.shoes.length > 0 ||
+                  itemsByCategory.accessories.length > 0 ||
+                  itemsByCategory.dress.length > 0) && (
                   <View style={styles.divider} />
                 )}
               </>
             )}
             {itemsByCategory.shoes.length > 0 && (
+              <>
+                <CategorySection
+                  title="Shoes"
+                  categoryItems={itemsByCategory.shoes}
+                />
+                {(itemsByCategory.accessories.length > 0 ||
+                  itemsByCategory.dress.length > 0) && (
+                  <View style={styles.divider} />
+                )}
+              </>
+            )}
+            {itemsByCategory.accessories.length > 0 && (
+              <>
+                <CategorySection
+                  title="Accessories"
+                  categoryItems={itemsByCategory.accessories}
+                />
+                {itemsByCategory.dress.length > 0 && (
+                  <View style={styles.divider} />
+                )}
+              </>
+            )}
+            {itemsByCategory.dress.length > 0 && (
               <CategorySection
-                title="Shoes"
-                categoryItems={itemsByCategory.shoes}
+                title="Dress"
+                categoryItems={itemsByCategory.dress}
               />
             )}
           </>

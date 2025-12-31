@@ -5,6 +5,7 @@ import * as FileSystem from "expo-file-system";
 import { styles } from "../../assets/styles/AddItemScreen.styles";
 import { KeyboardAvoidingView, Platform } from "react-native";
 import { addItemToCloset } from "../../services/closet.service";
+import { AddClosetItemRequest } from "../../types/closet";
 import { ImagePickerCard } from "@/components/add-item/ImagePickerCard";
 import {
   UserChoiceSelector,
@@ -20,13 +21,17 @@ import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 
-export const CATEGORIES = ["top", "bottom", "shoes"] as const;
+export const CATEGORIES = ["top", "bottom", "shoes", "accessories", "dress"] as const;
 export const STYLES = ["casual", "formal", "sport", "evening"] as const;
 export const SEASONS = ["summer", "winter", "spring", "fall", "all"] as const;
+export const SIZES_CLOTHING = ["XS", "S", "M", "L", "XL", "XXL", "one size"] as const;
+export const SIZES_SHOES = ["36", "37", "38", "39", "40", "41", "42", "43", "44", "45"] as const;
+export const TAGS = ["favorite", "rarely used", "new", "expensive"] as const;
 
 export type Category = (typeof CATEGORIES)[number];
 export type Style = (typeof STYLES)[number];
 export type Season = (typeof SEASONS)[number];
+export type Tag = (typeof TAGS)[number];
 
 export default function AddItemScreen() {
   const [image, setImage] = useState<string | null>(null);
@@ -47,6 +52,8 @@ export default function AddItemScreen() {
   const [colors, setColors] = useState<string[]>([]);
   const [stylesSelected, setStylesSelected] = useState<Style[]>([]);
   const [seasonsSelected, setSeasonsSelected] = useState<Season[]>([]);
+  const [size, setSize] = useState<string>("");
+  const [tagsSelected, setTagsSelected] = useState<Tag[]>([]);
 
   const hasColor = colors.length > 0 || color.trim().length > 0;
   const isFormValid = !!image && !!category && hasColor;
@@ -86,14 +93,32 @@ export default function AddItemScreen() {
       const colorsToSave =
         colors.length > 0 ? colors : color.trim() ? [color.toLowerCase()] : [];
 
-      await addItemToCloset({
+      // Debug: Log the current state values
+      console.log("=== Before saving item ===");
+      console.log("size state:", `"${size}"`, "trimmed:", `"${size.trim()}"`, "has value:", !!size.trim());
+      console.log("tagsSelected state:", tagsSelected, "length:", tagsSelected.length);
+
+      // Prepare the request object - always include size and tags in the object
+      const trimmedSize = size.trim();
+      const itemToSave: AddClosetItemRequest = {
         itemName: subCategory || category!,
         itemCategory: category!,
         itemImage: base64Image,
         style: stylesSelected.length ? stylesSelected : ["casual"],
         colors: colorsToSave,
         season: seasonsSelected.length ? seasonsSelected : ["all"],
-      });
+        size: trimmedSize || undefined,  // undefined will be omitted from JSON
+        tags: tagsSelected.length > 0 ? tagsSelected : undefined,  // undefined will be omitted from JSON
+      };
+
+      console.log("=== Final itemToSave object ===");
+      console.log("Object keys:", Object.keys(itemToSave));
+      console.log("size in object:", itemToSave.size, "type:", typeof itemToSave.size);
+      console.log("tags in object:", itemToSave.tags, "type:", Array.isArray(itemToSave.tags));
+      const jsonString = JSON.stringify(itemToSave);
+      console.log("JSON string:", jsonString);
+
+      await addItemToCloset(itemToSave);
       alert("Item added successfully");
       setImage(null);
       setImageBase64(null);
@@ -104,6 +129,8 @@ export default function AddItemScreen() {
       setColor("");
       setStylesSelected([]);
       setSeasonsSelected([]);
+      setSize("");
+      setTagsSelected([]);
       setTouched({ image: false, category: false, color: false });
     } catch (error) {
       console.error(error);
@@ -186,6 +213,9 @@ export default function AddItemScreen() {
     setColor(data.colors[0] ?? "");
     setStylesSelected(data.styles);
     setSeasonsSelected(data.seasons);
+    // Note: size and tags are not included in AI-generated data yet
+    setSize("");
+    setTagsSelected([]);
 
     setTouched({
       image: true,
@@ -296,6 +326,8 @@ export default function AddItemScreen() {
               colors={colors}
               stylesSelected={stylesSelected}
               seasonsSelected={seasonsSelected}
+              size={size}
+              tagsSelected={tagsSelected}
               touched={touched}
               isCategoryOpen={isCategoryOpen}
               tempCategory={tempCategory}
@@ -305,6 +337,8 @@ export default function AddItemScreen() {
               setColors={setColors}
               setStylesSelected={setStylesSelected}
               setSeasonsSelected={setSeasonsSelected}
+              setSize={setSize}
+              setTagsSelected={setTagsSelected}
               setTouched={setTouched}
               setIsCategoryOpen={setIsCategoryOpen}
               setTempCategory={setTempCategory}

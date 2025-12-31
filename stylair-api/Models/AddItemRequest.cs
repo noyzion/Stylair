@@ -6,4 +6,6 @@ public class AddItemRequest
     public List<string> style { get; set; } = new();
     public List<string> colors { get; set; } = new();
     public List<string> season { get; set; } = new();
+    public string? size { get; set; }
+    public List<string> tags { get; set; } = new();
 }

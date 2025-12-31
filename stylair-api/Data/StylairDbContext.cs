@@ -103,6 +103,19 @@ public class StylairDbContext : DbContext
                     v => v == null || v.Count == 0 ? "[]" : JsonSerializer.Serialize(v, jsonOptions),
                     v => string.IsNullOrEmpty(v) ? new List<string>() : JsonSerializer.Deserialize<List<string>>(v, jsonOptions) ?? new List<string>());
 
+            // Map size column - optional text
+            entity.Property(e => e.Size)
+                .HasColumnName("size")
+                .HasColumnType("text");
+
+            // Map tags column - JSONB in database, List<string> in C#
+            entity.Property(e => e.Tags)
+                .HasColumnName("tags")
+                .HasColumnType("jsonb")
+                .HasConversion(
+                    v => v == null || v.Count == 0 ? "[]" : JsonSerializer.Serialize(v, jsonOptions),
+                    v => string.IsNullOrEmpty(v) ? new List<string>() : JsonSerializer.Deserialize<List<string>>(v, jsonOptions) ?? new List<string>());
+
             // Map created_at column - timestamp in database, DateTime in C#
             entity.Property(e => e.CreatedAt)
                 .HasColumnName("created_at")

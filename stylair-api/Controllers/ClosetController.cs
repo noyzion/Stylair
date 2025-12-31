@@ -17,7 +17,12 @@ public class ClosetController : ControllerBase // ControllerBase is the base cla
     {
         try
         {
+            // Log the raw request
+            Console.WriteLine($"=== AddItem Request Received ===");
+            Console.WriteLine($"Size: '{request.size}' (is null: {request.size == null})");
+            Console.WriteLine($"Tags: [{string.Join(", ", request.tags ?? new List<string>())}] (is null: {request.tags == null}, count: {request.tags?.Count ?? 0})");
             var item = await _service.AddItemAsync(request);
+            Console.WriteLine($"=== Item Added Successfully ===");
             return Ok(new { message = "Item added successfully", item = item });
         }
         catch (ArgumentException ex)

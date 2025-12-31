@@ -7,6 +7,8 @@ export type AddClosetItemRequest = { //making new type, we can use it in other f
   style: Style[];
   colors: string[];
   season: Season[];
+  size?: string;
+  tags?: string[];
 };
 
 export interface OutfitItem {
@@ -17,6 +19,8 @@ export interface OutfitItem {
   style: string[];
   colors: string[];
   season: string[];
+  size?: string;
+  tags?: string[];
 }
 
 export interface SavedOutfit {

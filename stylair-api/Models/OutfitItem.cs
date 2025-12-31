@@ -10,6 +10,8 @@ public class OutfitItem
     public List<string> Style { get; set; } = new();
     public List<string> Colors { get; set; } = new();
     public List<string> Season { get; set; } = new();
+    public string? Size { get; set; }
+    public List<string> Tags { get; set; } = new();
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     // Backward compatibility properties for JSON serialization
@@ -67,5 +69,21 @@ public class OutfitItem
     { 
         get => Season; 
         set => Season = value ?? new List<string>(); 
+    }
+    
+    [NotMapped]
+    [JsonIgnore]
+    public string? size 
+    { 
+        get => Size; 
+        set => Size = value; 
+    }
+    
+    [NotMapped]
+    [JsonIgnore]
+    public List<string> tags 
+    { 
+        get => Tags; 
+        set => Tags = value ?? new List<string>(); 
     }
 }

@@ -1,7 +1,7 @@
 import { View, Text, Pressable, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from '../../assets/styles/AddItemScreen.styles';
-import { Category, Style, Season, STYLES, SEASONS } from '../../app/(tabs)/addItemScreen';
+import { Category, Style, Season, Tag, STYLES, SEASONS, SIZES_CLOTHING, SIZES_SHOES, TAGS } from '../../app/(tabs)/addItemScreen';
 import { CategoryModal } from './CategoryModal';
 
 type Props = {
@@ -11,6 +11,8 @@ type Props = {
   colors: string[];
   stylesSelected: Style[];
   seasonsSelected: Season[];
+  size: string;
+  tagsSelected: Tag[];
   touched: { category: boolean; color: boolean };
   isCategoryOpen: boolean;
   tempCategory: Category | null;
@@ -21,6 +23,8 @@ type Props = {
   setColors: React.Dispatch<React.SetStateAction<string[]>>;
   setStylesSelected: React.Dispatch<React.SetStateAction<Style[]>>;
   setSeasonsSelected: React.Dispatch<React.SetStateAction<Season[]>>;
+  setSize: (v: string) => void;
+  setTagsSelected: React.Dispatch<React.SetStateAction<Tag[]>>;
   setTouched: React.Dispatch<React.SetStateAction<{ image: boolean; category: boolean; color: boolean }>>;
   setIsCategoryOpen: (v: boolean) => void;
   setTempCategory: (v: Category | null) => void;
@@ -35,9 +39,13 @@ type Props = {
 };
 
 export function ManualForm(props: Props) {
-  const {category, subCategory, color,colors,stylesSelected,seasonsSelected, touched, isCategoryOpen,
+  const {category, subCategory, color,colors,stylesSelected,seasonsSelected, size, tagsSelected, touched, isCategoryOpen,
         tempCategory,setCategory,setSubCategory, setColor, setColors, setStylesSelected,setSeasonsSelected,
-        setTouched,setIsCategoryOpen, setTempCategory, toggleValue,  hasColor, } = props;
+        setSize, setTagsSelected, setTouched,setIsCategoryOpen, setTempCategory, toggleValue,  hasColor, } = props;
+  
+  // Determine which sizes to show based on category
+  // Only shoes use shoe sizes, all other categories (top, bottom, accessories, dress) use clothing sizes
+  const availableSizes = category === 'shoes' ? SIZES_SHOES : SIZES_CLOTHING;
   return (
     <View style={styles.manualFormContainer}>
             
@@ -59,7 +67,7 @@ export function ManualForm(props: Props) {
 
     <Text style={styles.formLabel}>Sub-Category (optional)</Text>
       <View style={styles.inputBox}> 
-        <TextInput value={subCategory} onChangeText={setSubCategory} placeholder="e.g T-shirt, Jeans, Sneakers" style={{ padding:0}}/>
+        <TextInput value={subCategory} onChangeText={setSubCategory} placeholder="e.g T-shirt, Jeans, Sneakers, Glasses, Belt" style={{ padding:0}}/>
       </View>
 
     <Text style={styles.formLabel}>Color *</Text>
@@ -117,6 +125,52 @@ export function ManualForm(props: Props) {
               <View style={[styles.chip, selected && styles.chipSelected]}>
                 <Text style={selected ? styles.chipTextSelected : styles.chipText}>
                   {se}
+                </Text>
+              </View>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <Text style={styles.formLabel}>Size (optional)</Text>
+      <View style={styles.chipsRow}>
+        {availableSizes.map(sz => {
+          const selected = size === sz;
+          return (
+            <Pressable key={sz} onPress={() => setSize(selected ? "" : sz)}>
+              <View style={[styles.chip, selected && styles.chipSelected]}>
+                <Text style={selected ? styles.chipTextSelected : styles.chipText}>
+                  {sz}
+                </Text>
+              </View>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <Text style={styles.formLabel}>Tags (optional)</Text>
+      <View style={styles.chipsRow}>
+        {TAGS.map(tag => {
+          const selected = tagsSelected.includes(tag);
+          const getTagDisplayName = (tagValue: string) => {
+            switch (tagValue) {
+              case 'favorite':
+                return 'Favorite';
+              case 'rarely used':
+                return 'Rarely Used';
+              case 'new':
+                return 'New';
+              case 'expensive':
+                return 'Expensive';
+              default:
+                return tagValue;
+            }
+          };
+          return (
+            <Pressable key={tag} onPress={() => toggleValue(tag, tagsSelected, setTagsSelected)}>
+              <View style={[styles.chip, selected && styles.chipSelected]}>
+                <Text style={selected ? styles.chipTextSelected : styles.chipText}>
+                  {getTagDisplayName(tag)}
                 </Text>
               </View>
             </Pressable>

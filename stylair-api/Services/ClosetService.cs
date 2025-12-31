@@ -35,8 +35,12 @@ public class ClosetService
             ItemImage = imageUrl, // Store the Supabase Storage URL instead of base64/URI
             Style = request.style ?? new List<string>(),
             Colors = request.colors ?? new List<string>(),
-            Season = request.season ?? new List<string>()
+            Season = request.season ?? new List<string>(),
+            Size = request.size,  // Can be null if not provided
+            Tags = request.tags ?? new List<string>()  // Default to empty list if null/empty
         };
+
+        Console.WriteLine($"Adding item with Size: '{item.Size}', Tags: [{string.Join(", ", item.Tags)}]");
 
         _store.Add(item);
         return item;
@@ -44,7 +48,44 @@ public class ClosetService
 
     public List<OutfitItem> GetAllItems()
     {
-        return _store.GetAll();
+        var items = _store.GetAll();
+        // Filter out "new" tag from items older than 30 days and update database
+        foreach (var item in items)
+        {
+            if (FilterNewTag(item))
+            {
+                // If tag was removed, update the item in the database
+                _store.Update(item);
+            }
+        }
+        return items;
+    }
+
+    private bool FilterNewTag(OutfitItem item)
+    {
+        // If item has "new" tag and is older than 30 days, remove the tag
+        if (item.Tags != null && item.Tags.Contains("new", StringComparer.OrdinalIgnoreCase))
+        {
+            // CreatedAt is stored as local time (Unspecified), so compare with local time
+            var now = DateTime.Now;
+            var created = item.CreatedAt;
+            
+            // Handle Unspecified DateTime by treating it as local time
+            if (created.Kind == DateTimeKind.Unspecified)
+            {
+                created = DateTime.SpecifyKind(created, DateTimeKind.Local);
+            }
+            
+            var daysSinceCreation = (now - created).TotalDays;
+            if (daysSinceCreation > 30)
+            {
+                var originalCount = item.Tags.Count;
+                item.Tags = item.Tags.Where(t => !t.Equals("new", StringComparison.OrdinalIgnoreCase)).ToList();
+                // Return true if tag was actually removed
+                return item.Tags.Count < originalCount;
+            }
+        }
+        return false;
     }
 
     public async Task DeleteItemAsync(string itemImage)

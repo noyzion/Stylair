@@ -26,14 +26,22 @@ export function CategoryModal({
 
           <View style={styles.pickerContainer}>
             <Picker
-              selectedValue={value}
-              onValueChange={onChange}
+              selectedValue={value ?? ""}
+              onValueChange={(itemValue) => {
+                // Only update if a valid category is selected (not the placeholder)
+                if (itemValue && itemValue !== "") {
+                  onChange(itemValue as Category);
+                }
+              }}
               style={styles.picker}
               itemStyle={styles.pickerItem}
             >
+              <Picker.Item label="Select a category..." value="" enabled={false} />
               <Picker.Item label="Top" value="top" />
               <Picker.Item label="Bottom" value="bottom" />
               <Picker.Item label="Shoes" value="shoes" />
+              <Picker.Item label="Accessories" value="accessories" />
+              <Picker.Item label="Dress" value="dress" />
             </Picker>
           </View>
 

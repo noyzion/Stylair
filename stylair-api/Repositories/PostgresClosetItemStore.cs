@@ -32,12 +32,19 @@ public class PostgresClosetItemStore : IClosetItemStore, IOutfitStore
             // Set the creation time (if not set, the database will insert it automatically)
             item.CreatedAt = DateTime.Now;
 
+            // Log before saving
+            Console.WriteLine($"=== PostgresClosetItemStore.Add ===");
+            Console.WriteLine($"Item Size: '{item.Size}' (is null: {item.Size == null})");
+            Console.WriteLine($"Item Tags: [{string.Join(", ", item.Tags ?? new List<string>())}] (is null: {item.Tags == null}, count: {item.Tags?.Count ?? 0})");
+
             // Add the item to the DbSet (this doesn't save to database yet)
             _context.ClosetItems.Add(item);
 
             // Save changes to the database - this is where the actual operation happens in PostgreSQL
             // EF Core translates this to SQL: INSERT INTO closet_items ...
             _context.SaveChanges();
+            
+            Console.WriteLine($"=== Item Saved to Database ===");
         }
         catch (Exception ex)
         {
@@ -94,6 +101,42 @@ public class PostgresClosetItemStore : IClosetItemStore, IOutfitStore
     public bool IsClosetEmpty()
     {
         return _context.ClosetItems.Count() == 0;
+    }
+
+    /// Update - Updates an existing item in the database
+    public void Update(OutfitItem item)
+    {
+        try
+        {
+            var existingItem = _context.ClosetItems.Find(item.ItemImage);
+            if (existingItem != null)
+            {
+                // Update all properties
+                existingItem.ItemName = item.ItemName;
+                existingItem.ItemCategory = item.ItemCategory;
+                existingItem.Style = item.Style;
+                existingItem.Colors = item.Colors;
+                existingItem.Season = item.Season;
+                existingItem.Size = item.Size;
+                existingItem.Tags = item.Tags;
+                
+                _context.SaveChanges();
+            }
+            else
+            {
+                throw new ArgumentException($"Item with image '{item.ItemImage}' not found");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in PostgresClosetItemStore.Update: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            }
+            throw;
+        }
     }
 
     public OutfitRecommendationResponse GetOutfitByCriteria(OutfitCriteria criteria)
@@ -163,8 +206,9 @@ public class PostgresClosetItemStore : IClosetItemStore, IOutfitStore
             }
         }
 
-        // Group items by category to ensure we have one of each type (bottom, top, shoes)
-        // Find one item from each category (bottom, top, shoes)
+        // Group items by category to ensure we have one of each core type (bottom, top, shoes)
+        // Note: accessories and dress are optional categories and not included in core outfit recommendations
+        // Find one item from each core category (bottom, top, shoes)
         OutfitItem? bottomItem = null;
         OutfitItem? topItem = null;
         OutfitItem? shoesItem = null;
