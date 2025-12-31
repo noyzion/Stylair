@@ -55,7 +55,8 @@ export default function AddItemScreen() {
   const [size, setSize] = useState<string>("");
   const [tagsSelected, setTagsSelected] = useState<Tag[]>([]);
 
-  const hasColor = colors.length > 0 || color.trim().length > 0;
+  // Color is valid only if at least one color was added to the list (via "Add Color" button)
+  const hasColor = colors.length > 0;
   const isFormValid = !!image && !!category && hasColor;
   const isProductValid = brand.trim().length > 0 && sku.trim().length > 0;
 
@@ -90,8 +91,8 @@ export default function AddItemScreen() {
         base64Image = await convertImageUriToBase64(image);
       }
 
-      const colorsToSave =
-        colors.length > 0 ? colors : color.trim() ? [color.toLowerCase()] : [];
+      // Only save colors that were added to the list via "Add Color" button
+      const colorsToSave = colors;
 
       // Debug: Log the current state values
       console.log("=== Before saving item ===");

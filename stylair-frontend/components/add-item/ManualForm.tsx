@@ -71,7 +71,7 @@ export function ManualForm(props: Props) {
       </View>
 
     <Text style={styles.formLabel}>Color *</Text>
-      <View style={[styles.inputBox, touched.color && !color && styles.inputError,]}>
+      <View style={[styles.inputBox, touched.color && !hasColor && styles.inputError]}>
       <TextInput value={color} onChangeText={setColor} placeholder="e.g Blue"/>
       </View>
       <Pressable 
