@@ -31,7 +31,7 @@ export default function HomeScreen() {
     
     // If not authenticated, redirect to login
     if (!isAuth) {
-      router.replace('/(tabs)/auth/login'); // 👈 המסלול הנכון - הקבצים בתוך (tabs)
+      router.replace('/(tabs)/auth/login');
       return;
     }
     

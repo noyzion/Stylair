@@ -30,7 +30,7 @@ public class OutfitChatController : ControllerBase
     /// 
     /// Request body:
     /// {
-    ///   "userMessage": "יש לי פגישה בצהריים ואימון בערב",
+    ///   "userMessage": "I have a meeting at noon and a workout in the evening",
     ///   "weather": {
     ///     "temperature": 25,
     ///     "condition": "sun",

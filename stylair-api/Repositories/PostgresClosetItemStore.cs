@@ -6,13 +6,12 @@ namespace stylair_api.Repositories;
 
 /// PostgresClosetItemStore - This is the Repository that connects to PostgreSQL
 /// It implements IClosetItemStore and uses StylairDbContext to perform database operations
-public class PostgresClosetItemStore : IClosetItemStore, IOutfitStore
+public class PostgresClosetItemStore : IClosetItemStore
 {
-    /// _context - This is the DbContext that connects us to PostgreSQL
-    /// It is injected through Dependency Injection in Program.cs
+    /// DbContext for PostgreSQL
     private readonly StylairDbContext _context;
 
-    /// Constructor - Receives the DbContext through Dependency Injection
+    /// Constructor
     public PostgresClosetItemStore(StylairDbContext context)
     {
         _context = context;
@@ -68,7 +67,7 @@ public class PostgresClosetItemStore : IClosetItemStore, IOutfitStore
         // EF Core translates this to SQL: SELECT * FROM closet_items WHERE user_id = @userId ORDER BY created_at DESC
         // Filters by user_id to ensure users only see their own items
         return _context.ClosetItems
-            .Where(x => x.UserId == userId) // 👈 סינון לפי user_id
+            .Where(x => x.UserId == userId)
             .OrderByDescending(x => x.CreatedAt)
             .ToList();
     }
@@ -106,11 +105,6 @@ public class PostgresClosetItemStore : IClosetItemStore, IOutfitStore
         }
     }
 
-    public bool IsClosetEmpty(string userId)
-    {
-        return _context.ClosetItems.Count(x => x.UserId == userId) == 0;
-    }
-
     /// Update - Updates an existing item in the database
     public void Update(OutfitItem item)
     {
@@ -143,115 +137,6 @@ public class PostgresClosetItemStore : IClosetItemStore, IOutfitStore
             }
             throw;
         }
-    }
-
-    public OutfitRecommendationResponse GetOutfitByCriteria(OutfitCriteria criteria, string userId)
-    {
-        // Filter items by user_id first
-        List<OutfitItem> items = _context.ClosetItems
-            .Where(x => x.UserId == userId) // 👈 סינון לפי user_id
-            .ToList();
-        var returnedOutfit = new OutfitRecommendationResponse();
-
-        // Filter items based on criteria (style, colors, season)
-        // Go through all items and check if they match the criteria
-        List<OutfitItem> filteredItems = new List<OutfitItem>();
-
-        foreach (var item in items)
-        {
-            // Check style: if criteria has no styles, accept all. Otherwise, check if item has matching style
-            bool styleMatch = true;
-            if (criteria.style.Count > 0)
-            {
-                styleMatch = false;
-                foreach (var itemStyle in item.style)
-                {
-                    foreach (var requestedStyle in criteria.style)
-                    {
-                        if (itemStyle == requestedStyle)
-                        {
-                            styleMatch = true;
-                            break;
-                        }
-                    }
-                    if (styleMatch) break;
-                }
-            }
-
-            // Check colors: if criteria has no colors, accept all. Otherwise, check if item has matching color
-            bool colorMatch = true;
-            if (criteria.colors.Count > 0)
-            {
-                colorMatch = false;
-                foreach (var itemColor in item.colors)
-                {
-                    foreach (var requestedColor in criteria.colors)
-                    {
-                        if (itemColor.ToLower() == requestedColor.ToLower())
-                        {
-                            colorMatch = true;
-                            break;
-                        }
-                    }
-                    if (colorMatch) break;
-                }
-            }
-
-            // Check season: if criteria season is "all" or item season contains "all", accept. Otherwise, must match
-            bool seasonMatch = false;
-            if (criteria.season == "all" || item.season.Contains("all"))
-            {
-                seasonMatch = true;
-            }
-            else if (item.season.Contains(criteria.season))
-            {
-                seasonMatch = true;
-            }
-
-            // If all three conditions match, add this item to filtered list
-            if (styleMatch && colorMatch && seasonMatch)
-            {
-                filteredItems.Add(item);
-            }
-        }
-
-        // Group items by category to ensure we have one of each core type (bottom, top, shoes)
-        // Note: accessories and dress are optional categories and not included in core outfit recommendations
-        // Find one item from each core category (bottom, top, shoes)
-        OutfitItem? bottomItem = null;
-        OutfitItem? topItem = null;
-        OutfitItem? shoesItem = null;
-
-        foreach (var item in filteredItems)
-        {
-            if (item.itemCategory == "bottom" && bottomItem == null)
-            {
-                bottomItem = item;
-            }
-            else if (item.itemCategory == "top" && topItem == null)
-            {
-                topItem = item;
-            }
-            else if (item.itemCategory == "shoes" && shoesItem == null)
-            {
-                shoesItem = item;
-            }
-        }
-
-        // Add one item from each category if we found them
-        if (bottomItem != null)
-            returnedOutfit.items.Add(bottomItem);
-        if (topItem != null)
-            returnedOutfit.items.Add(topItem);
-        if (shoesItem != null)
-            returnedOutfit.items.Add(shoesItem);
-
-        if (returnedOutfit.items.Count == 0)
-        {
-            returnedOutfit.reasonText = "there are no matching items in the closet";
-        }
-
-        return returnedOutfit;
     }
 }
 

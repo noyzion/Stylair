@@ -73,13 +73,12 @@ export default function AddItemScreen() {
   const [tagsSelected, setTagsSelected] = useState<Tag[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  // Load item data if in edit mode - only run once when component mounts or edit mode changes
+  // Load item data if in edit mode
   useEffect(() => {
     if (isEditMode && params.itemImage && !image) {
-      // Only load if we don't already have an image (prevent re-running)
       // Set image
       setImage(params.itemImage);
-      setImageBase64(null); // Don't need base64 for existing image
+      setImageBase64(null);
       
       // Set category
       if (params.itemCategory) {
@@ -153,16 +152,15 @@ export default function AddItemScreen() {
         color: true,
       });
     }
-    // Only depend on isEditMode and itemImage - not the entire params object
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEditMode, params.itemImage]);
 
-  // Reset form when screen loses focus (user navigates away)
+  // Reset form when screen loses focus
   useFocusEffect(
     useCallback(() => {
       // This runs when screen gains focus
       return () => {
-        // This cleanup function runs when screen loses focus
+        // Cleanup on screen unfocus
         // Reset all form fields
         setImage(null);
         setImageBase64(null);
@@ -192,8 +190,7 @@ export default function AddItemScreen() {
 
   const convertImageUriToBase64 = async (uri: string): Promise<string> => {
     try {
-      // Use expo-file-system to read the file as base64
-      // In newer versions, we can use readAsStringAsync with base64 encoding
+      // Read file as base64
       const base64 = await FileSystem.readAsStringAsync(uri, {
         encoding: 'base64',
       });
@@ -212,23 +209,22 @@ export default function AddItemScreen() {
         return;
       }
 
-      // Use the base64 we already have, or convert from URI if needed
-      // In edit mode, if image hasn't changed, use the existing URL
+      // Use existing base64 or convert from URI
       let base64Image: string;
       if (isEditMode && !imageBase64 && image === editItemImage) {
-        // Image hasn't changed, use existing URL
+        // Use existing URL
         base64Image = image;
       } else if (imageBase64) {
         base64Image = imageBase64;
       } else {
-        // Convert URI to base64 if we don't have it already
+        // Convert URI to base64
         base64Image = await convertImageUriToBase64(image);
       }
 
-      // Only save colors that were added to the list via "Add Color" button
+      // Save colors from list
       const colorsToSave = colors;
 
-      // Prepare the request object - always include size and tags in the object
+      // Prepare request object
       const trimmedSize = size.trim();
       const itemToSave: AddClosetItemRequest = {
         itemName: subCategory || category!,
@@ -345,7 +341,7 @@ export default function AddItemScreen() {
     setColor(data.colors[0] ?? "");
     setStylesSelected(data.styles);
     setSeasonsSelected(data.seasons);
-    // Note: size and tags are not included in AI-generated data yet
+    // Size and tags not included in AI data
     setSize("");
     setTagsSelected([]);
 
@@ -357,10 +353,7 @@ export default function AddItemScreen() {
 
     setChoice("manual");
     
-    // Convert the image URI to base64 if needed
-    // Note: If the imageUri is already from ImagePicker with base64, we should store it
-    // For now, we'll need to convert it when saving, or store base64 separately
-    // This is a limitation - we might need to refetch the image with base64 option
+    // Convert image URI to base64 if needed
   };
 
   return (

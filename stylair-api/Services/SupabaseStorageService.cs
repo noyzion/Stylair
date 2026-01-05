@@ -27,7 +27,7 @@ public class SupabaseStorageService
                 throw new InvalidOperationException("SUPABASE_KEY environment variable is required but not set. Please set it before running the application.");
             }
             _supabaseKey = envKey;
-            Console.WriteLine("✅ SUPABASE_KEY environment variable found");
+            Console.WriteLine("SUPABASE_KEY environment variable found");
         }
         else
         {

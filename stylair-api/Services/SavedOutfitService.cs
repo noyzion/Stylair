@@ -21,7 +21,7 @@ public class SavedOutfitService
             ReasonText = outfitResponse.reasonText ?? string.Empty,
             Items = outfitResponse.items,
             CreatedAt = DateTime.UtcNow,
-            UserId = userId // 👈 שמירת user_id
+            UserId = userId
         };
 
         _store.Add(savedOutfit, userId);

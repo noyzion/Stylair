@@ -46,12 +46,12 @@ public class OpenAIImageAnalysisService
     /// Constructor - validates API key and initializes OpenAI client
     public OpenAIImageAnalysisService(IConfiguration configuration)
     {
-        // Get API key from environment variable (SECURE - never hardcode!)
+        // Get API key from environment variable
         _apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY") 
             ?? throw new InvalidOperationException(
                 "OPENAI_API_KEY environment variable is required but not set. " +
                 "Please set it before running the application. " +
-                "⚠️ NEVER commit API keys to GitHub - OpenAI will disable them!");
+                "NEVER commit API keys to GitHub - OpenAI will disable them!");
 
         // Validate API key format (starts with 'sk-')
         if (!_apiKey.StartsWith("sk-", StringComparison.OrdinalIgnoreCase))
@@ -162,7 +162,7 @@ public class OpenAIImageAnalysisService
         }
         else if (!string.IsNullOrWhiteSpace(request.ImageBase64))
         {
-            // Extract base64 data (remove data:image/jpeg;base64, prefix if present)
+            // Extract base64 data
             var base64Data = request.ImageBase64;
             if (base64Data.Contains(','))
             {
@@ -170,7 +170,6 @@ public class OpenAIImageAnalysisService
             }
 
             // Return base64 image URL format
-            // OpenAI-DotNet expects data:image/jpeg;base64,{base64} format
             var mimeType = "image/jpeg"; // Default, could be detected from base64 prefix
             if (request.ImageBase64.StartsWith("data:image/"))
             {
@@ -253,7 +252,7 @@ GENERAL RULES:
     {
         try
         {
-            // Clean response text (remove markdown code blocks if present)
+            // Clean response text
             var cleanText = responseText.Trim();
             if (cleanText.StartsWith("```json"))
             {
@@ -273,10 +272,10 @@ GENERAL RULES:
             var jsonDoc = JsonDocument.Parse(cleanText);
             var root = jsonDoc.RootElement;
 
-            // Extract values - support both old format (single values) and new format (arrays)
+            // Extract values
             var category = root.GetProperty("category").GetString() ?? string.Empty;
             
-            // Extract colors - support both "color" (single) and "colors" (array)
+            // Extract colors
             var colors = new List<string>();
             if (root.TryGetProperty("colors", out var colorsElement) && colorsElement.ValueKind == System.Text.Json.JsonValueKind.Array)
             {
@@ -291,7 +290,7 @@ GENERAL RULES:
             }
             else if (root.TryGetProperty("color", out var colorElement))
             {
-                // Backward compatibility: support single "color" field
+                // Backward compatibility
                 var colorValue = colorElement.GetString();
                 if (!string.IsNullOrWhiteSpace(colorValue))
                 {
@@ -299,7 +298,7 @@ GENERAL RULES:
                 }
             }
 
-            // Extract styles - support both "style" (single) and "styles" (array)
+            // Extract styles
             var styles = new List<string>();
             if (root.TryGetProperty("styles", out var stylesElement) && stylesElement.ValueKind == System.Text.Json.JsonValueKind.Array)
             {
@@ -322,7 +321,7 @@ GENERAL RULES:
                 }
             }
 
-            // Extract seasons - support both "season" (single) and "seasons" (array)
+            // Extract seasons
             var seasons = new List<string>();
             if (root.TryGetProperty("seasons", out var seasonsElement) && seasonsElement.ValueKind == System.Text.Json.JsonValueKind.Array)
             {
@@ -424,7 +423,7 @@ GENERAL RULES:
                         validatedCategory = "Accessories";
                 }
                 
-                // Final validation - if still not valid, return error with helpful message
+                // Final validation
                 if (!ValidCategories.Contains(validatedCategory, StringComparer.OrdinalIgnoreCase))
                 {
                     return new AIImageAnalysisResponse
@@ -439,13 +438,13 @@ GENERAL RULES:
             
             category = validatedCategory;
 
-            // Validate colors - filter out "Multicolor" and try to match similar colors
+            // Validate colors
             var validColors = new List<string>();
             var invalidColors = new List<string>();
             
             foreach (var color in colors)
             {
-                // Skip "Multicolor" - we want individual colors instead
+                // Skip "Multicolor"
                 if (color.Equals("Multicolor", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
@@ -516,7 +515,7 @@ GENERAL RULES:
                 }
             }
 
-            // If we have some valid colors but also invalid ones, warn but don't fail
+            // Warn if invalid colors found
             if (validColors.Count == 0)
             {
                 return new AIImageAnalysisResponse
@@ -527,7 +526,7 @@ GENERAL RULES:
                 };
             }
             
-            // If we have invalid colors but also valid ones, include a note
+            // Add note if invalid colors found
             if (invalidColors.Count > 0 && notes == null)
             {
                 notes = $"Note: Some colors could not be identified ({string.Join(", ", invalidColors)}). Using detected colors: {string.Join(", ", validColors)}.";
@@ -587,7 +586,7 @@ GENERAL RULES:
                 };
             }
 
-            // Check if all 4 seasons are selected - if so, convert to "All Season"
+            // Convert all 4 seasons to "All Season"
             var hasSpring = validSeasons.Any(s => s.Equals("Spring", StringComparison.OrdinalIgnoreCase));
             var hasSummer = validSeasons.Any(s => s.Equals("Summer", StringComparison.OrdinalIgnoreCase));
             var hasFall = validSeasons.Any(s => s.Equals("Fall", StringComparison.OrdinalIgnoreCase));
@@ -595,18 +594,18 @@ GENERAL RULES:
             
             if (hasSpring && hasSummer && hasFall && hasWinter && validSeasons.Count == 4)
             {
-                // All 4 seasons selected - convert to "All Season"
+                // Convert to "All Season"
                 validSeasons = new List<string> { "All Season" };
             }
             else
             {
-                // Remove "All Season" if there are specific seasons - "All Season" means it fits all, so specific seasons are redundant
+                // Remove "All Season" if specific seasons exist
                 var hasAllSeason = validSeasons.Any(s => s.Equals("All Season", StringComparison.OrdinalIgnoreCase));
                 var hasSpecificSeasons = validSeasons.Any(s => !s.Equals("All Season", StringComparison.OrdinalIgnoreCase));
                 
                 if (hasAllSeason && hasSpecificSeasons)
                 {
-                    // Remove "All Season" and keep only specific seasons
+                    // Keep only specific seasons
                     validSeasons = validSeasons
                         .Where(s => !s.Equals("All Season", StringComparison.OrdinalIgnoreCase))
                         .ToList();

@@ -8,7 +8,7 @@ export const getCurrentUser = () : CognitoUser | null => {
 export const getUserName = async (): Promise<string | null> => {
     const currentUser = getCurrentUser();
     if (!currentUser) {
-        return null; // או throw error - תלוי מה אתה מעדיף
+        return null;
     }
 
     return new Promise((resolve) => {

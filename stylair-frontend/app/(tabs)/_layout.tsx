@@ -22,7 +22,7 @@ export default function TabLayout() {
       // If not authenticated and not already in auth screens, redirect to login
       if (!authenticated && !inAuthGroup) {
         // Use push instead of replace to avoid navigation errors
-        router.push('/(tabs)/auth/login'); // 👈 המסלול הנכון - הקבצים בתוך (tabs)
+        router.push('/(tabs)/auth/login');
       }
       // If authenticated and in auth screens, redirect to home
       else if (authenticated && inAuthGroup) {

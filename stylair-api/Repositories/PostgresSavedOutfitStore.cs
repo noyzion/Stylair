@@ -53,7 +53,7 @@ public class PostgresSavedOutfitStore : ISavedOutfitStore
     {
         // Filter by user_id and order by newest first
         return _context.SavedOutfits
-            .Where(x => x.UserId == userId) // 👈 סינון לפי user_id
+            .Where(x => x.UserId == userId)
             .OrderByDescending(x => x.CreatedAt)
             .ToList();
     }
@@ -96,12 +96,12 @@ public class PostgresSavedOutfitStore : ISavedOutfitStore
     {
         try
         {
-            // Load all outfits for the user first (Items is JSONB, so we need to load and filter in memory)
+            // Load all outfits for the user first
             var allOutfits = _context.SavedOutfits
-                .Where(x => x.UserId == userId) // 👈 סינון לפי user_id
+                .Where(x => x.UserId == userId)
                 .ToList();
             
-            // Filter outfits that contain the item image (client-side evaluation)
+            // Filter outfits that contain the item image
             var outfitsToDelete = allOutfits
                 .Where(outfit => outfit.Items != null && outfit.Items.Any(item => item.ItemImage == itemImage))
                 .ToList();

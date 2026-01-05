@@ -235,29 +235,28 @@ export default function TodayLookScreen() {
     return "cloud";
   }
 
-  //function to send the message to the API, async because we are using await to wait for the response
+  // Send message to API
   const handleSend = async () => {
     if (message.trim() === "") return;
     
     // Store message before clearing
     const messageToSend = message.trim();
     
-    // Check if this is a new topic (different event) - reset history if so
-    // Note: Off-topic detection is handled by backend semantic relevance check
+    // Check if this is a new topic
     const isNewTopicMessage = isNewTopic(messageToSend);
     
-    // If it's a new topic, reset topic tracking (but keep messages visible)
+    // Reset topic tracking for new topics
     if (isNewTopicMessage) {
       setCurrentTopic(null);
     } else {
-      // Extract and update current topic if it's a continuation
+      // Extract and update current topic
       const extractedTopic = extractTopic(messageToSend);
       if (extractedTopic) {
         setCurrentTopic(extractedTopic);
       }
     }
     
-    // Add user message to chat (always keep messages visible)
+    // Add user message to chat
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       type: 'user',
@@ -281,10 +280,7 @@ export default function TodayLookScreen() {
     }]);
     
     try {
-      // Build chat history from previous messages (excluding loading messages)
-      // Only include history if we're continuing the same topic
-      // Note: Messages stay visible on screen, but history sent to backend is reset for new topics
-      // Note: Backend will handle semantic relevance - we just send history for context
+      // Build chat history from previous messages
       const shouldIncludeHistory = !isNewTopicMessage;
       const chatHistory = shouldIncludeHistory 
         ? chatMessages
@@ -296,7 +292,7 @@ export default function TodayLookScreen() {
                   content: msg.text
                 };
               } else {
-                // For AI messages, include outfit information in a structured way
+                // Include outfit information for AI messages
                 if (msg.outfits && msg.outfits.length > 0) {
                   // Build a description of the outfits for context
                   const outfitDescriptions = msg.outfits.map(outfit => {
@@ -334,7 +330,7 @@ export default function TodayLookScreen() {
       if (!response.success) {
         const errorText = response.errorMessage || "Failed to generate outfit suggestions";
         
-        // If it's an off-topic message, show it as AI message
+        // Show off-topic message as AI message
         if (errorText.toLowerCase().includes("i'm a fashion") ||
             errorText.toLowerCase().includes("i can only help") ||
             errorText.toLowerCase().includes("fashion stylist"))
@@ -370,7 +366,7 @@ export default function TodayLookScreen() {
         timestamp: new Date(),
       }]);
       
-      // Update current topic if outfits were found and we don't have a topic yet
+      // Update current topic if needed
       if (response.outfits.length > 0 && !currentTopic) {
         const extractedTopic = extractTopic(messageToSend);
         if (extractedTopic) {

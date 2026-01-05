@@ -5,15 +5,8 @@ type WeatherBannerProps = {
     tempC?: number;
     condition?: 'sun' | 'cloud' | 'rain' | 'storm' | 'snow' | 'wind' | 'hot';
     style?: StyleProp<ViewStyle>;
-    isNight?: boolean; // ✅ חדש
+    isNight?: boolean;
   };
-  
-
-function isWorkDay(date: Date) {
-  // 0=Sunday ... 6=Saturday
-  const day = date.getDay();
-  return day !== 0 && day !== 6;
-}
 
 function getDayLabel(date: Date) {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -48,7 +41,7 @@ export default function WeatherBanner({
     isNight = false,
 }: WeatherBannerProps) {
   const now = useMemo(() => new Date(), []);
-  const temp = typeof tempC === 'number' ? tempC : 18; // MOCK
+  const temp = typeof tempC === 'number' ? tempC : 18; // Default fallback temperature
   const label = getDayLabel(now);
   const icon = getIcon(condition, isNight);
 

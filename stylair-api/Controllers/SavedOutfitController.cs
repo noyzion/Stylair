@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using stylair_api.Extensions;
 using stylair_api.Services;
 
-[Authorize] // 👈 דורש authentication לכל ה-endpoints
+[Authorize]
 [ApiController]
 [Route("api/saved-outfits")]
 public class SavedOutfitController : ControllerBase
@@ -20,7 +20,7 @@ public class SavedOutfitController : ControllerBase
     {
         try
         {
-            var userId = User.GetUserId(); // 👈 מקבלים את ה-user ID מה-token
+            var userId = User.GetUserId();
             var savedOutfit = _service.SaveOutfit(outfitResponse, userId);
             return Ok(new { message = "Outfit saved successfully", outfit = savedOutfit });
         }
@@ -45,7 +45,7 @@ public class SavedOutfitController : ControllerBase
     {
         try
         {
-            var userId = User.GetUserId(); // 👈 מקבלים את ה-user ID מה-token
+            var userId = User.GetUserId();
             var outfits = _service.GetAllSavedOutfits(userId);
             return Ok(outfits);
         }
@@ -71,7 +71,7 @@ public class SavedOutfitController : ControllerBase
                 return BadRequest(new { message = $"Invalid outfit ID format: {outfitId}" });
             }
 
-            var userId = User.GetUserId(); // 👈 מקבלים את ה-user ID מה-token
+            var userId = User.GetUserId();
             _service.DeleteOutfit(guidOutfitId, userId);
             return Ok(new { message = "Outfit deleted successfully" });
         }

@@ -13,7 +13,7 @@ export async function addItemToCloset(item: AddClosetItemRequest): Promise<{ mes
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`, // 👈 הוספת JWT token
+      'Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(item),
   });
@@ -37,7 +37,7 @@ export async function getAllItemsFromCloset(): Promise<OutfitItem[]> {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`, // 👈 הוספת JWT token
+      'Authorization': `Bearer ${token}`,
     },
   });
 
@@ -63,7 +63,7 @@ export async function saveOutfit(outfit: {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`, // 👈 הוספת JWT token
+      'Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(outfit),
   });
@@ -87,7 +87,7 @@ export async function getAllSavedOutfits(): Promise<SavedOutfit[]> {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`, // 👈 הוספת JWT token
+      'Authorization': `Bearer ${token}`,
     },
   });
 
@@ -110,7 +110,7 @@ export async function deleteItemFromCloset(itemImage: string): Promise<{ message
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`, // 👈 הוספת JWT token
+      'Authorization': `Bearer ${token}`,
     },
   });
 
@@ -151,7 +151,7 @@ export async function deleteOutfitFromArchive(outfitId: string): Promise<{ messa
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`, // 👈 הוספת JWT token
+      'Authorization': `Bearer ${token}`,
     },
   });
 

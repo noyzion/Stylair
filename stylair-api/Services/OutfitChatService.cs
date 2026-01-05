@@ -26,7 +26,7 @@ public class OutfitChatService
             ?? throw new InvalidOperationException(
                 "OPENAI_API_KEY environment variable is required but not set. " +
                 "Please set it before running the application. " +
-                "⚠️ NEVER commit API keys to GitHub - OpenAI will disable them!");
+                "NEVER commit API keys to GitHub - OpenAI will disable them!");
 
         // Validate API key format (starts with 'sk-')
         if (!_apiKey.StartsWith("sk-", StringComparison.OrdinalIgnoreCase))
@@ -55,11 +55,11 @@ public class OutfitChatService
             {
                 var thankYouResponses = new[]
                 {
-                    "You're so welcome! I'm here whenever you need outfit help! 💜",
-                    "Happy to help! Feel free to ask me anytime about outfits! ✨",
-                    "You're welcome! I'm always here to help you look amazing! 🌟",
-                    "My pleasure! Can't wait to help you with your next outfit! 💫",
-                    "You're welcome! I love helping you create perfect looks! 💕"
+                    "You're so welcome! I'm here whenever you need outfit help!",
+                    "Happy to help! Feel free to ask me anytime about outfits!",
+                    "You're welcome! I'm always here to help you look amazing!",
+                    "My pleasure! Can't wait to help you with your next outfit!",
+                    "You're welcome! I love helping you create perfect looks!"
                 };
                 var random = new Random();
                 return new OutfitChatResponse
@@ -172,12 +172,11 @@ public class OutfitChatService
                 .GetProperty("content")
                 .GetString() ?? string.Empty;
 
-            // Check if response is NOT valid JSON (might be a text response)
-            // This should not happen since we check relevance before, but handle it gracefully
+            // Check if response is valid JSON
             var trimmedResponse = responseText.Trim();
             if (!trimmedResponse.StartsWith("{") && !trimmedResponse.StartsWith("```json"))
             {
-                // This is a text response, not JSON - treat as non-outfit response
+                // Text response, not JSON
                 var lowerResponse = trimmedResponse.ToLower();
                 if (lowerResponse.Contains("i'm a fashion") || 
                     lowerResponse.Contains("i can only help") || 
@@ -185,14 +184,14 @@ public class OutfitChatService
                     lowerResponse.Contains("tell me about your day") ||
                     lowerResponse.Contains("tell me about your events"))
                 {
-                    // It's a text response (shouldn't happen after relevance check, but handle it)
+                    // Text response
                     return new OutfitChatResponse
                     {
                         Success = false,
                         ErrorMessage = trimmedResponse
                     };
                 }
-                // If it's not a known off-topic pattern, try to parse anyway or return error
+                // Try to parse or return error
                 return new OutfitChatResponse
                 {
                     Success = false,
@@ -221,7 +220,7 @@ public class OutfitChatService
         }
         catch (Exception ex)
         {
-            // Log error but don't expose internal details to client
+            // Log error
             Console.WriteLine($"Error in OutfitChatService: {ex.Message}");
             Console.WriteLine($"Stack trace: {ex.StackTrace}");
             
@@ -368,7 +367,7 @@ If you cannot find suitable items, be honest in the missingItems array and notes
     {
         var message = new StringBuilder();
         
-        // Add chat history context for feedback understanding
+        // Add chat history context
         if (request.ChatHistory != null && request.ChatHistory.Count > 0)
         {
             message.AppendLine("=== CONVERSATION CONTEXT ===");
@@ -503,16 +502,16 @@ If you cannot find suitable items, be honest in the missingItems array and notes
             "תודה על העזרה", "תודה על הכל", "תודה רבה לך"
         };
 
-        // Check if message is primarily a thank you (not combined with outfit request)
+        // Check if message is a thank you
         var isThankYou = thankYouPhrases.Any(phrase => lowerMessage.Contains(phrase));
         
-        // If it's a thank you, make sure it's not combined with an outfit request
+            // Check if combined with outfit request
         if (isThankYou)
         {
             var outfitKeywords = new[] { "outfit", "clothing", "clothes", "wear", "suggest", "recommend", "help", "need", "want" };
             var hasOutfitRequest = outfitKeywords.Any(keyword => lowerMessage.Contains(keyword));
             
-            // If it's just a thank you without outfit request, return true
+            // Return true if just a thank you
             if (!hasOutfitRequest)
             {
                 return true;
@@ -537,14 +536,14 @@ If you cannot find suitable items, be honest in the missingItems array and notes
             "change", "replace", "different", "another", "suggest", "recommend", "give me", "show me", "what to wear", "help me"
         };
 
-        // Keywords indicating irrelevance (greetings, small talk, general questions, romantic/emotional)
+        // Keywords indicating irrelevance
         var irrelevantKeywords = new[] {
             "hi", "hello", "hey", "how are you", "what's up", "good morning", "good evening", "good night", "מה נשמע", "שלום", "היי",
             "what time is it", "tell me a joke", "do you like", "i'm bored", "today is", "i had a bad day", "animals", "food", "emotions", "life", "general question",
             "i love you", "love you", "i like you", "like you", "miss you", "thinking of you", "you're beautiful", "you're amazing"
         };
 
-        // Check for explicit irrelevant phrases (sentences, not just words)
+        // Check for irrelevant phrases
         var irrelevantPhrases = new[] {
             "hi how are you", "what's going on", "i'm bored", "do you like dogs", "what time is it", "tell me a joke", "today is a weird day", "i had a bad day at work",
             "i love you", "love you", "i like you", "miss you", "thinking of you", "you're beautiful", "you're amazing", "you're cute", "you're sweet"
@@ -555,19 +554,19 @@ If you cannot find suitable items, be honest in the missingItems array and notes
             return false;
         }
 
-        // If it contains any relevant keyword, it's likely relevant
+        // Check for relevant keywords
         if (relevantKeywords.Any(keyword => lowerMessage.Contains(keyword)))
         {
             return true;
         }
 
-        // If it contains any irrelevant keyword and no relevant ones, it's likely irrelevant
+        // Check for irrelevant keywords
         if (irrelevantKeywords.Any(keyword => lowerMessage.Contains(keyword)))
         {
             return false;
         }
 
-        // If it's a very short message and didn't hit any relevant keywords, assume irrelevant
+        // Check if message is too short
         if (lowerMessage.Length < 10 && !relevantKeywords.Any(keyword => lowerMessage.Contains(keyword)))
         {
             return false;
@@ -581,7 +580,7 @@ If you cannot find suitable items, be honest in the missingItems array and notes
     {
         try
         {
-            // Clean response text (remove markdown code blocks if present)
+            // Clean response text
             var cleanText = responseText.Trim();
             if (cleanText.StartsWith("```json"))
             {

@@ -43,7 +43,7 @@ export default function Bubbles() {
       viewBox="0 0 100 100"
     >
       <Defs>
-        {/* מילוי סופר עדין (כמעט שקוף) */}
+        {/* Super subtle fill (almost transparent) */}
         <RadialGradient id="soapFill" cx="35%" cy="30%" r="70%">
           <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.20" />
           <Stop offset="0.45" stopColor="#BFE0FF" stopOpacity="0.10" />
@@ -51,7 +51,7 @@ export default function Bubbles() {
           <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
         </RadialGradient>
 
-        {/* טבעת (rim) בהירה - זה מה שגורם לזה להיראות בועה */}
+        {/* Bright rim - this is what makes it look like a bubble */}
         <RadialGradient id="soapRim" cx="50%" cy="50%" r="50%">
           <Stop offset="55%" stopColor="#FFFFFF" stopOpacity="0" />
           <Stop offset="78%" stopColor="#FFFFFF" stopOpacity="0.45" />
@@ -60,7 +60,7 @@ export default function Bubbles() {
         </RadialGradient>
 
 
-        {/* היילייט קטן */}
+        {/* Small highlight */}
         <RadialGradient id="highlight" cx="50%" cy="50%" r="50%">
           <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.8" />
           <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
@@ -74,7 +74,7 @@ export default function Bubbles() {
           <Circle cx={b.cx} cy={b.cy} r={b.r} fill="url(#soapFill)" opacity={b.o} />
           {/* rim */}
           <Circle cx={b.cx} cy={b.cy} r={b.r} fill="url(#soapRim)" opacity={b.o} />
-          {/* highlight (נקודת אור) */}
+          {/* highlight */}
           <Circle
             cx={b.cx - b.r * 0.35}
             cy={b.cy - b.r * 0.35}

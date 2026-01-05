@@ -24,7 +24,7 @@ public class ClosetService
         if (string.IsNullOrWhiteSpace(request.itemImage))
             throw new ArgumentException("Item image is required");
 
-        // Upload image to Supabase Storage and get the public URL
+        // Upload image to Supabase Storage
         var imageUrl = await _storageService.UploadImageAsync(request.itemImage);
 
         var item = new OutfitItem  //making outfititem
@@ -32,13 +32,13 @@ public class ClosetService
             ItemId = Guid.NewGuid(),  //id - backend decision 
             ItemName = request.itemName,
             ItemCategory = request.itemCategory,
-            ItemImage = imageUrl, // Store the Supabase Storage URL instead of base64/URI
+            ItemImage = imageUrl,
             Style = request.style ?? new List<string>(),
             Colors = request.colors ?? new List<string>(),
             Season = request.season ?? new List<string>(),
-            Size = request.size,  // Can be null if not provided
-            Tags = request.tags ?? new List<string>(),  // Default to empty list if null/empty
-            UserId = userId // 👈 שמירת user_id
+            Size = request.size,
+            Tags = request.tags ?? new List<string>(),
+            UserId = userId
         };
 
         Console.WriteLine($"Adding item with Size: '{item.Size}', Tags: [{string.Join(", ", item.Tags)}]");
@@ -50,12 +50,12 @@ public class ClosetService
     public List<OutfitItem> GetAllItems(string userId)
     {
         var items = _store.GetAll(userId);
-        // Filter out "new" tag from items older than 30 days and update database
+        // Filter out "new" tag from old items
         foreach (var item in items)
         {
             if (FilterNewTag(item))
             {
-                // If tag was removed, update the item in the database
+                // Update item if tag was removed
                 _store.Update(item);
             }
         }
@@ -64,14 +64,14 @@ public class ClosetService
 
     private bool FilterNewTag(OutfitItem item)
     {
-        // If item has "new" tag and is older than 30 days, remove the tag
+        // Remove "new" tag from items older than 30 days
         if (item.Tags != null && item.Tags.Contains("new", StringComparer.OrdinalIgnoreCase))
         {
-            // CreatedAt is stored as local time (Unspecified), so compare with local time
+            // Compare with local time
             var now = DateTime.Now;
             var created = item.CreatedAt;
             
-            // Handle Unspecified DateTime by treating it as local time
+            // Treat Unspecified DateTime as local time
             if (created.Kind == DateTimeKind.Unspecified)
             {
                 created = DateTime.SpecifyKind(created, DateTimeKind.Local);
@@ -94,12 +94,11 @@ public class ClosetService
         if (string.IsNullOrWhiteSpace(itemImage))
             throw new ArgumentException("Item image is required");
 
-        // Delete from database first (this also verifies ownership)
+        // Delete from database first
         _store.Delete(itemImage, userId);
         _savedOutfitStore.DeleteOutfitsContainingItem(itemImage, userId);
 
-        // Delete from Supabase Storage (if it's a Supabase URL)
-        // This is non-critical - if it fails, the item is already deleted from DB
+        // Delete from Supabase Storage (non-critical)
         if (itemImage.Contains("supabase.co/storage"))
         {
             try
@@ -108,9 +107,9 @@ public class ClosetService
             }
             catch (Exception ex)
             {
-                // Log warning but don't throw - item is already deleted from DB
+                // Log warning
                 Console.WriteLine($"Warning: Failed to delete image from Supabase Storage: {ex.Message}");
-                // Don't rethrow - the item is already deleted from the database
+                // Don't rethrow
             }
         }
     }
@@ -141,18 +140,18 @@ public class ClosetService
             throw new UnauthorizedAccessException("You don't have permission to edit this item. It belongs to another user.");
         }
 
-        // Handle image update - if new image is provided and different, upload it
+        // Handle image update
         string finalImageUrl = itemImage; // Keep existing image by default
         if (!string.IsNullOrWhiteSpace(request.itemImage) && request.itemImage != itemImage)
         {
-            // Check if it's a new image (base64 or different URL)
+            // Check if it's a new image
             if (request.itemImage.StartsWith("data:image") || request.itemImage.StartsWith("file://") || 
                 !request.itemImage.Contains("supabase.co/storage"))
             {
                 // New image provided - upload it
                 finalImageUrl = await _storageService.UploadImageAsync(request.itemImage);
                 
-                // Delete old image from Supabase Storage if it was stored there
+                // Delete old image from Supabase Storage
                 if (itemImage.Contains("supabase.co/storage"))
                 {
                     try

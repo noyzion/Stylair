@@ -7,7 +7,6 @@ namespace stylair_api.Models;
 public class OutfitChatRequest
 {
     /// User's message describing their day/events
-    /// Example: "יש לי פגישה בצהריים ואימון בערב"
     public string UserMessage { get; set; } = string.Empty;
 
     /// Weather data from frontend
