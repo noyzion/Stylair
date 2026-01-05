@@ -206,3 +206,64 @@ export async function analyzeImageWithAI(
 
   return response.json();
 }
+
+// Outfit Chat with AI
+export interface OutfitChatRequest {
+  userMessage: string;
+  weather?: {
+    temperature?: number;
+    condition?: string;
+    isNight?: boolean;
+  };
+}
+
+export interface OutfitItemSuggestion {
+  id: string;
+  category: string;
+  reason: string;
+}
+
+export interface OutfitSuggestion {
+  event: string;
+  items: OutfitItemSuggestion[];
+  missingItems: string[];
+  notes: string;
+}
+
+export interface OutfitChatResponse {
+  success: boolean;
+  outfits: OutfitSuggestion[];
+  errorMessage?: string;
+}
+
+export async function suggestOutfitWithAI(
+  request: OutfitChatRequest
+): Promise<OutfitChatResponse> {
+  const token = await getJwtToken();
+  if (!token) {
+    throw new Error('Not authenticated. Please log in.');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/api/outfit-chat/suggest`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    let errorMessage = 'Failed to generate outfit suggestions';
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.message || errorMessage;
+    } catch {
+      // If response is not JSON, use status text
+      errorMessage = response.statusText || errorMessage;
+    }
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
+}

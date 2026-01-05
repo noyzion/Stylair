@@ -17,7 +17,7 @@ public class OpenAIImageAnalysisService
     // Predefined lists - OpenAI must choose only from these values
     private static readonly string[] ValidCategories = new[]
     {
-        "Shirt", "T-Shirt", "Blouse", "Pants", "Jeans", "Shorts", "Dress", "Skirt",
+        "Shirt", "T-Shirt", "Blouse", "Top", "Pants", "Jeans", "Shorts", "Dress", "Skirt",
         "Jacket", "Coat", "Sweater", "Hoodie", "Cardigan", "Vest", "Suit",
         "Shoes", "Boots", "Sneakers", "Sandals", "Heels", "Accessories", "Hat", "Bag"
     };
@@ -27,7 +27,9 @@ public class OpenAIImageAnalysisService
         "Black", "White", "Gray", "Grey", "Navy", "Blue", "Light Blue", "Dark Blue",
         "Red", "Pink", "Purple", "Green", "Light Green", "Dark Green", "Yellow",
         "Orange", "Brown", "Beige", "Tan", "Cream", "Ivory", "Burgundy", "Maroon",
-        "Teal", "Turquoise", "Coral", "Lavender", "Olive", "Khaki", "Multicolor"
+        "Teal", "Turquoise", "Coral", "Lavender", "Olive", "Khaki", "Gold", "Silver",
+        "Bronze", "Copper", "Rose Gold", "Champagne", "Peach", "Salmon", "Mint",
+        "Emerald", "Ruby", "Sapphire", "Amber", "Charcoal", "Slate", "Multicolor"
     };
 
     private static readonly string[] ValidStyles = new[]
@@ -205,6 +207,12 @@ REQUIRED OUTPUT FORMAT (JSON):
 VALID CATEGORIES (choose ONLY ONE from this list):
 {string.Join(", ", ValidCategories)}
 
+CATEGORY GUIDELINES:
+- For any type of top/shirt/upper body garment: Use ""Top"", ""Shirt"", ""T-Shirt"", ""Blouse"", ""Sweater"", ""Hoodie"", ""Cardigan"", ""Jacket"", ""Coat"", or ""Vest"" depending on the specific type
+- If unsure about the exact type of top, use ""Top"" as a safe default
+- For sportswear tops, use ""Top"" or ""T-Shirt"" depending on the style
+- For formal tops, use ""Shirt"" or ""Blouse""
+
 VALID COLORS (choose ALL applicable colors from this list - use array):
 {string.Join(", ", ValidColors)}
 
@@ -231,11 +239,14 @@ RULES FOR STYLES AND SEASONS:
 
 GENERAL RULES:
 1. You MUST choose values ONLY from the provided lists - DO NOT invent new categories, colors, styles, or seasons
-2. If you're not certain about identification, set confidence to 0.5 or lower
-3. If multiple items are detected in the image, mention it in the 'notes' field
-4. If the image doesn't contain a clothing item, set confidence to 0.0 and explain in notes
-5. Return ONLY valid JSON, no additional text or explanations
-6. Confidence scale: 1.0 = very certain, 0.5 = somewhat certain, 0.0 = uncertain";
+2. For colors: Be flexible and match similar shades (e.g., ""golden"" → ""Gold"", ""silvery"" → ""Silver"", ""navy blue"" → ""Navy"")
+3. For categories: If you see a top/shirt/upper garment and unsure of exact type, use ""Top"" as a safe default
+4. If you're not certain about identification, set confidence to 0.5 or lower
+5. If multiple items are detected in the image, mention it in the 'notes' field
+6. If the image doesn't contain a clothing item, set confidence to 0.0 and explain in notes
+7. Return ONLY valid JSON, no additional text or explanations
+8. Confidence scale: 1.0 = very certain, 0.5 = somewhat certain, 0.0 = uncertain
+9. IMPORTANT: When in doubt about a color or category, choose the closest match from the lists rather than inventing new values";
     }
 
     private AIImageAnalysisResponse ParseOpenAIResponse(string responseText)
@@ -341,18 +352,97 @@ GENERAL RULES:
                 ? notesElement.GetString() 
                 : null;
 
-            // Validate category
+            // Validate category - try to find close match first
+            string validatedCategory = category;
             if (!ValidCategories.Contains(category, StringComparer.OrdinalIgnoreCase))
             {
-                return new AIImageAnalysisResponse
+                // Try to find a close match for common variations
+                var categoryLower = category.ToLowerInvariant();
+                if (categoryLower.Contains("top") || categoryLower.Contains("shirt") || 
+                    categoryLower.Contains("blouse") || categoryLower.Contains("tank") ||
+                    categoryLower.Contains("tee") || categoryLower.Contains("sweater"))
                 {
-                    Success = false,
-                    ErrorMessage = $"Invalid category '{category}'. Must be from predefined list."
-                };
+                    // Try to match to a specific top category
+                    if (categoryLower.Contains("hoodie") || categoryLower.Contains("sweatshirt"))
+                        validatedCategory = "Hoodie";
+                    else if (categoryLower.Contains("sweater") || categoryLower.Contains("pullover"))
+                        validatedCategory = "Sweater";
+                    else if (categoryLower.Contains("cardigan"))
+                        validatedCategory = "Cardigan";
+                    else if (categoryLower.Contains("jacket") || categoryLower.Contains("blazer"))
+                        validatedCategory = "Jacket";
+                    else if (categoryLower.Contains("coat"))
+                        validatedCategory = "Coat";
+                    else if (categoryLower.Contains("vest"))
+                        validatedCategory = "Vest";
+                    else if (categoryLower.Contains("tee") || categoryLower.Contains("t-shirt"))
+                        validatedCategory = "T-Shirt";
+                    else if (categoryLower.Contains("blouse") || categoryLower.Contains("shirt"))
+                        validatedCategory = "Shirt";
+                    else
+                        validatedCategory = "Top"; // Default fallback for tops
+                }
+                else if (categoryLower.Contains("pant") || categoryLower.Contains("trouser"))
+                {
+                    validatedCategory = categoryLower.Contains("jean") ? "Jeans" : "Pants";
+                }
+                else if (categoryLower.Contains("short"))
+                {
+                    validatedCategory = "Shorts";
+                }
+                else if (categoryLower.Contains("dress"))
+                {
+                    validatedCategory = "Dress";
+                }
+                else if (categoryLower.Contains("skirt"))
+                {
+                    validatedCategory = "Skirt";
+                }
+                else if (categoryLower.Contains("shoe") || categoryLower.Contains("sneaker") || 
+                         categoryLower.Contains("boot") || categoryLower.Contains("heel") ||
+                         categoryLower.Contains("sandal"))
+                {
+                    if (categoryLower.Contains("sneaker") || categoryLower.Contains("trainer"))
+                        validatedCategory = "Sneakers";
+                    else if (categoryLower.Contains("boot"))
+                        validatedCategory = "Boots";
+                    else if (categoryLower.Contains("heel"))
+                        validatedCategory = "Heels";
+                    else if (categoryLower.Contains("sandal"))
+                        validatedCategory = "Sandals";
+                    else
+                        validatedCategory = "Shoes";
+                }
+                else if (categoryLower.Contains("accessor") || categoryLower.Contains("hat") ||
+                         categoryLower.Contains("bag") || categoryLower.Contains("belt"))
+                {
+                    if (categoryLower.Contains("hat") || categoryLower.Contains("cap"))
+                        validatedCategory = "Hat";
+                    else if (categoryLower.Contains("bag") || categoryLower.Contains("purse"))
+                        validatedCategory = "Bag";
+                    else
+                        validatedCategory = "Accessories";
+                }
+                
+                // Final validation - if still not valid, return error with helpful message
+                if (!ValidCategories.Contains(validatedCategory, StringComparer.OrdinalIgnoreCase))
+                {
+                    return new AIImageAnalysisResponse
+                    {
+                        Success = false,
+                        ErrorMessage = $"Could not identify the clothing category. The AI detected '{category}', but this doesn't match our categories. " +
+                                     $"Please try: (1) Use a clearer image, (2) Make sure the item is clearly visible, or (3) Add the item manually. " +
+                                     $"Valid categories are: {string.Join(", ", ValidCategories)}"
+                    };
+                }
             }
+            
+            category = validatedCategory;
 
-            // Validate colors - filter out "Multicolor" and ensure all colors are valid
+            // Validate colors - filter out "Multicolor" and try to match similar colors
             var validColors = new List<string>();
+            var invalidColors = new List<string>();
+            
             foreach (var color in colors)
             {
                 // Skip "Multicolor" - we want individual colors instead
@@ -367,21 +457,80 @@ GENERAL RULES:
                 }
                 else
                 {
-                    return new AIImageAnalysisResponse
+                    // Try to find a close match
+                    var colorLower = color.ToLowerInvariant();
+                    string? matchedColor = null;
+                    
+                    // Common color variations
+                    if (colorLower.Contains("gold") || colorLower.Contains("golden"))
+                        matchedColor = "Gold";
+                    else if (colorLower.Contains("silver") || colorLower.Contains("silvery"))
+                        matchedColor = "Silver";
+                    else if (colorLower.Contains("bronze") || colorLower.Contains("bronzy"))
+                        matchedColor = "Bronze";
+                    else if (colorLower.Contains("copper") || colorLower.Contains("coppery"))
+                        matchedColor = "Copper";
+                    else if (colorLower.Contains("rose gold") || colorLower.Contains("rose-gold"))
+                        matchedColor = "Rose Gold";
+                    else if (colorLower.Contains("champagne"))
+                        matchedColor = "Champagne";
+                    else if (colorLower.Contains("peach"))
+                        matchedColor = "Peach";
+                    else if (colorLower.Contains("salmon"))
+                        matchedColor = "Salmon";
+                    else if (colorLower.Contains("mint"))
+                        matchedColor = "Mint";
+                    else if (colorLower.Contains("emerald"))
+                        matchedColor = "Emerald";
+                    else if (colorLower.Contains("ruby"))
+                        matchedColor = "Ruby";
+                    else if (colorLower.Contains("sapphire"))
+                        matchedColor = "Sapphire";
+                    else if (colorLower.Contains("amber"))
+                        matchedColor = "Amber";
+                    else if (colorLower.Contains("charcoal"))
+                        matchedColor = "Charcoal";
+                    else if (colorLower.Contains("slate"))
+                        matchedColor = "Slate";
+                    else if (colorLower.Contains("navy") || colorLower.Contains("navy blue"))
+                        matchedColor = "Navy";
+                    else if (colorLower.Contains("light blue") || colorLower.Contains("sky"))
+                        matchedColor = "Light Blue";
+                    else if (colorLower.Contains("dark blue") || colorLower.Contains("midnight"))
+                        matchedColor = "Dark Blue";
+                    else if (colorLower.Contains("light green") || colorLower.Contains("lime"))
+                        matchedColor = "Light Green";
+                    else if (colorLower.Contains("dark green") || colorLower.Contains("forest"))
+                        matchedColor = "Dark Green";
+                    else if (colorLower == "gray" || colorLower == "grey")
+                        matchedColor = "Gray";
+                    
+                    if (matchedColor != null && ValidColors.Contains(matchedColor, StringComparer.OrdinalIgnoreCase))
                     {
-                        Success = false,
-                        ErrorMessage = $"Invalid color '{color}'. Must be from predefined list."
-                    };
+                        validColors.Add(matchedColor);
+                    }
+                    else
+                    {
+                        invalidColors.Add(color);
+                    }
                 }
             }
 
+            // If we have some valid colors but also invalid ones, warn but don't fail
             if (validColors.Count == 0)
             {
                 return new AIImageAnalysisResponse
                 {
                     Success = false,
-                    ErrorMessage = "At least one valid color is required."
+                    ErrorMessage = $"Could not identify any valid colors. The AI detected: {string.Join(", ", colors)}. " +
+                                 $"Please try: (1) Use a clearer image with better lighting, (2) Make sure the item's color is clearly visible, or (3) Add the item manually with the correct color."
                 };
+            }
+            
+            // If we have invalid colors but also valid ones, include a note
+            if (invalidColors.Count > 0 && notes == null)
+            {
+                notes = $"Note: Some colors could not be identified ({string.Join(", ", invalidColors)}). Using detected colors: {string.Join(", ", validColors)}.";
             }
 
             // Validate styles
@@ -438,16 +587,30 @@ GENERAL RULES:
                 };
             }
 
-            // Remove "All Season" if there are specific seasons - "All Season" means it fits all, so specific seasons are redundant
-            var hasAllSeason = validSeasons.Any(s => s.Equals("All Season", StringComparison.OrdinalIgnoreCase));
-            var hasSpecificSeasons = validSeasons.Any(s => !s.Equals("All Season", StringComparison.OrdinalIgnoreCase));
+            // Check if all 4 seasons are selected - if so, convert to "All Season"
+            var hasSpring = validSeasons.Any(s => s.Equals("Spring", StringComparison.OrdinalIgnoreCase));
+            var hasSummer = validSeasons.Any(s => s.Equals("Summer", StringComparison.OrdinalIgnoreCase));
+            var hasFall = validSeasons.Any(s => s.Equals("Fall", StringComparison.OrdinalIgnoreCase));
+            var hasWinter = validSeasons.Any(s => s.Equals("Winter", StringComparison.OrdinalIgnoreCase));
             
-            if (hasAllSeason && hasSpecificSeasons)
+            if (hasSpring && hasSummer && hasFall && hasWinter && validSeasons.Count == 4)
             {
-                // Remove "All Season" and keep only specific seasons
-                validSeasons = validSeasons
-                    .Where(s => !s.Equals("All Season", StringComparison.OrdinalIgnoreCase))
-                    .ToList();
+                // All 4 seasons selected - convert to "All Season"
+                validSeasons = new List<string> { "All Season" };
+            }
+            else
+            {
+                // Remove "All Season" if there are specific seasons - "All Season" means it fits all, so specific seasons are redundant
+                var hasAllSeason = validSeasons.Any(s => s.Equals("All Season", StringComparison.OrdinalIgnoreCase));
+                var hasSpecificSeasons = validSeasons.Any(s => !s.Equals("All Season", StringComparison.OrdinalIgnoreCase));
+                
+                if (hasAllSeason && hasSpecificSeasons)
+                {
+                    // Remove "All Season" and keep only specific seasons
+                    validSeasons = validSeasons
+                        .Where(s => !s.Equals("All Season", StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                }
             }
 
             // Return validated response

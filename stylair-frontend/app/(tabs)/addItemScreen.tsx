@@ -286,7 +286,9 @@ export default function AddItemScreen() {
                   const analysis = await analyzeImageWithAI(imageBase64);
 
                   if (!analysis.success) {
-                    alert(analysis.errorMessage || "Failed to analyze image");
+                    // Show detailed error message to user
+                    const errorMsg = analysis.errorMessage || "Failed to analyze image";
+                    alert(`Image Analysis Error\n\n${errorMsg}\n\nPlease try:\n1. Use a clearer image\n2. Ensure good lighting\n3. Make sure the item is clearly visible\n4. Or add the item manually`);
                     return;
                   }
 
@@ -296,6 +298,7 @@ export default function AddItemScreen() {
                     "Shirt": "top",
                     "T-Shirt": "top",
                     "Blouse": "top",
+                    "Top": "top",
                     "Pants": "bottom",
                     "Jeans": "bottom",
                     "Shorts": "bottom",
@@ -383,7 +386,8 @@ export default function AddItemScreen() {
                   });
                 } catch (error) {
                   console.error("Error analyzing image:", error);
-                  alert(error instanceof Error ? error.message : "Failed to analyze image");
+                  const errorMsg = error instanceof Error ? error.message : "Failed to analyze image";
+                  alert(`Image Analysis Error\n\n${errorMsg}\n\nPlease try:\n1. Check your internet connection\n2. Use a clearer image\n3. Ensure good lighting\n4. Or add the item manually`);
                 } finally {
                   setIsAnalyzing(false);
                 }

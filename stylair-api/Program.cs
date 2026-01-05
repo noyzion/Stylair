@@ -133,11 +133,12 @@ else
     Console.WriteLine("✅ OPENAI_API_KEY environment variable found and validated");
 }
 
-// Register OpenAI service (will throw exception if API key is missing when first used)
+// Register OpenAI services (will throw exception if API key is missing when first used)
 // Using TryAddScoped to avoid exception if API key is not set (allows server to start)
 try
 {
     builder.Services.AddScoped<OpenAIImageAnalysisService>();
+    builder.Services.AddScoped<OutfitChatService>();
 }
 catch (Exception ex)
 {

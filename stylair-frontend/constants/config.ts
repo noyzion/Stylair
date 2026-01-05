@@ -13,6 +13,7 @@ export const API_BASE_URL = "http://10.0.0.19:5292"; // Replace with your local 
 
 export const API_ENDPOINTS = {
   OUTFIT_RECOMMENDATION: `${API_BASE_URL}/api/outfit/recommendation`,
+  OUTFIT_CHAT_SUGGEST: `${API_BASE_URL}/api/outfit-chat/suggest`,
   SAVE_OUTFIT: `${API_BASE_URL}/api/saved-outfits`,
 };
 

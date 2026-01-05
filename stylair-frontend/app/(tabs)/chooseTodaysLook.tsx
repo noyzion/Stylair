@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   TextInput,
   StyleSheet,
@@ -15,27 +15,23 @@ import { Image } from "expo-image";
 import { Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
-import { API_ENDPOINTS } from "@/constants/config"; //import the API_ENDPOINTS from the config file
+import * as Location from "expo-location";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { Link } from "expo-router";
-import { saveOutfit } from "../../services/closet.service";
+import { Link, useFocusEffect } from "expo-router";
+import { 
+  saveOutfit, 
+  suggestOutfitWithAI, 
+  OutfitSuggestion,
+  getAllItemsFromCloset 
+} from "../../services/closet.service";
 import { OutfitItem } from "../../types/closet";
-import { getJwtToken } from "../../services/auth/auth.service";
-
-// Types matching the backend models
-
-interface OutfitRecommendation {
-  occasionLabel: string;
-  items: OutfitItem[];
-  reasonText: string;
-}
 
 export default function TodayLookScreen() {
   const [message, setMessage] = useState("");
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  const [outfits, setOutfits] = useState<OutfitRecommendation[]>([]); //list of outfits and function to set it (inital empty list)
+  const [outfits, setOutfits] = useState<OutfitSuggestion[]>([]); //list of outfits and function to set it (inital empty list)
   const [loading, setLoading] = useState(false); //loading state and function to set it (inital false)
   const [error, setError] = useState<string | null>(null); //error state and function to set it (inital null)
   const [savingOutfitIndex, setSavingOutfitIndex] = useState<number | null>(
@@ -44,6 +40,80 @@ export default function TodayLookScreen() {
   const [savedOutfitIndices, setSavedOutfitIndices] = useState<Set<number>>(
     new Set()
   ); //track which outfits have already been saved
+  
+  // Weather data
+  const [tempC, setTempC] = useState<number | null>(null);
+  const [condition, setCondition] = useState<
+    "sun" | "cloud" | "rain" | "storm" | "snow" | "wind" | "hot"
+  >("sun");
+  const [isNight, setIsNight] = useState(false);
+  
+  // Store all items to map IDs to full items
+  const [allItems, setAllItems] = useState<OutfitItem[]>([]);
+
+  // Clean screen when focus is gained (when user returns to this screen)
+  useFocusEffect(
+    useCallback(() => {
+      // Reset state when screen is focused
+      setOutfits([]);
+      setMessage("");
+      setError(null);
+      setSelectedImage(null);
+      setSavedOutfitIndices(new Set());
+      setSavingOutfitIndex(null);
+    }, [])
+  );
+
+  // Load weather data and closet items on mount
+  useEffect(() => {
+    // Load closet items
+    getAllItemsFromCloset()
+      .then(setAllItems)
+      .catch(console.error);
+
+    // Load weather data
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") return;
+
+        const loc = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+
+        const { latitude, longitude } = loc.coords;
+
+        const url =
+          `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
+          `&current=temperature_2m,weather_code,wind_speed_10m,is_day&timezone=auto`;
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        const isDay = data?.current?.is_day;
+        setIsNight(isDay === 0);
+
+        const t = data?.current?.temperature_2m;
+        const code = data?.current?.weather_code;
+
+        if (typeof t === "number") {
+          const rounded = Math.round(t);
+          setTempC(rounded);
+
+          if (rounded >= 30) {
+            setCondition("hot");
+            return;
+          }
+        }
+
+        if (typeof code === "number") {
+          setCondition(mapWeatherCodeToCondition(code));
+        }
+      } catch (error) {
+        console.error("Error loading weather:", error);
+      }
+    })();
+  }, []);
 
   // Handle keyboard show/hide to adjust input position
   useEffect(() => {
@@ -66,30 +136,37 @@ export default function TodayLookScreen() {
     };
   }, []);
 
+  function mapWeatherCodeToCondition(code: number) {
+    if (code === 0) return "sun";
+    if ([1, 2, 3].includes(code)) return "cloud";
+    if ([45, 48].includes(code)) return "cloud";
+    if ([51, 53, 55, 56, 57].includes(code)) return "rain";
+    if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return "rain";
+    if ([71, 73, 75, 77, 85, 86].includes(code)) return "snow";
+    if ([95, 96, 99].includes(code)) return "storm";
+    return "cloud";
+  }
+
   //function to send the message to the API, async because we are using await to wait for the response
   const handleSend = async () => {
     if (message === "") return;
     setLoading(true);
     setError(null);
     try {
-      const token = await getJwtToken();
-      if (!token) {
-        throw new Error('Not authenticated. Please log in.');
+      const response = await suggestOutfitWithAI({
+        userMessage: message,
+        weather: {
+          temperature: tempC ?? undefined,
+          condition: condition,
+          isNight: isNight,
+        },
+      });
+
+      if (!response.success) {
+        throw new Error(response.errorMessage || "Failed to generate outfit suggestions");
       }
 
-      const response = await fetch(API_ENDPOINTS.OUTFIT_RECOMMENDATION, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`, // 👈 הוספת JWT token
-        },
-        body: JSON.stringify({ message }),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to fetch outfits");
-      }
-      const data = await response.json();
-      setOutfits(data.outfits);
+      setOutfits(response.outfits);
       setMessage(""); //clear the message
       setLoading(false);
       // Clear saved indices when new outfits are loaded
@@ -101,7 +178,7 @@ export default function TodayLookScreen() {
   };
 
   const handleSaveOutfit = async (
-    outfit: OutfitRecommendation,
+    outfit: OutfitSuggestion,
     index: number
   ) => {
     // Don't save if already saved
@@ -111,7 +188,23 @@ export default function TodayLookScreen() {
 
     setSavingOutfitIndex(index); // set the index of the outfit being saved
     try {
-      await saveOutfit(outfit);
+      // Map outfit suggestion to full items
+      const fullItems: OutfitItem[] = outfit.items
+        .map(itemSuggestion => {
+          const fullItem = allItems.find(item => item.itemId === itemSuggestion.id);
+          return fullItem;
+        })
+        .filter((item): item is OutfitItem => item !== undefined);
+
+      if (fullItems.length === 0) {
+        throw new Error("Could not find items in closet");
+      }
+
+      await saveOutfit({
+        occasionLabel: outfit.event,
+        items: fullItems,
+        reasonText: outfit.notes,
+      });
       // Add index to saved set
       setSavedOutfitIndices((prev) => new Set(prev).add(index));
       // Show success message (you can use alert or a toast notification)
@@ -189,60 +282,80 @@ export default function TodayLookScreen() {
           {error && <Text style={styles.errorText}>Error: {error}</Text>}
           {outfits.length > 0 && (
             <View style={styles.resultsContainer}>
-              {outfits.map((outfit, index) => (
-                <View key={index} style={styles.outfitCard}>
-                  <Text style={styles.occasionLabel}>
-                    {outfit.occasionLabel}
-                  </Text>
-                  <Text style={styles.reasonText}>{outfit.reasonText}</Text>
+              {outfits.map((outfit, index) => {
+                // Map item IDs to full items
+                const fullItems = outfit.items
+                  .map(itemSuggestion => {
+                    const fullItem = allItems.find(item => item.itemId === itemSuggestion.id);
+                    return fullItem;
+                  })
+                  .filter((item): item is OutfitItem => item !== undefined);
 
-                  {/* Items images */}
-                  {outfit.items && outfit.items.length > 0 && (
-                    <View style={styles.itemsContainer}>
-                      {outfit.items.map((item, itemIndex) => (
-                        <TouchableOpacity
-                          key={itemIndex}
-                          onPress={() => setSelectedImage(item.itemImage)}
-                          activeOpacity={0.8}
-                        >
-                          <Image
-                            source={{ uri: item.itemImage }}
-                            style={styles.itemImage}
-                            contentFit="cover"
-                          />
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  )}
+                return (
+                  <View key={index} style={styles.outfitCard}>
+                    <Text style={styles.occasionLabel}>
+                      {outfit.event}
+                    </Text>
+                    <Text style={styles.reasonText}>{outfit.notes}</Text>
 
-                  {/* Save button - only show if outfit has items */}
-                  {outfit.items && outfit.items.length > 0 && (
-                    <Pressable
-                      onPress={() => handleSaveOutfit(outfit, index)}
-                      disabled={
-                        savingOutfitIndex === index ||
-                        savedOutfitIndices.has(index)
-                      }
-                      style={[
-                        styles.saveOutfitButton,
-                        (savingOutfitIndex === index ||
-                          savedOutfitIndices.has(index)) &&
-                          styles.saveOutfitButtonDisabled,
-                        savedOutfitIndices.has(index) &&
-                          styles.saveOutfitButtonSaved,
-                      ]}
-                    >
-                      <Text style={styles.saveOutfitButtonText}>
-                        {savingOutfitIndex === index
-                          ? "Saving..."
-                          : savedOutfitIndices.has(index)
-                          ? "Saved ✓"
-                          : "Save to Archive"}
-                      </Text>
-                    </Pressable>
-                  )}
-                </View>
-              ))}
+                    {/* Missing items warning */}
+                    {outfit.missingItems && outfit.missingItems.length > 0 && (
+                      <View style={styles.missingItemsContainer}>
+                        <Text style={styles.missingItemsLabel}>Missing items:</Text>
+                        <Text style={styles.missingItemsText}>
+                          {outfit.missingItems.join(", ")}
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Items images */}
+                    {fullItems.length > 0 && (
+                      <View style={styles.itemsContainer}>
+                        {fullItems.map((item, itemIndex) => (
+                          <TouchableOpacity
+                            key={itemIndex}
+                            onPress={() => setSelectedImage(item.itemImage)}
+                            activeOpacity={0.8}
+                          >
+                            <Image
+                              source={{ uri: item.itemImage }}
+                              style={styles.itemImage}
+                              contentFit="cover"
+                            />
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
+
+                    {/* Save button - only show if outfit has items */}
+                    {fullItems.length > 0 && (
+                      <Pressable
+                        onPress={() => handleSaveOutfit(outfit, index)}
+                        disabled={
+                          savingOutfitIndex === index ||
+                          savedOutfitIndices.has(index)
+                        }
+                        style={[
+                          styles.saveOutfitButton,
+                          (savingOutfitIndex === index ||
+                            savedOutfitIndices.has(index)) &&
+                            styles.saveOutfitButtonDisabled,
+                          savedOutfitIndices.has(index) &&
+                            styles.saveOutfitButtonSaved,
+                        ]}
+                      >
+                        <Text style={styles.saveOutfitButtonText}>
+                          {savingOutfitIndex === index
+                            ? "Saving..."
+                            : savedOutfitIndices.has(index)
+                            ? "Saved ✓"
+                            : "Save to Archive"}
+                        </Text>
+                      </Pressable>
+                    )}
+                  </View>
+                );
+              })}
             </View>
           )}
         </ScrollView>
@@ -487,6 +600,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#FF0000",
     marginTop: 50,
+  },
+  missingItemsContainer: {
+    backgroundColor: "rgba(255, 193, 7, 0.1)",
+    borderLeftWidth: 3,
+    borderLeftColor: "#FFC107",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  missingItemsLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FF9800",
+    marginBottom: 4,
+  },
+  missingItemsText: {
+    fontSize: 14,
+    color: "#666",
   },
   inputContainer: {
     flexDirection: "row",
