@@ -1,3 +1,5 @@
+namespace stylair_api.Models;
+
 public class OutfitRecommendationResponse
 {
     public string occasionLabel { get; set; } = string.Empty;

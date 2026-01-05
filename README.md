@@ -5,11 +5,20 @@ Stylair is a smart mobile application for managing a personal digital wardrobe, 
 ## ✨ Features
 
 - 📸 **Upload Clothes** - Add items via camera or gallery
-- 🏷️ **Smart Tagging** - Automatic categorization: clothing type, color, season, formality
+- 🏷️ **Smart Tagging** - AI-powered automatic categorization: clothing type, color, season, style
+  - Manual entry option
+  - AI image analysis for automatic tagging
 - 👚 **Digital Wardrobe** - Manage your personal closet with ease
-- 🤖 **AI Outfit Recommendations** - Get personalized outfit suggestions based on weather
+  - View all items in your closet
+  - Edit item details
+  - Delete items
+- 💬 **AI Outfit Chat** - Interactive chat-based outfit recommendations
+  - Context-aware conversations
+  - Weather-based suggestions
+  - Multiple event handling
+  - Item-specific modifications
 - 🔐 **User Authentication** - Secure login and registration with AWS Cognito
-- ☁️ **Cloud Storage** - All your wardrobe data stored securely
+- ☁️ **Cloud Storage** - All your wardrobe data stored securely in Supabase
 
 ## 🛠️ Tech Stack
 
@@ -24,14 +33,9 @@ Stylair is a smart mobile application for managing a personal digital wardrobe, 
 - ASP.NET Core Web API
 - PostgreSQL (Supabase)
 - Entity Framework Core
+- OpenAI API (for image analysis and outfit recommendations)
 
 ## 🚀 Getting Started
-
-### Prerequisites
-- Node.js (v18+)
-- .NET 9.0 SDK
-- PostgreSQL database (or Supabase account)
-- AWS Cognito user pool
 
 ### Frontend Setup
 
@@ -57,16 +61,18 @@ Stylair is a smart mobile application for managing a personal digital wardrobe, 
 
 ### Backend Setup
 
-1. **Set environment variable**
+1. **Set environment variables**
    
    **Windows (PowerShell):**
    ```powershell
-   $env:DB_PASSWORD="nOyzion@2033"
+   setx $env:DB_PASSWORD
+   setx $env:OPENAI_API_KEY
    ```
    
    **Mac/Linux:**
    ```bash
-   export DB_PASSWORD="nOyzion@2033"
+   export DB_PASSWORD
+   export OPENAI_API_KEY
    ```
 
 2. **Run the API**
@@ -77,24 +83,36 @@ Stylair is a smart mobile application for managing a personal digital wardrobe, 
    
    API will be available at `http://localhost:5292`
 
-## 📱 Main Screens
-
-- **Home** - Welcome screen with weather-based recommendations
-- **Add Item** - Upload and tag clothing items
-- **Choose Today's Look** - AI-powered outfit recommendations
-- **My Closet** - View and manage your wardrobe
-- **Archive** - View archived items
-
 ## 🔧 Configuration
 
 - **API Port:** Default is `5292`
 - **Database:** PostgreSQL via Supabase
 - **Authentication:** AWS Cognito
+- **AI Services:** OpenAI API for image analysis and outfit recommendations
 
 ## 📝 Environment Variables
 
-- `DB_PASSWORD` - PostgreSQL database password (required for backend)
+### Backend
+- `DB_PASSWORD` - PostgreSQL database password (required)
+- `OPENAI_API_KEY` - OpenAI API key for AI features (required for image analysis and outfit chat)
+
+### Frontend
+- Configure API URL in `stylair-frontend/constants/config.ts`
+
+## 🎯 Key Features Details
+
+### AI Image Analysis
+- Automatically detects clothing category (top, bottom, shoes, accessories, dress)
+- Identifies colors, styles, and seasons
+- Validates and suggests corrections for better accuracy
+
+### AI Outfit Chat
+- Semantic relevance detection (only responds to outfit-related queries)
+- Context-aware conversations (remembers previous outfits)
+- Item-specific modifications (change only specific items)
+- Weather-based recommendations
+- Avoids repeating recently saved outfits
 
 ---
 
-**Note:** Make sure to configure your API URL and Cognito credentials before running the application.
+**Note:** Make sure to configure your API URL, Cognito credentials, and OpenAI API key before running the application.

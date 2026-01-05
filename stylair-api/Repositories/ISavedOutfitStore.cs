@@ -1,3 +1,5 @@
+using stylair_api.Models;
+
 public interface ISavedOutfitStore
 {
     void Add(SavedOutfit outfit, string userId);

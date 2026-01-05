@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using stylair_api.Extensions;
+using stylair_api.Models;
 using stylair_api.Services;
 
 [Authorize]

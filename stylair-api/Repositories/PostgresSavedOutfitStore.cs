@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using stylair_api.Data;
+using stylair_api.Models;
 
 namespace stylair_api.Repositories;
 

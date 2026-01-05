@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
+namespace stylair_api.Models;
+
 public class OutfitItem
 {
     public Guid ItemId { get; set; }
@@ -13,9 +15,8 @@ public class OutfitItem
     public string? Size { get; set; }
     public List<string> Tags { get; set; } = new();
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public string UserId { get; set; } = string.Empty; // User ID from Cognito (email or sub)
+    public string UserId { get; set; } = string.Empty;
     
-    // Backward compatibility properties for JSON serialization
     [NotMapped]
     [JsonIgnore]
     public string itemId 
@@ -88,3 +89,4 @@ public class OutfitItem
         set => Tags = value ?? new List<string>(); 
     }
 }
+

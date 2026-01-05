@@ -1,3 +1,4 @@
+using stylair_api.Models;
 using stylair_api.Repositories;
 
 public class SavedOutfitService

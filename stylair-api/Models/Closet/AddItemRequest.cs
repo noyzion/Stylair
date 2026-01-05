@@ -1,3 +1,5 @@
+namespace stylair_api.Models;
+
 public class AddItemRequest
 {
     public string itemName { get; set; } = string.Empty;
@@ -9,3 +11,4 @@ public class AddItemRequest
     public string? size { get; set; }
     public List<string> tags { get; set; } = new();
 }
+

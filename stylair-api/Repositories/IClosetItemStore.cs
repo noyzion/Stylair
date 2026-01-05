@@ -1,3 +1,5 @@
+using stylair_api.Models;
+
 public interface IClosetItemStore
 {
     void Add(OutfitItem item, string userId);

@@ -1,3 +1,5 @@
+using stylair_api.Models;
+
 namespace stylair_api.Services;
 
 public class ClosetService
