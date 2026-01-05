@@ -12,7 +12,6 @@ import {
   UserChoice,
 } from "../../components/add-item/UserChoiceSelector";
 import { AIImageCard } from "../../components/add-item/AIImageCard";
-import { AIProductCard } from "../../components/add-item/AIProductCard";
 import { ManualForm } from "../../components/add-item/ManualForm";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Link, useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
@@ -64,8 +63,6 @@ export default function AddItemScreen() {
     category: false,
     color: false,
   });
-  const [brand, setBrand] = useState("");
-  const [sku, setSku] = useState("");
   const [colors, setColors] = useState<string[]>([]);
   const [stylesSelected, setStylesSelected] = useState<Style[]>([]);
   const [seasonsSelected, setSeasonsSelected] = useState<Season[]>([]);
@@ -174,8 +171,6 @@ export default function AddItemScreen() {
         setSize("");
         setTagsSelected([]);
         setTouched({ image: false, category: false, color: false });
-        setBrand("");
-        setSku("");
         setIsCategoryOpen(false);
         setTempCategory(null);
         setIsAnalyzing(false);
@@ -186,7 +181,6 @@ export default function AddItemScreen() {
   // Color is valid only if at least one color was added to the list (via "Add Color" button)
   const hasColor = colors.length > 0;
   const isFormValid = !!image && !!category && hasColor;
-  const isProductValid = brand.trim().length > 0 && sku.trim().length > 0;
 
   const convertImageUriToBase64 = async (uri: string): Promise<string> => {
     try {
@@ -529,27 +523,6 @@ export default function AddItemScreen() {
             />
           )}
 
-          {choice === "ai-product" && (
-            <AIProductCard
-              brand={brand}
-              sku={sku}
-              onBrandChange={setBrand}
-              onSkuChange={setSku}
-              onGenerate={() => {
-                // generateFromBrandAndSKU()
-                applyAIGeneratedData({
-                  imageUri: image!,
-                  category: "top",
-                  subCategory: "t-shirt",
-                  colors: ["black"],
-                  styles: ["casual"],
-                  seasons: ["all"],
-                });
-                setBrand("");
-                setSku("");
-              }}
-            />
-          )}
 
           {choice === "manual" && (
             <ManualForm

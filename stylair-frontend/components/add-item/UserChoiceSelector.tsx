@@ -2,7 +2,7 @@ import { View, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from '../../assets/styles/AddItemScreen.styles';
 
-export type UserChoice = 'manual' | 'ai-image' | 'ai-product';
+export type UserChoice = 'manual' | 'ai-image';
 
 type Props = {
   value: UserChoice | null;
@@ -53,23 +53,6 @@ export function UserChoiceSelector({ value, onChange }: Props) {
           </View>
         </Pressable>
 
-        <Pressable onPress={() => onChange('ai-product')}>
-          <View style={[styles.option, value === 'ai-product' && styles.optionSelected]}>
-            <View style={[styles.iconContainer,value === 'ai-product' && styles.iconContainerSelected,]} >
-              <Ionicons name="barcode-outline" size={20} color={value === 'ai-product' ? 'white' : 'rgb(108, 99, 255)'}/>
-            </View>
-
-            <View style={{ marginLeft: 12 }}>
-              <Text
-                style={[ styles.choiceText, value === 'ai-product' && { color: 'rgb(108, 99, 255)' },]} >
-                Generate with AI (brand & SKU)
-              </Text>
-              <Text style={styles.descriptionText}>
-                Use brand and product code
-              </Text>
-            </View>
-          </View>
-        </Pressable>
       </View>
     </>
   );
