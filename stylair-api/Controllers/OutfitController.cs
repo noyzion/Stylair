@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using stylair_api.Extensions;
 using stylair_api.Services;
 
+[Authorize] // 👈 דורש authentication לכל ה-endpoints
 [ApiController]
 [Route("api/outfit")]
 public class OutfitController : ControllerBase // ControllerBase is the base class for all controllers
@@ -14,7 +17,8 @@ public class OutfitController : ControllerBase // ControllerBase is the base cla
     [HttpPost("recommendation")] //attribute to map the method to the http post request
     public IActionResult Recommand(OutfitRecommendationRequest request)
     {
-        OutfitRecommendationsListResponse response = _service.ReturnResponse(request);
+        var userId = User.GetUserId(); // 👈 מקבלים את ה-user ID מה-token
+        OutfitRecommendationsListResponse response = _service.ReturnResponse(request, userId);
         return Ok(response);
     }
 }

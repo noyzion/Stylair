@@ -20,6 +20,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Link } from "expo-router";
 import { saveOutfit } from "../../services/closet.service";
 import { OutfitItem } from "../../types/closet";
+import { getJwtToken } from "../../services/auth/auth.service";
 
 // Types matching the backend models
 
@@ -71,9 +72,17 @@ export default function TodayLookScreen() {
     setLoading(true);
     setError(null);
     try {
+      const token = await getJwtToken();
+      if (!token) {
+        throw new Error('Not authenticated. Please log in.');
+      }
+
       const response = await fetch(API_ENDPOINTS.OUTFIT_RECOMMENDATION, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`, // 👈 הוספת JWT token
+        },
         body: JSON.stringify({ message }),
       });
       if (!response.ok) {

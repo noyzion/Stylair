@@ -49,13 +49,13 @@ public class OutfitRecommendationService
         return "For day:"; // default
     }
 
-    public OutfitRecommendationsListResponse ReturnResponse(OutfitRecommendationRequest request)
+    public OutfitRecommendationsListResponse ReturnResponse(OutfitRecommendationRequest request, string userId)
     {
         var message = request?.message?.ToLower() ?? string.Empty;
         var response = new OutfitRecommendationsListResponse();
 
         // Check if the closet is empty - if so, return immediately with a single message
-        if (_store.IsClosetEmpty())
+        if (_store.IsClosetEmpty(userId))
         {
             var emptyOutfit = new OutfitRecommendationResponse
             {
@@ -77,7 +77,7 @@ public class OutfitRecommendationService
                 season = "all",
                 colors = new List<string> { "black", "white", "navy", "gray" }
             };
-            var outfit = _store.GetOutfitByCriteria(criteria);
+            var outfit = _store.GetOutfitByCriteria(criteria, userId);
             outfit.occasionLabel = GetLabelForFormal(message);
             // Only set reasonText if outfit has items (otherwise store already set an empty closet message)
             if (outfit.items.Count > 0)
@@ -98,7 +98,7 @@ public class OutfitRecommendationService
                 season = "all",
                 colors = new List<string> { "black", "blue", "red", "white" }
             };
-            var outfit = _store.GetOutfitByCriteria(criteria);
+            var outfit = _store.GetOutfitByCriteria(criteria, userId);
             outfit.occasionLabel = GetLabelForParty(message);
             if (outfit.items.Count > 0)
             {
@@ -118,7 +118,7 @@ public class OutfitRecommendationService
                 season = "all",
                 colors = new List<string> { "black", "gray", "white", "blue" }
             };
-            var outfit = _store.GetOutfitByCriteria(criteria);
+            var outfit = _store.GetOutfitByCriteria(criteria, userId);
             outfit.occasionLabel = GetLabelForGym(message);
             if (outfit.items.Count > 0)
             {
@@ -138,7 +138,7 @@ public class OutfitRecommendationService
                 season = "all",
                 colors = new List<string> { "blue", "black", "white", "gray", "red" }
             };
-            var outfit = _store.GetOutfitByCriteria(criteria);
+            var outfit = _store.GetOutfitByCriteria(criteria, userId);
             outfit.occasionLabel = GetLabelForCasual(message);
             if (outfit.items.Count > 0)
             {
@@ -157,7 +157,7 @@ public class OutfitRecommendationService
                 season = "all",
                 colors = new List<string> { "black", "white", "blue", "gray" }
             };
-            var outfit = _store.GetOutfitByCriteria(criteria);
+            var outfit = _store.GetOutfitByCriteria(criteria, userId);
             outfit.occasionLabel = "Default:";
             if (outfit.items.Count > 0)
             {

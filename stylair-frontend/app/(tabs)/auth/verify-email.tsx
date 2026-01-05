@@ -139,7 +139,7 @@ export default function VerifyEmail() {
                             </ThemedText>
                         </Pressable>
                         
-                        <Pressable onPress={() => router.push("/auth/login")} style={styles.backButton}>
+                        <Pressable onPress={() => router.push("/(tabs)/auth/login")} style={styles.backButton}>
                             <Ionicons name="arrow-back-outline" size={20} color="#6C63FF" />
                             <ThemedText style={styles.backButtonText}>Back</ThemedText>
                         </Pressable>

@@ -1,12 +1,19 @@
 import { AddClosetItemRequest, OutfitItem, SavedOutfit } from '../types/closet';
 import { API_BASE_URL } from '../constants/config';
+import { getJwtToken } from './auth/auth.service';
 
 // add item to closet
 export async function addItemToCloset(item: AddClosetItemRequest): Promise<{ message: string; item?: any }> {
+  const token = await getJwtToken();
+  if (!token) {
+    throw new Error('Not authenticated. Please log in.');
+  }
+
   const response = await fetch(`${API_BASE_URL}/api/closet/item`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`, // 👈 הוספת JWT token
     },
     body: JSON.stringify(item),
   });
@@ -21,10 +28,16 @@ export async function addItemToCloset(item: AddClosetItemRequest): Promise<{ mes
 
 // get all items from closet
 export async function getAllItemsFromCloset(): Promise<OutfitItem[]> {
+  const token = await getJwtToken();
+  if (!token) {
+    throw new Error('Not authenticated. Please log in.');
+  }
+
   const response = await fetch(`${API_BASE_URL}/api/closet/items`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`, // 👈 הוספת JWT token
     },
   });
 
@@ -41,10 +54,16 @@ export async function saveOutfit(outfit: {
   items: OutfitItem[];
   reasonText: string;
 }): Promise<{ message: string; outfit?: any }> {
+  const token = await getJwtToken();
+  if (!token) {
+    throw new Error('Not authenticated. Please log in.');
+  }
+
   const response = await fetch(API_BASE_URL + '/api/saved-outfits', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`, // 👈 הוספת JWT token
     },
     body: JSON.stringify(outfit),
   });
@@ -59,10 +78,16 @@ export async function saveOutfit(outfit: {
 
 // get all saved outfits from archive
 export async function getAllSavedOutfits(): Promise<SavedOutfit[]> {
+  const token = await getJwtToken();
+  if (!token) {
+    throw new Error('Not authenticated. Please log in.');
+  }
+
   const response = await fetch(`${API_BASE_URL}/api/saved-outfits`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`, // 👈 הוספת JWT token
     },
   });
 
@@ -75,11 +100,17 @@ export async function getAllSavedOutfits(): Promise<SavedOutfit[]> {
 
 // delete item from closet
 export async function deleteItemFromCloset(itemImage: string): Promise<{ message: string }> {
+  const token = await getJwtToken();
+  if (!token) {
+    throw new Error('Not authenticated. Please log in.');
+  }
+
   const encodedItemImage = encodeURIComponent(itemImage);
   const response = await fetch(`${API_BASE_URL}/api/closet/item/${encodedItemImage}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`, // 👈 הוספת JWT token
     },
   });
 
@@ -93,10 +124,16 @@ export async function deleteItemFromCloset(itemImage: string): Promise<{ message
 
 // delete outfit from archive
 export async function deleteOutfitFromArchive(outfitId: string): Promise<{ message: string }> {
+  const token = await getJwtToken();
+  if (!token) {
+    throw new Error('Not authenticated. Please log in.');
+  }
+
   const response = await fetch(`${API_BASE_URL}/api/saved-outfits/${outfitId}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`, // 👈 הוספת JWT token
     },
   });
 

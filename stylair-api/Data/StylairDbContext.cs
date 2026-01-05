@@ -126,6 +126,11 @@ public class StylairDbContext : DbContext
                     // Conversion when reading: set as Unspecified (no timezone)
                     v => DateTime.SpecifyKind(v, DateTimeKind.Unspecified))
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");  // If no value is specified, PostgreSQL will insert current time
+
+            // Map user_id column - required text
+            entity.Property(e => e.UserId)
+                .HasColumnName("user_id")  // Column name in PostgreSQL
+                .IsRequired();  // Required - cannot be null
         });
 
         // Define the mapping for the saved_outfits table
@@ -178,6 +183,11 @@ public class StylairDbContext : DbContext
                     v => v.Kind == DateTimeKind.Utc ? v.ToLocalTime() : v,
                     v => DateTime.SpecifyKind(v, DateTimeKind.Unspecified))
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            // Map user_id column - required text
+            entity.Property(e => e.UserId)
+                .HasColumnName("user_id")  // Column name in PostgreSQL
+                .IsRequired();  // Required - cannot be null
         });
     }
 }

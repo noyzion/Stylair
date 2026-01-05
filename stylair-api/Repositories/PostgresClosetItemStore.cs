@@ -19,7 +19,7 @@ public class PostgresClosetItemStore : IClosetItemStore, IOutfitStore
     }
 
     /// Add - Adds a new item to the database
-    public void Add(OutfitItem item)
+    public void Add(OutfitItem item, string userId)
     {
         try
         {
@@ -28,6 +28,9 @@ public class PostgresClosetItemStore : IClosetItemStore, IOutfitStore
             {
                 item.ItemId = Guid.NewGuid();
             }
+
+            // Set the user ID (required for multi-user support)
+            item.UserId = userId;
 
             // Set the creation time (if not set, the database will insert it automatically)
             item.CreatedAt = DateTime.Now;
@@ -59,32 +62,37 @@ public class PostgresClosetItemStore : IClosetItemStore, IOutfitStore
         }
     }
 
-    /// GetAll - Gets all items from the database
-    public List<OutfitItem> GetAll()
+    /// GetAll - Gets all items from the database for a specific user
+    public List<OutfitItem> GetAll(string userId)
     {
-        // EF Core translates this to SQL: SELECT * FROM closet_items ORDER BY created_at DESC
-        // OrderByDescending - orders from newest to oldest
-        // ToList() - executes the query and returns results as List
+        // EF Core translates this to SQL: SELECT * FROM closet_items WHERE user_id = @userId ORDER BY created_at DESC
+        // Filters by user_id to ensure users only see their own items
         return _context.ClosetItems
+            .Where(x => x.UserId == userId) // 👈 סינון לפי user_id
             .OrderByDescending(x => x.CreatedAt)
             .ToList();
     }
 
     /// Delete - Deletes an item from the database by itemImage (primary key)
-    public void Delete(string itemImage)
+    /// Also verifies that the user owns the item before deleting
+    public void Delete(string itemImage, string userId)
     {
         try
         {
             var item = _context.ClosetItems.Find(itemImage);
-            if (item != null)
-            {
-                _context.ClosetItems.Remove(item);
-                _context.SaveChanges();
-            }
-            else
+            if (item == null)
             {
                 throw new ArgumentException($"Item with image '{itemImage}' not found");
             }
+            
+            // Verify that the user owns this item
+            if (item.UserId != userId)
+            {
+                throw new UnauthorizedAccessException("You don't have permission to delete this item. It belongs to another user.");
+            }
+            
+            _context.ClosetItems.Remove(item);
+            _context.SaveChanges();
         }
         catch (Exception ex)
         {
@@ -98,9 +106,9 @@ public class PostgresClosetItemStore : IClosetItemStore, IOutfitStore
         }
     }
 
-    public bool IsClosetEmpty()
+    public bool IsClosetEmpty(string userId)
     {
-        return _context.ClosetItems.Count() == 0;
+        return _context.ClosetItems.Count(x => x.UserId == userId) == 0;
     }
 
     /// Update - Updates an existing item in the database
@@ -109,23 +117,21 @@ public class PostgresClosetItemStore : IClosetItemStore, IOutfitStore
         try
         {
             var existingItem = _context.ClosetItems.Find(item.ItemImage);
-            if (existingItem != null)
-            {
-                // Update all properties
-                existingItem.ItemName = item.ItemName;
-                existingItem.ItemCategory = item.ItemCategory;
-                existingItem.Style = item.Style;
-                existingItem.Colors = item.Colors;
-                existingItem.Season = item.Season;
-                existingItem.Size = item.Size;
-                existingItem.Tags = item.Tags;
-                
-                _context.SaveChanges();
-            }
-            else
+            if (existingItem == null)
             {
                 throw new ArgumentException($"Item with image '{item.ItemImage}' not found");
             }
+            
+            // Update all properties
+            existingItem.ItemName = item.ItemName;
+            existingItem.ItemCategory = item.ItemCategory;
+            existingItem.Style = item.Style;
+            existingItem.Colors = item.Colors;
+            existingItem.Season = item.Season;
+            existingItem.Size = item.Size;
+            existingItem.Tags = item.Tags;
+            
+            _context.SaveChanges();
         }
         catch (Exception ex)
         {
@@ -139,9 +145,12 @@ public class PostgresClosetItemStore : IClosetItemStore, IOutfitStore
         }
     }
 
-    public OutfitRecommendationResponse GetOutfitByCriteria(OutfitCriteria criteria)
+    public OutfitRecommendationResponse GetOutfitByCriteria(OutfitCriteria criteria, string userId)
     {
-        List<OutfitItem> items = _context.ClosetItems.ToList();
+        // Filter items by user_id first
+        List<OutfitItem> items = _context.ClosetItems
+            .Where(x => x.UserId == userId) // 👈 סינון לפי user_id
+            .ToList();
         var returnedOutfit = new OutfitRecommendationResponse();
 
         // Filter items based on criteria (style, colors, season)

@@ -9,7 +9,7 @@ public class SavedOutfitService
         _store = store;
     }
 
-    public SavedOutfit SaveOutfit(OutfitRecommendationResponse outfitResponse)
+    public SavedOutfit SaveOutfit(OutfitRecommendationResponse outfitResponse, string userId)
     {
         if (outfitResponse.items == null || outfitResponse.items.Count == 0)
             throw new ArgumentException("Outfit must contain at least one item");
@@ -20,24 +20,25 @@ public class SavedOutfitService
             OccasionLabel = outfitResponse.occasionLabel ?? string.Empty,
             ReasonText = outfitResponse.reasonText ?? string.Empty,
             Items = outfitResponse.items,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            UserId = userId // 👈 שמירת user_id
         };
 
-        _store.Add(savedOutfit);
+        _store.Add(savedOutfit, userId);
         return savedOutfit;
     }
 
-    public List<SavedOutfit> GetAllSavedOutfits()
+    public List<SavedOutfit> GetAllSavedOutfits(string userId)
     {
-        return _store.GetAll();
+        return _store.GetAll(userId);
     }
 
-    public void DeleteOutfit(Guid outfitId)
+    public void DeleteOutfit(Guid outfitId, string userId)
     {
         if (outfitId == Guid.Empty)
             throw new ArgumentException("Outfit ID is required");
 
-        _store.Delete(outfitId);
+        _store.Delete(outfitId, userId);
     }
 }
 

@@ -28,11 +28,18 @@ export default function HomeScreen() {
   const checkAuthStatus = useCallback(async () => {
     const isAuth = await isAuthenticated();
     setIsLoggedIn(isAuth);
+    
+    // If not authenticated, redirect to login
+    if (!isAuth) {
+      router.replace('/(tabs)/auth/login'); // 👈 המסלול הנכון - הקבצים בתוך (tabs)
+      return;
+    }
+    
     if (isAuth) {
       const userName = await getUserName();
       setUserName(userName);
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     checkAuthStatus();

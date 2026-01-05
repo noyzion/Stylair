@@ -13,7 +13,7 @@ public class ClosetService
         _storageService = storageService;
     }
 
-    public async Task<OutfitItem> AddItemAsync(AddItemRequest request)
+    public async Task<OutfitItem> AddItemAsync(AddItemRequest request, string userId)
     {
         if (string.IsNullOrWhiteSpace(request.itemName))
             throw new ArgumentException("Item name is required");
@@ -37,18 +37,19 @@ public class ClosetService
             Colors = request.colors ?? new List<string>(),
             Season = request.season ?? new List<string>(),
             Size = request.size,  // Can be null if not provided
-            Tags = request.tags ?? new List<string>()  // Default to empty list if null/empty
+            Tags = request.tags ?? new List<string>(),  // Default to empty list if null/empty
+            UserId = userId // 👈 שמירת user_id
         };
 
         Console.WriteLine($"Adding item with Size: '{item.Size}', Tags: [{string.Join(", ", item.Tags)}]");
 
-        _store.Add(item);
+        _store.Add(item, userId);
         return item;
     }
 
-    public List<OutfitItem> GetAllItems()
+    public List<OutfitItem> GetAllItems(string userId)
     {
-        var items = _store.GetAll();
+        var items = _store.GetAll(userId);
         // Filter out "new" tag from items older than 30 days and update database
         foreach (var item in items)
         {
@@ -88,14 +89,14 @@ public class ClosetService
         return false;
     }
 
-    public async Task DeleteItemAsync(string itemImage)
+    public async Task DeleteItemAsync(string itemImage, string userId)
     {
         if (string.IsNullOrWhiteSpace(itemImage))
             throw new ArgumentException("Item image is required");
 
-        // Delete from database first
-        _store.Delete(itemImage);
-        _savedOutfitStore.DeleteOutfitsContainingItem(itemImage);
+        // Delete from database first (this also verifies ownership)
+        _store.Delete(itemImage, userId);
+        _savedOutfitStore.DeleteOutfitsContainingItem(itemImage, userId);
 
         // Delete from Supabase Storage (if it's a Supabase URL)
         if (itemImage.Contains("supabase.co/storage"))
