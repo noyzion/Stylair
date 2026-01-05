@@ -12,6 +12,21 @@ public class OutfitChatRequest
 
     /// Weather data from frontend
     public WeatherData? Weather { get; set; }
+
+    /// Chat history - previous messages in the conversation
+    public List<ChatHistoryMessage>? ChatHistory { get; set; }
+}
+
+/// <summary>
+/// Single message in chat history
+/// </summary>
+public class ChatHistoryMessage
+{
+    /// Role: "user" or "assistant"
+    public string Role { get; set; } = string.Empty;
+
+    /// Message content
+    public string Content { get; set; } = string.Empty;
 }
 
 /// <summary>

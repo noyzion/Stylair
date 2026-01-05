@@ -236,6 +236,11 @@ export async function updateItemInCloset(
 }
 
 // Outfit Chat with AI
+export interface ChatHistoryMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export interface OutfitChatRequest {
   userMessage: string;
   weather?: {
@@ -243,6 +248,7 @@ export interface OutfitChatRequest {
     condition?: string;
     isNight?: boolean;
   };
+  chatHistory?: ChatHistoryMessage[];
 }
 
 export interface OutfitItemSuggestion {

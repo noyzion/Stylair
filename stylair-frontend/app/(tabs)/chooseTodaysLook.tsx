@@ -47,6 +47,7 @@ export default function TodayLookScreen() {
   const [error, setError] = useState<string | null>(null);
   const [savingOutfitIndex, setSavingOutfitIndex] = useState<number | null>(null);
   const [savedOutfitIndices, setSavedOutfitIndices] = useState<Set<string>>(new Set());
+  const [currentTopic, setCurrentTopic] = useState<string | null>(null); // Track current conversation topic
   
   // Weather data
   const [tempC, setTempC] = useState<number | null>(null);
@@ -68,8 +69,75 @@ export default function TodayLookScreen() {
       setSelectedImage(null);
       setSavedOutfitIndices(new Set());
       setSavingOutfitIndex(null);
+      setCurrentTopic(null);
     }, [])
   );
+
+  // Helper function to detect if message is a greeting or off-topic
+  const isOffTopicOrGreeting = (message: string): boolean => {
+    const lowerMessage = message.toLowerCase().trim();
+    const greetings = ['hi', 'hello', 'hey', 'מה נשמע', 'שלום', 'היי', 'מה קורה', 'מה המצב'];
+    const offTopicKeywords = ['מה השעה', 'מה התאריך', 'תספר לי על', 'מה אתה', 'מי אתה'];
+    
+    // Check if it's a simple greeting
+    if (greetings.some(g => lowerMessage === g || lowerMessage.startsWith(g + ' '))) {
+      return true;
+    }
+    
+    // Check if it contains off-topic keywords
+    if (offTopicKeywords.some(keyword => lowerMessage.includes(keyword))) {
+      return true;
+    }
+    
+    // If message is very short and doesn't mention any event/clothing related words
+    if (message.length < 10) {
+      const clothingKeywords = ['פגישה', 'אימון', 'יציאה', 'מסיבה', 'עבודה', 'אאוטפיט', 'לוק', 'בגד', 'outfit', 'meeting', 'party', 'workout', 'gym', 'event'];
+      if (!clothingKeywords.some(keyword => lowerMessage.includes(keyword))) {
+        return true;
+      }
+    }
+    
+    return false;
+  };
+
+  // Helper function to detect if message is about a new topic/event
+  const isNewTopic = (message: string): boolean => {
+    const lowerMessage = message.toLowerCase().trim();
+    
+    // Keywords that indicate a new event/request
+    const newEventKeywords = ['יש לי', 'אני צריך', 'אני רוצה', 'תביא לי', 'תציע לי', 'יש', 'need', 'want', 'have', 'i have', 'i need', 'i want'];
+    
+    // If current topic is null, this is definitely a new topic
+    if (!currentTopic) {
+      return newEventKeywords.some(keyword => lowerMessage.includes(keyword));
+    }
+    
+    // If message mentions a new event type, it's a new topic
+    const eventTypes = ['פגישה', 'אימון', 'יציאה', 'מסיבה', 'עבודה', 'דייט', 'meeting', 'workout', 'gym', 'party', 'date', 'work'];
+    const mentionedEvents = eventTypes.filter(event => lowerMessage.includes(event));
+    
+    // If mentions a different event than current topic, it's a new topic
+    if (mentionedEvents.length > 0 && currentTopic) {
+      return !mentionedEvents.some(event => currentTopic.includes(event));
+    }
+    
+    // If starts with new event keywords, it's likely a new topic
+    return newEventKeywords.some(keyword => lowerMessage.startsWith(keyword) || lowerMessage.includes(keyword + ' '));
+  };
+
+  // Helper function to extract topic from message
+  const extractTopic = (message: string): string | null => {
+    const lowerMessage = message.toLowerCase().trim();
+    const eventTypes = ['פגישה', 'אימון', 'יציאה', 'מסיבה', 'עבודה', 'דייט', 'meeting', 'workout', 'gym', 'party', 'date', 'work'];
+    
+    for (const event of eventTypes) {
+      if (lowerMessage.includes(event)) {
+        return event;
+      }
+    }
+    
+    return null;
+  };
 
   // Scroll to bottom when new messages are added
   useEffect(() => {
@@ -174,7 +242,22 @@ export default function TodayLookScreen() {
     // Store message before clearing
     const messageToSend = message.trim();
     
-    // Add user message to chat
+    // Check if this is a new topic (different event) - reset history if so
+    // Note: Off-topic detection is handled by backend semantic relevance check
+    const isNewTopicMessage = isNewTopic(messageToSend);
+    
+    // If it's a new topic, reset topic tracking (but keep messages visible)
+    if (isNewTopicMessage) {
+      setCurrentTopic(null);
+    } else {
+      // Extract and update current topic if it's a continuation
+      const extractedTopic = extractTopic(messageToSend);
+      if (extractedTopic) {
+        setCurrentTopic(extractedTopic);
+      }
+    }
+    
+    // Add user message to chat (always keep messages visible)
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       type: 'user',
@@ -198,6 +281,43 @@ export default function TodayLookScreen() {
     }]);
     
     try {
+      // Build chat history from previous messages (excluding loading messages)
+      // Only include history if we're continuing the same topic
+      // Note: Messages stay visible on screen, but history sent to backend is reset for new topics
+      // Note: Backend will handle semantic relevance - we just send history for context
+      const shouldIncludeHistory = !isNewTopicMessage;
+      const chatHistory = shouldIncludeHistory 
+        ? chatMessages
+            .filter(msg => msg.text || msg.outfits) // Only include messages with content
+            .map(msg => {
+              if (msg.type === 'user') {
+                return {
+                  role: 'user' as const,
+                  content: msg.text
+                };
+              } else {
+                // For AI messages, include outfit information in a structured way
+                if (msg.outfits && msg.outfits.length > 0) {
+                  // Build a description of the outfits for context
+                  const outfitDescriptions = msg.outfits.map(outfit => {
+                    const itemsList = outfit.items.map(item => `${item.category}: ${item.id}`).join(', ');
+                    return `Outfit for "${outfit.event}": ${itemsList}. Notes: ${outfit.notes}`;
+                  }).join(' | ');
+                  return {
+                    role: 'assistant' as const,
+                    content: `I suggested ${msg.outfits.length} outfit${msg.outfits.length > 1 ? 's' : ''}: ${outfitDescriptions}`
+                  };
+                } else {
+                  return {
+                    role: 'assistant' as const,
+                    content: msg.text || ''
+                  };
+                }
+              }
+            })
+            .slice(-10) // Keep last 10 messages for context
+        : []; // Reset history for new topics (but messages stay visible on screen)
+
       const response = await suggestOutfitWithAI({
         userMessage: messageToSend,
         weather: {
@@ -205,25 +325,58 @@ export default function TodayLookScreen() {
           condition: condition,
           isNight: isNight,
         },
+        chatHistory: chatHistory.length > 0 ? chatHistory : undefined,
       });
+
+      // Remove loading message
+      setChatMessages(prev => prev.filter(msg => msg.id !== loadingMessageId));
 
       if (!response.success) {
-        throw new Error(response.errorMessage || "Failed to generate outfit suggestions");
+        const errorText = response.errorMessage || "Failed to generate outfit suggestions";
+        
+        // If it's an off-topic message, show it as AI message
+        if (errorText.toLowerCase().includes("i'm a fashion") ||
+            errorText.toLowerCase().includes("i can only help") ||
+            errorText.toLowerCase().includes("fashion stylist"))
+        {
+          setChatMessages(prev => [...prev, {
+            id: Date.now().toString(),
+            type: 'ai',
+            text: errorText,
+            timestamp: new Date(),
+          }]);
+        } else {
+          // Regular error
+          setChatMessages(prev => [...prev, {
+            id: Date.now().toString(),
+            type: 'ai',
+            text: errorText,
+            timestamp: new Date(),
+          }]);
+        }
+        setError(errorText);
+        setLoading(false);
+        return;
       }
 
-      // Remove loading message and add AI response
-      setChatMessages(prev => {
-        const filtered = prev.filter(msg => msg.id !== loadingMessageId);
-        return [...filtered, {
-          id: Date.now().toString(),
-          type: 'ai',
-          text: response.outfits.length > 0 
-            ? `I found ${response.outfits.length} outfit${response.outfits.length > 1 ? 's' : ''} for you!`
-            : 'I couldn\'t find any outfits matching your request.',
-          outfits: response.outfits,
-          timestamp: new Date(),
-        }];
-      });
+      // Add AI response with outfits
+      setChatMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        type: 'ai',
+        text: response.outfits.length > 0 
+          ? `I found ${response.outfits.length} outfit${response.outfits.length > 1 ? 's' : ''} for you!`
+          : 'I couldn\'t find any outfits matching your request.',
+        outfits: response.outfits,
+        timestamp: new Date(),
+      }]);
+      
+      // Update current topic if outfits were found and we don't have a topic yet
+      if (response.outfits.length > 0 && !currentTopic) {
+        const extractedTopic = extractTopic(messageToSend);
+        if (extractedTopic) {
+          setCurrentTopic(extractedTopic);
+        }
+      }
       
       setLoading(false);
     } catch (error) {

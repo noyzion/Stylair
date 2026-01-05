@@ -1,5 +1,7 @@
+using System;
 using System.Text.Json;
 using System.Text;
+using System.Linq;
 using stylair_api.Models;
 using stylair_api.Repositories;
 
@@ -48,6 +50,36 @@ public class OutfitChatService
     {
         try
         {
+            // Check for thank you messages first - return a friendly response
+            if (IsThankYouMessage(request.UserMessage))
+            {
+                var thankYouResponses = new[]
+                {
+                    "You're so welcome! I'm here whenever you need outfit help! 💜",
+                    "Happy to help! Feel free to ask me anytime about outfits! ✨",
+                    "You're welcome! I'm always here to help you look amazing! 🌟",
+                    "My pleasure! Can't wait to help you with your next outfit! 💫",
+                    "You're welcome! I love helping you create perfect looks! 💕"
+                };
+                var random = new Random();
+                return new OutfitChatResponse
+                {
+                    Success = false,
+                    ErrorMessage = thankYouResponses[random.Next(thankYouResponses.Length)]
+                };
+            }
+
+            // SEMANTIC RELEVANCE DETECTION - Check BEFORE generating outfits
+            var isRelevant = IsMessageRelevant(request.UserMessage);
+            if (!isRelevant)
+            {
+                return new OutfitChatResponse
+                {
+                    Success = false,
+                    ErrorMessage = "I'm a fashion stylist assistant and I can only help with outfit suggestions or outfit-related changes. Please tell me about your events or ask me about outfits, clothing, or styling!"
+                };
+            }
+
             // Get user's closet items
             var closetItems = _closetStore.GetAll(userId);
 
@@ -90,15 +122,29 @@ public class OutfitChatService
             // Create user message with context
             var userMessage = CreateUserMessage(request, itemsForAI, savedOutfitsForAI);
 
+            // Build messages list with chat history
+            var messages = new List<object>
+            {
+                new { role = "system", content = systemPrompt }
+            };
+
+            // Add chat history if provided (for context)
+            if (request.ChatHistory != null && request.ChatHistory.Count > 0)
+            {
+                foreach (var historyMsg in request.ChatHistory)
+                {
+                    messages.Add(new { role = historyMsg.Role, content = historyMsg.Content });
+                }
+            }
+
+            // Add current user message
+            messages.Add(new { role = "user", content = userMessage });
+
             // Prepare request body for OpenAI API
             var requestBody = new
             {
                 model = "gpt-4o-mini",
-                messages = new List<object>
-                {
-                    new { role = "system", content = systemPrompt },
-                    new { role = "user", content = userMessage }
-                },
+                messages = messages,
                 max_tokens = 1500, // Increased to allow more detailed responses
                 response_format = new { type = "json_object" },
                 temperature = 0.7
@@ -125,6 +171,34 @@ public class OutfitChatService
                 .GetProperty("message")
                 .GetProperty("content")
                 .GetString() ?? string.Empty;
+
+            // Check if response is NOT valid JSON (might be a text response)
+            // This should not happen since we check relevance before, but handle it gracefully
+            var trimmedResponse = responseText.Trim();
+            if (!trimmedResponse.StartsWith("{") && !trimmedResponse.StartsWith("```json"))
+            {
+                // This is a text response, not JSON - treat as non-outfit response
+                var lowerResponse = trimmedResponse.ToLower();
+                if (lowerResponse.Contains("i'm a fashion") || 
+                    lowerResponse.Contains("i can only help") || 
+                    lowerResponse.Contains("fashion stylist") ||
+                    lowerResponse.Contains("tell me about your day") ||
+                    lowerResponse.Contains("tell me about your events"))
+                {
+                    // It's a text response (shouldn't happen after relevance check, but handle it)
+                    return new OutfitChatResponse
+                    {
+                        Success = false,
+                        ErrorMessage = trimmedResponse
+                    };
+                }
+                // If it's not a known off-topic pattern, try to parse anyway or return error
+                return new OutfitChatResponse
+                {
+                    Success = false,
+                    ErrorMessage = "The AI response was not in the expected format. Please try again."
+                };
+            }
 
             // Parse JSON response
             var chatResponse = ParseOpenAIResponse(responseText, closetItems);
@@ -163,6 +237,29 @@ public class OutfitChatService
     private string CreateSystemPrompt()
     {
         return @"You are an expert professional fashion stylist AI assistant with deep knowledge of color theory, style matching, and outfit coordination. Your job is to create PERFECT outfit suggestions that are:
+
+CRITICAL: You have already been validated that this message is relevant to outfits. The user message has passed semantic relevance detection, so you MUST generate outfit suggestions.
+
+CONTEXT-AWARE FEEDBACK HANDLING:
+- If the user gives feedback on a previous outfit (""I didn't like it"", ""this doesn't work"", ""change the shoes""):
+  * Analyze the chat history to understand which outfit they're referring to
+  * If they mention a SPECIFIC item category (shoes, shirt, pants, jacket, accessories, top, bottom) → Replace ONLY that item category, keep all other items unchanged
+  * If feedback is general (""I didn't like it"", ""this doesn't work"", ""another one"", ""different"") → Generate a completely new outfit
+  * Maintain style, event context, and color harmony when making partial changes
+- NEVER change unrelated items unless explicitly required
+- When replacing a specific item, use the SAME item IDs for all other items from the previous outfit
+
+ITEM-SPECIFIC MODIFICATION RULES (CRITICAL - NO RANDOMNESS):
+- If user says: ""change the shoes"" / ""different shirt"" / ""replace the jacket"" / ""I don't like the pants"":
+  * Identify the category mentioned (shoes = ""shoes"", shirt = ""top"", jacket = ""top"", pants = ""bottom"")
+  * Look at the previous assistant message in chat history to find the outfit they're referring to
+  * Copy ALL item IDs from that outfit EXCEPT for the category mentioned
+  * Replace ONLY the item in that specific category
+  * Ensure the new item coordinates with existing items (colors, style, formality)
+  * Do NOT change any other items - this is critical for user trust
+- If user says: ""I didn't like it"" / ""this doesn't work"" / ""another one"" / ""different"" (without specifying an item):
+  * Generate a completely new outfit for the same event/context
+  * Do NOT reuse any items from the previous outfit
 
 1. HIGHLY RELEVANT to the user's specific message and events
 2. WEATHER-APPROPRIATE based on temperature and conditions
@@ -271,13 +368,38 @@ If you cannot find suitable items, be honest in the missingItems array and notes
     {
         var message = new StringBuilder();
         
-        message.AppendLine("=== USER REQUEST ===");
+        // Add chat history context for feedback understanding
+        if (request.ChatHistory != null && request.ChatHistory.Count > 0)
+        {
+            message.AppendLine("=== CONVERSATION CONTEXT ===");
+            message.AppendLine("Previous messages in this conversation (for understanding feedback and context):");
+            foreach (var histMsg in request.ChatHistory.TakeLast(10))
+            {
+                var content = histMsg.Content;
+                // Truncate very long messages
+                if (content.Length > 200)
+                {
+                    content = content.Substring(0, 200) + "...";
+                }
+                message.AppendLine($"{histMsg.Role}: {content}");
+            }
+            message.AppendLine();
+            message.AppendLine("IMPORTANT: If the user is giving feedback or requesting changes:");
+            message.AppendLine("- Analyze the previous messages to understand which outfit they're referring to");
+            message.AppendLine("- If they mention a SPECIFIC item (shoes, shirt, pants, jacket, accessories) → Replace ONLY that item, keep all other items unchanged");
+            message.AppendLine("- If feedback is general (\"I didn't like it\", \"this doesn't work\") → Generate a completely new outfit");
+            message.AppendLine("- Maintain style, event context, and color harmony when making partial changes");
+            message.AppendLine();
+        }
+        
+        message.AppendLine("=== CURRENT USER REQUEST ===");
         message.AppendLine($"User message: \"{request.UserMessage}\"");
         message.AppendLine();
         message.AppendLine("Please analyze this message carefully and understand:");
-        message.AppendLine("- What events/activities the user mentioned");
+        message.AppendLine("- What events/activities the user mentioned (or from context if giving feedback)");
         message.AppendLine("- The formality level needed");
         message.AppendLine("- The style/aesthetic appropriate for these events");
+        message.AppendLine("- If this is feedback on a previous outfit, identify which items to change");
         message.AppendLine();
 
         // Add weather information
@@ -364,6 +486,94 @@ If you cannot find suitable items, be honest in the missingItems array and notes
         message.AppendLine("Return your response in the exact JSON format specified in the system prompt.");
 
         return message.ToString();
+    }
+
+    /// Checks if the message is a thank you message
+    private bool IsThankYouMessage(string userMessage)
+    {
+        if (string.IsNullOrWhiteSpace(userMessage))
+            return false;
+
+        var lowerMessage = userMessage.ToLower().Trim();
+        
+        var thankYouPhrases = new[]
+        {
+            "thank you", "thanks", "תודה", "תודה רבה", "תודה לך", "תודה לך מאוד",
+            "appreciate it", "i appreciate", "much appreciated", "grateful",
+            "תודה על העזרה", "תודה על הכל", "תודה רבה לך"
+        };
+
+        // Check if message is primarily a thank you (not combined with outfit request)
+        var isThankYou = thankYouPhrases.Any(phrase => lowerMessage.Contains(phrase));
+        
+        // If it's a thank you, make sure it's not combined with an outfit request
+        if (isThankYou)
+        {
+            var outfitKeywords = new[] { "outfit", "clothing", "clothes", "wear", "suggest", "recommend", "help", "need", "want" };
+            var hasOutfitRequest = outfitKeywords.Any(keyword => lowerMessage.Contains(keyword));
+            
+            // If it's just a thank you without outfit request, return true
+            if (!hasOutfitRequest)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// Checks if user message is semantically relevant to outfit creation/modification
+    private bool IsMessageRelevant(string userMessage)
+    {
+        if (string.IsNullOrWhiteSpace(userMessage))
+            return false;
+
+        var lowerMessage = userMessage.ToLower();
+
+        // Keywords indicating relevance
+        var relevantKeywords = new[] {
+            "outfit", "clothing", "clothes", "fashion", "style", "styling", "wear", "dress", "shirt", "pants", "shoes", "jacket", "skirt", "top", "bottom", "accessories", "look",
+            "meeting", "workout", "gym", "party", "date", "event", "work", "casual", "formal", "evening", "day", "weather", "cold", "hot", "rain", "wind", "snow",
+            "change", "replace", "different", "another", "suggest", "recommend", "give me", "show me", "what to wear", "help me"
+        };
+
+        // Keywords indicating irrelevance (greetings, small talk, general questions, romantic/emotional)
+        var irrelevantKeywords = new[] {
+            "hi", "hello", "hey", "how are you", "what's up", "good morning", "good evening", "good night", "מה נשמע", "שלום", "היי",
+            "what time is it", "tell me a joke", "do you like", "i'm bored", "today is", "i had a bad day", "animals", "food", "emotions", "life", "general question",
+            "i love you", "love you", "i like you", "like you", "miss you", "thinking of you", "you're beautiful", "you're amazing"
+        };
+
+        // Check for explicit irrelevant phrases (sentences, not just words)
+        var irrelevantPhrases = new[] {
+            "hi how are you", "what's going on", "i'm bored", "do you like dogs", "what time is it", "tell me a joke", "today is a weird day", "i had a bad day at work",
+            "i love you", "love you", "i like you", "miss you", "thinking of you", "you're beautiful", "you're amazing", "you're cute", "you're sweet"
+        };
+
+        if (irrelevantPhrases.Any(phrase => lowerMessage.Contains(phrase)))
+        {
+            return false;
+        }
+
+        // If it contains any relevant keyword, it's likely relevant
+        if (relevantKeywords.Any(keyword => lowerMessage.Contains(keyword)))
+        {
+            return true;
+        }
+
+        // If it contains any irrelevant keyword and no relevant ones, it's likely irrelevant
+        if (irrelevantKeywords.Any(keyword => lowerMessage.Contains(keyword)))
+        {
+            return false;
+        }
+
+        // If it's a very short message and didn't hit any relevant keywords, assume irrelevant
+        if (lowerMessage.Length < 10 && !relevantKeywords.Any(keyword => lowerMessage.Contains(keyword)))
+        {
+            return false;
+        }
+
+        return true; // Default to relevant if no strong indicators either way
     }
 
     /// Parses OpenAI response and validates against actual closet items
