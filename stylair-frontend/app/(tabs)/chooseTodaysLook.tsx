@@ -150,11 +150,18 @@ export default function TodayLookScreen() {
   //function to send the message to the API, async because we are using await to wait for the response
   const handleSend = async () => {
     if (message === "") return;
+    
+    // Store message before clearing
+    const messageToSend = message;
+    
+    // Clear the message immediately after sending
+    setMessage("");
     setLoading(true);
     setError(null);
+    
     try {
       const response = await suggestOutfitWithAI({
-        userMessage: message,
+        userMessage: messageToSend,
         weather: {
           temperature: tempC ?? undefined,
           condition: condition,
@@ -167,7 +174,6 @@ export default function TodayLookScreen() {
       }
 
       setOutfits(response.outfits);
-      setMessage(""); //clear the message
       setLoading(false);
       // Clear saved indices when new outfits are loaded
       setSavedOutfitIndices(new Set());

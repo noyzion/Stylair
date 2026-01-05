@@ -207,6 +207,34 @@ export async function analyzeImageWithAI(
   return response.json();
 }
 
+// update item in closet
+export async function updateItemInCloset(
+  itemImage: string,
+  item: AddClosetItemRequest
+): Promise<{ message: string; item?: any }> {
+  const token = await getJwtToken();
+  if (!token) {
+    throw new Error('Not authenticated. Please log in.');
+  }
+
+  const encodedItemImage = encodeURIComponent(itemImage);
+  const response = await fetch(`${API_BASE_URL}/api/closet/item/${encodedItemImage}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(item),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: 'Failed to update item' }));
+    throw new Error(errorData.message || 'Failed to update item');
+  }
+
+  return response.json();
+}
+
 // Outfit Chat with AI
 export interface OutfitChatRequest {
   userMessage: string;

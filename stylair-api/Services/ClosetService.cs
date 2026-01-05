@@ -114,4 +114,78 @@ public class ClosetService
             }
         }
     }
+
+    public async Task<OutfitItem> UpdateItemAsync(AddItemRequest request, string itemImage, string userId)
+    {
+        if (string.IsNullOrWhiteSpace(itemImage))
+            throw new ArgumentException("Item image is required");
+
+        if (string.IsNullOrWhiteSpace(request.itemName))
+            throw new ArgumentException("Item name is required");
+
+        if (string.IsNullOrWhiteSpace(request.itemCategory))
+            throw new ArgumentException("Item category is required");
+
+        // Get existing item to verify ownership
+        var existingItems = _store.GetAll(userId);
+        var existingItem = existingItems.FirstOrDefault(i => i.ItemImage == itemImage);
+        
+        if (existingItem == null)
+        {
+            throw new ArgumentException($"Item with image '{itemImage}' not found or you don't have permission to edit it");
+        }
+
+        // Verify ownership
+        if (existingItem.UserId != userId)
+        {
+            throw new UnauthorizedAccessException("You don't have permission to edit this item. It belongs to another user.");
+        }
+
+        // Handle image update - if new image is provided and different, upload it
+        string finalImageUrl = itemImage; // Keep existing image by default
+        if (!string.IsNullOrWhiteSpace(request.itemImage) && request.itemImage != itemImage)
+        {
+            // Check if it's a new image (base64 or different URL)
+            if (request.itemImage.StartsWith("data:image") || request.itemImage.StartsWith("file://") || 
+                !request.itemImage.Contains("supabase.co/storage"))
+            {
+                // New image provided - upload it
+                finalImageUrl = await _storageService.UploadImageAsync(request.itemImage);
+                
+                // Delete old image from Supabase Storage if it was stored there
+                if (itemImage.Contains("supabase.co/storage"))
+                {
+                    try
+                    {
+                        await _storageService.DeleteImageAsync(itemImage);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Warning: Failed to delete old image from Supabase Storage: {ex.Message}");
+                        // Don't throw - new image is already uploaded
+                    }
+                }
+            }
+            else
+            {
+                // Same URL or already uploaded image
+                finalImageUrl = request.itemImage;
+            }
+        }
+
+        // Update item properties
+        existingItem.ItemName = request.itemName;
+        existingItem.ItemCategory = request.itemCategory;
+        existingItem.ItemImage = finalImageUrl;
+        existingItem.Style = request.style ?? new List<string>();
+        existingItem.Colors = request.colors ?? new List<string>();
+        existingItem.Season = request.season ?? new List<string>();
+        existingItem.Size = request.size;
+        existingItem.Tags = request.tags ?? new List<string>();
+
+        Console.WriteLine($"Updating item with Size: '{existingItem.Size}', Tags: [{string.Join(", ", existingItem.Tags)}]");
+
+        _store.Update(existingItem);
+        return existingItem;
+    }
 }

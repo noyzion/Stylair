@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import { styles } from "../../assets/styles/AddItemScreen.styles";
 import { KeyboardAvoidingView, Platform } from "react-native";
-import { addItemToCloset, analyzeImageWithAI } from "../../services/closet.service";
+import { addItemToCloset, updateItemInCloset, analyzeImageWithAI } from "../../services/closet.service";
 import { AddClosetItemRequest } from "../../types/closet";
 import { ImagePickerCard } from "@/components/add-item/ImagePickerCard";
 import {
@@ -15,7 +15,7 @@ import { AIImageCard } from "../../components/add-item/AIImageCard";
 import { AIProductCard } from "../../components/add-item/AIProductCard";
 import { ManualForm } from "../../components/add-item/ManualForm";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { Link } from "expo-router";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
@@ -34,6 +34,23 @@ export type Season = (typeof SEASONS)[number];
 export type Tag = (typeof TAGS)[number];
 
 export default function AddItemScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams<{
+    editMode?: string;
+    itemId?: string;
+    itemImage?: string;
+    itemName?: string;
+    itemCategory?: string;
+    colors?: string;
+    styles?: string;
+    seasons?: string;
+    size?: string;
+    tags?: string;
+  }>();
+
+  const isEditMode = params.editMode === "true";
+  const editItemImage = params.itemImage || null;
+
   const [image, setImage] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [choice, setChoice] = useState<UserChoice | null>(null);
@@ -55,6 +72,90 @@ export default function AddItemScreen() {
   const [size, setSize] = useState<string>("");
   const [tagsSelected, setTagsSelected] = useState<Tag[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  // Load item data if in edit mode - only run once when component mounts or edit mode changes
+  useEffect(() => {
+    if (isEditMode && params.itemImage && !image) {
+      // Only load if we don't already have an image (prevent re-running)
+      // Set image
+      setImage(params.itemImage);
+      setImageBase64(null); // Don't need base64 for existing image
+      
+      // Set category
+      if (params.itemCategory) {
+        const cat = params.itemCategory as Category;
+        if (CATEGORIES.includes(cat)) {
+          setCategory(cat);
+        }
+      }
+      
+      // Set subcategory (item name)
+      if (params.itemName) {
+        setSubCategory(params.itemName);
+      }
+      
+      // Set colors
+      if (params.colors) {
+        try {
+          const parsedColors = JSON.parse(params.colors) as string[];
+          setColors(parsedColors);
+          if (parsedColors.length > 0) {
+            setColor(parsedColors[0]);
+          }
+        } catch (e) {
+          console.error("Error parsing colors:", e);
+        }
+      }
+      
+      // Set styles
+      if (params.styles) {
+        try {
+          const parsedStyles = JSON.parse(params.styles) as string[];
+          const validStyles = parsedStyles.filter(s => STYLES.includes(s as Style)) as Style[];
+          setStylesSelected(validStyles);
+        } catch (e) {
+          console.error("Error parsing styles:", e);
+        }
+      }
+      
+      // Set seasons
+      if (params.seasons) {
+        try {
+          const parsedSeasons = JSON.parse(params.seasons) as string[];
+          const validSeasons = parsedSeasons.filter(s => SEASONS.includes(s as Season)) as Season[];
+          setSeasonsSelected(validSeasons);
+        } catch (e) {
+          console.error("Error parsing seasons:", e);
+        }
+      }
+      
+      // Set size
+      if (params.size) {
+        setSize(params.size);
+      }
+      
+      // Set tags
+      if (params.tags) {
+        try {
+          const parsedTags = JSON.parse(params.tags) as string[];
+          const validTags = parsedTags.filter(t => TAGS.includes(t as Tag)) as Tag[];
+          setTagsSelected(validTags);
+        } catch (e) {
+          console.error("Error parsing tags:", e);
+        }
+      }
+      
+      // Set to manual mode and mark as touched
+      setChoice("manual");
+      setTouched({
+        image: true,
+        category: true,
+        color: true,
+      });
+    }
+    // Only depend on isEditMode and itemImage - not the entire params object
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditMode, params.itemImage]);
 
   // Color is valid only if at least one color was added to the list (via "Add Color" button)
   const hasColor = colors.length > 0;
@@ -84,8 +185,12 @@ export default function AddItemScreen() {
       }
 
       // Use the base64 we already have, or convert from URI if needed
+      // In edit mode, if image hasn't changed, use the existing URL
       let base64Image: string;
-      if (imageBase64) {
+      if (isEditMode && !imageBase64 && image === editItemImage) {
+        // Image hasn't changed, use existing URL
+        base64Image = image;
+      } else if (imageBase64) {
         base64Image = imageBase64;
       } else {
         // Convert URI to base64 if we don't have it already
@@ -108,24 +213,32 @@ export default function AddItemScreen() {
         tags: tagsSelected.length > 0 ? tagsSelected : undefined,  // undefined will be omitted from JSON
       };
 
-      
-      await addItemToCloset(itemToSave);
-      alert("Item added successfully");
-      setImage(null);
-      setImageBase64(null);
-      setChoice(null);
-      setCategory(null);
-      setSubCategory("");
-      setColors([]);
-      setColor("");
-      setStylesSelected([]);
-      setSeasonsSelected([]);
-      setSize("");
-      setTagsSelected([]);
-      setTouched({ image: false, category: false, color: false });
+      if (isEditMode && editItemImage) {
+        // Update existing item
+        await updateItemInCloset(editItemImage, itemToSave);
+        alert("Item updated successfully");
+        // Navigate back to closet screen
+        router.back();
+      } else {
+        // Add new item
+        await addItemToCloset(itemToSave);
+        alert("Item added successfully");
+        setImage(null);
+        setImageBase64(null);
+        setChoice(null);
+        setCategory(null);
+        setSubCategory("");
+        setColors([]);
+        setColor("");
+        setStylesSelected([]);
+        setSeasonsSelected([]);
+        setSize("");
+        setTagsSelected([]);
+        setTouched({ image: false, category: false, color: false });
+      }
     } catch (error) {
       console.error(error);
-      alert("Failed to add item");
+      alert(isEditMode ? "Failed to update item" : "Failed to add item");
     }
   };
 
@@ -476,7 +589,9 @@ export default function AddItemScreen() {
                 size={16}
                 color="white"
               />
-              <Text style={styles.saveButtonText}>Save to Closet</Text>
+              <Text style={styles.saveButtonText}>
+                {isEditMode ? "Update Item" : "Save to Closet"}
+              </Text>
             </Pressable>
           )}
         </ScrollView>

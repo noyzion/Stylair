@@ -13,7 +13,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { Image as ExpoImage } from "expo-image";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { Link, useFocusEffect } from "expo-router";
+import { Link, useFocusEffect, useRouter } from "expo-router";
 import {
   getAllItemsFromCloset,
   deleteItemFromCloset,
@@ -21,6 +21,7 @@ import {
 import { OutfitItem } from "../../types/closet";
 
 export default function MyClosetScreen() {
+  const router = useRouter();
   const [items, setItems] = useState<OutfitItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<OutfitItem | null>(null);
@@ -278,6 +279,30 @@ export default function MyClosetScreen() {
                 )}
                 <View style={styles.modalButtonsRow}>
                   <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() => {
+                      setModalVisible(false);
+                      // Navigate to edit screen with item data
+                      router.push({
+                        pathname: "/(tabs)/addItemScreen",
+                        params: {
+                          editMode: "true",
+                          itemId: selectedItem.itemId,
+                          itemImage: selectedItem.itemImage,
+                          itemName: selectedItem.itemName,
+                          itemCategory: selectedItem.itemCategory,
+                          colors: JSON.stringify(selectedItem.colors),
+                          styles: JSON.stringify(selectedItem.style),
+                          seasons: JSON.stringify(selectedItem.season),
+                          size: selectedItem.size || "",
+                          tags: JSON.stringify(selectedItem.tags || []),
+                        },
+                      });
+                    }}
+                  >
+                    <Text style={styles.editButtonText}>Edit</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
                     style={[
                       styles.deleteButton,
                       deleting && styles.deleteButtonDisabled,
@@ -453,6 +478,19 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 20,
     width: "100%",
+  },
+  editButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 20,
+    backgroundColor: "rgb(108, 99, 255)",
+    alignItems: "center",
+  },
+  editButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
   },
   deleteButton: {
     flex: 1,

@@ -54,6 +54,41 @@ public class ClosetController : ControllerBase // ControllerBase is the base cla
         return Ok(items);
     }
 
+    [HttpPut("item/{itemImage}")]
+    public async Task<IActionResult> UpdateItem(string itemImage, [FromBody] AddItemRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(itemImage))
+            {
+                return BadRequest(new { message = "Item image is required" });
+            }
+
+            var userId = User.GetUserId(); // 👈 מקבלים את ה-user ID מה-token
+            var decodedItemImage = Uri.UnescapeDataString(itemImage);
+            var item = await _service.UpdateItemAsync(request, decodedItemImage, userId);
+            return Ok(new { message = "Item updated successfully", item = item });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating item: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            }
+            return StatusCode(500, new { message = $"Failed to update item: {ex.Message}" });
+        }
+    }
+
     [HttpDelete("item/{itemImage}")]
     public async Task<IActionResult> DeleteItem(string itemImage)
     {
