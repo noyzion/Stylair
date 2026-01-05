@@ -115,11 +115,29 @@ export async function deleteItemFromCloset(itemImage: string): Promise<{ message
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: 'Failed to delete item' }));
-    throw new Error(errorData.message || 'Failed to delete item');
+    let errorMessage = 'Failed to delete item';
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.message || errorMessage;
+    } catch {
+      // If response is not JSON, use status text
+      errorMessage = response.statusText || errorMessage;
+    }
+    throw new Error(errorMessage);
   }
 
-  return response.json();
+  // Try to parse JSON response, but don't fail if it's empty or invalid
+  try {
+    const text = await response.text();
+    if (text) {
+      return JSON.parse(text);
+    }
+    // If response is empty, return success message
+    return { message: 'Item deleted successfully' };
+  } catch {
+    // If JSON parsing fails, but status is OK, assume success
+    return { message: 'Item deleted successfully' };
+  }
 }
 
 // delete outfit from archive
@@ -140,6 +158,50 @@ export async function deleteOutfitFromArchive(outfitId: string): Promise<{ messa
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Failed to delete outfit' }));
     throw new Error(errorData.message || 'Failed to delete outfit');
+  }
+
+  return response.json();
+}
+
+// Analyze image with AI
+export interface AIImageAnalysisRequest {
+  imageUrl?: string;
+  imageBase64?: string;
+}
+
+export interface AIImageAnalysisResponse {
+  category: string;
+  colors: string[];
+  styles: string[];
+  seasons: string[];
+  confidence: number;
+  notes?: string;
+  success: boolean;
+  errorMessage?: string;
+}
+
+export async function analyzeImageWithAI(
+  imageBase64: string
+): Promise<AIImageAnalysisResponse> {
+  const token = await getJwtToken();
+  if (!token) {
+    throw new Error('Not authenticated. Please log in.');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/api/ai/analyze-image`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      imageBase64: imageBase64,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: 'Failed to analyze image' }));
+    throw new Error(errorData.message || 'Failed to analyze image');
   }
 
   return response.json();

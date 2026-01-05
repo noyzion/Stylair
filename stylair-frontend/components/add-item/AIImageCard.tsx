@@ -6,12 +6,14 @@ import { styles } from '../../assets/styles/AddItemScreen.styles';
 
 type Props = {
   disabled: boolean;
-  onGenerate: () => void;
+  onGenerate: () => void | Promise<void>;
+  isLoading?: boolean;
 };
 
 export function AIImageCard(props: Props) {
     const disabled = props.disabled;
     const onGenerate = props.onGenerate;
+    const isLoading = props.isLoading || false;
   return (
     <View style={styles.aiCard}>
       <View style={styles.aiIconWrapper}>
@@ -30,8 +32,8 @@ export function AIImageCard(props: Props) {
             end={{ x: 1, y: 0 }}
             style={StyleSheet.absoluteFillObject}
           />
-          <Ionicons name="sparkles-outline" size={18} color="white" />
-          <Text style={styles.aiButtonText}>Generate Details</Text>
+          <Ionicons name={isLoading ? "hourglass-outline" : "sparkles-outline"} size={18} color="white" />
+          <Text style={styles.aiButtonText}>{isLoading ? "Analyzing..." : "Generate Details"}</Text>
         </View>
       </Pressable>
     </View>

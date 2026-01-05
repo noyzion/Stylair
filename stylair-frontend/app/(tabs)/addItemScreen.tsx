@@ -4,7 +4,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import { styles } from "../../assets/styles/AddItemScreen.styles";
 import { KeyboardAvoidingView, Platform } from "react-native";
-import { addItemToCloset } from "../../services/closet.service";
+import { addItemToCloset, analyzeImageWithAI } from "../../services/closet.service";
 import { AddClosetItemRequest } from "../../types/closet";
 import { ImagePickerCard } from "@/components/add-item/ImagePickerCard";
 import {
@@ -54,6 +54,7 @@ export default function AddItemScreen() {
   const [seasonsSelected, setSeasonsSelected] = useState<Season[]>([]);
   const [size, setSize] = useState<string>("");
   const [tagsSelected, setTagsSelected] = useState<Tag[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // Color is valid only if at least one color was added to the list (via "Add Color" button)
   const hasColor = colors.length > 0;
@@ -94,11 +95,6 @@ export default function AddItemScreen() {
       // Only save colors that were added to the list via "Add Color" button
       const colorsToSave = colors;
 
-      // Debug: Log the current state values
-      console.log("=== Before saving item ===");
-      console.log("size state:", `"${size}"`, "trimmed:", `"${size.trim()}"`, "has value:", !!size.trim());
-      console.log("tagsSelected state:", tagsSelected, "length:", tagsSelected.length);
-
       // Prepare the request object - always include size and tags in the object
       const trimmedSize = size.trim();
       const itemToSave: AddClosetItemRequest = {
@@ -112,13 +108,7 @@ export default function AddItemScreen() {
         tags: tagsSelected.length > 0 ? tagsSelected : undefined,  // undefined will be omitted from JSON
       };
 
-      console.log("=== Final itemToSave object ===");
-      console.log("Object keys:", Object.keys(itemToSave));
-      console.log("size in object:", itemToSave.size, "type:", typeof itemToSave.size);
-      console.log("tags in object:", itemToSave.tags, "type:", Array.isArray(itemToSave.tags));
-      const jsonString = JSON.stringify(itemToSave);
-      console.log("JSON string:", jsonString);
-
+      
       await addItemToCloset(itemToSave);
       alert("Item added successfully");
       setImage(null);
@@ -282,17 +272,121 @@ export default function AddItemScreen() {
           <UserChoiceSelector value={choice} onChange={setChoice} />
           {choice === "ai-image" && (
             <AIImageCard
-              disabled={!image}
-              onGenerate={() => {
-                // כאן בעתיד יהיה API
-                applyAIGeneratedData({
-                  imageUri: image!,
-                  category: "top",
-                  subCategory: "t-shirt",
-                  colors: ["black"],
-                  styles: ["casual"],
-                  seasons: ["all"],
-                });
+              disabled={!image || isAnalyzing}
+              isLoading={isAnalyzing}
+              onGenerate={async () => {
+                if (!image || !imageBase64) {
+                  alert("Please select an image first");
+                  return;
+                }
+
+                setIsAnalyzing(true);
+                try {
+                  // Call AI API to analyze the image
+                  const analysis = await analyzeImageWithAI(imageBase64);
+
+                  if (!analysis.success) {
+                    alert(analysis.errorMessage || "Failed to analyze image");
+                    return;
+                  }
+
+                  // Map AI response to our form format
+                  // Map category from AI response to our categories
+                  const categoryMap: Record<string, Category> = {
+                    "Shirt": "top",
+                    "T-Shirt": "top",
+                    "Blouse": "top",
+                    "Pants": "bottom",
+                    "Jeans": "bottom",
+                    "Shorts": "bottom",
+                    "Dress": "dress",
+                    "Skirt": "bottom",
+                    "Jacket": "top",
+                    "Coat": "top",
+                    "Sweater": "top",
+                    "Hoodie": "top",
+                    "Cardigan": "top",
+                    "Vest": "top",
+                    "Suit": "top",
+                    "Shoes": "shoes",
+                    "Boots": "shoes",
+                    "Sneakers": "shoes",
+                    "Sandals": "shoes",
+                    "Heels": "shoes",
+                    "Accessories": "accessories",
+                    "Hat": "accessories",
+                    "Bag": "accessories",
+                  };
+
+                  // Map style from AI response to our styles
+                  const styleMap: Record<string, Style> = {
+                    "Casual": "casual",
+                    "Formal": "formal",
+                    "Business": "formal",
+                    "Sporty": "sport",
+                    "Elegant": "evening",
+                    "Vintage": "casual",
+                    "Modern": "casual",
+                    "Classic": "casual",
+                    "Bohemian": "casual",
+                    "Minimalist": "casual",
+                    "Streetwear": "casual",
+                    "Athletic": "sport",
+                    "Romantic": "evening",
+                  };
+
+                  // Map season from AI response to our seasons
+                  const seasonMap: Record<string, Season> = {
+                    "Spring": "spring",
+                    "Summer": "summer",
+                    "Fall": "fall",
+                    "Winter": "winter",
+                    "All Season": "all",
+                  };
+
+                  // Validate that we have the required data
+                  if (!analysis.category) {
+                    alert("Failed to detect category from image");
+                    return;
+                  }
+
+                  if (!analysis.colors || analysis.colors.length === 0) {
+                    alert("Failed to detect color from image");
+                    return;
+                  }
+
+                  // Map category from AI response to our categories
+                  const mappedCategory = categoryMap[analysis.category] || "top";
+                  
+                  // Map styles - use first style if available, otherwise default
+                  const mappedStyles: Style[] = analysis.styles && analysis.styles.length > 0
+                    ? analysis.styles
+                        .map(style => styleMap[style])
+                        .filter((style): style is Style => style !== undefined)
+                    : ["casual"];
+                  
+                  // Map seasons - use first season if available, otherwise default
+                  const mappedSeasons: Season[] = analysis.seasons && analysis.seasons.length > 0
+                    ? analysis.seasons
+                        .map(season => seasonMap[season])
+                        .filter((season): season is Season => season !== undefined)
+                    : ["all"];
+
+                  // Apply the AI-generated data to the form
+                  applyAIGeneratedData({
+                    imageUri: image,
+                    category: mappedCategory,
+                    subCategory: analysis.category.toLowerCase(),
+                    colors: analysis.colors.map(c => c.toLowerCase()),
+                    styles: mappedStyles,
+                    seasons: mappedSeasons,
+                  });
+                } catch (error) {
+                  console.error("Error analyzing image:", error);
+                  alert(error instanceof Error ? error.message : "Failed to analyze image");
+                } finally {
+                  setIsAnalyzing(false);
+                }
               }}
             />
           )}

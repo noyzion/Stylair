@@ -96,17 +96,25 @@ public class PostgresSavedOutfitStore : ISavedOutfitStore
     {
         try
         {
-            // Filter by user_id first, then check if outfit contains the item
-            var outfitsToDelete = _context.SavedOutfits
+            // Load all outfits for the user first (Items is JSONB, so we need to load and filter in memory)
+            var allOutfits = _context.SavedOutfits
                 .Where(x => x.UserId == userId) // 👈 סינון לפי user_id
-                .Where(outfit => outfit.Items.Any(item => item.ItemImage == itemImage))
+                .ToList();
+            
+            // Filter outfits that contain the item image (client-side evaluation)
+            var outfitsToDelete = allOutfits
+                .Where(outfit => outfit.Items != null && outfit.Items.Any(item => item.ItemImage == itemImage))
                 .ToList();
             
             foreach (var outfit in outfitsToDelete)
             {
                 _context.SavedOutfits.Remove(outfit);
             }
-            _context.SaveChanges();
+            
+            if (outfitsToDelete.Count > 0)
+            {
+                _context.SaveChanges();
+            }
         }
         catch (Exception ex)
         {

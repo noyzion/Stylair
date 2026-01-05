@@ -107,6 +107,44 @@ builder.Services.AddScoped<ISavedOutfitStore, PostgresSavedOutfitStore>();
 builder.Services.AddScoped<SavedOutfitService>();
 builder.Services.AddScoped<SupabaseStorageService>();
 
+// ============================================
+// OpenAI Configuration
+// ============================================
+// ⚠️ SECURITY WARNING: OPENAI_API_KEY must be set as environment variable
+// NEVER commit API keys to GitHub - OpenAI will detect and disable them!
+// To set: $env:OPENAI_API_KEY="sk-your-key-here" (PowerShell)
+// Or add to .env file (but make sure .env is in .gitignore!)
+
+// Validate OpenAI API key on startup
+var openAiApiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+if (string.IsNullOrWhiteSpace(openAiApiKey))
+{
+    Console.WriteLine("⚠️  WARNING: OPENAI_API_KEY environment variable is not set!");
+    Console.WriteLine("⚠️  AI image analysis features will not work until OPENAI_API_KEY is configured.");
+    Console.WriteLine("⚠️  To set: $env:OPENAI_API_KEY=\"sk-your-key-here\" (PowerShell)");
+    Console.WriteLine("⚠️  NEVER commit API keys to GitHub!");
+}
+else if (!openAiApiKey.StartsWith("sk-", StringComparison.OrdinalIgnoreCase))
+{
+    Console.WriteLine("⚠️  WARNING: OPENAI_API_KEY format appears invalid (should start with 'sk-')");
+}
+else
+{
+    Console.WriteLine("✅ OPENAI_API_KEY environment variable found and validated");
+}
+
+// Register OpenAI service (will throw exception if API key is missing when first used)
+// Using TryAddScoped to avoid exception if API key is not set (allows server to start)
+try
+{
+    builder.Services.AddScoped<OpenAIImageAnalysisService>();
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"⚠️  Failed to register OpenAI service: {ex.Message}");
+    Console.WriteLine("⚠️  AI endpoints will not be available until OPENAI_API_KEY is configured.");
+}
+
 var app = builder.Build();
 
 // Test database connection on startup
@@ -128,6 +166,24 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         Console.WriteLine($"❌ Database connection failed: {ex.Message}");
+    }
+
+    // Test OpenAI configuration (optional - doesn't fail if not configured)
+    try
+    {
+        var isOpenAIConfigured = OpenAIImageAnalysisService.ValidateApiKey();
+        if (isOpenAIConfigured)
+        {
+            Console.WriteLine("✅ OpenAI API key is configured and ready");
+        }
+        else
+        {
+            Console.WriteLine("⚠️  OpenAI API key is not configured - AI features will not work");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"⚠️  OpenAI configuration check failed: {ex.Message}");
     }
 }
 

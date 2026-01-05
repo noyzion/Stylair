@@ -99,9 +99,19 @@ public class ClosetService
         _savedOutfitStore.DeleteOutfitsContainingItem(itemImage, userId);
 
         // Delete from Supabase Storage (if it's a Supabase URL)
+        // This is non-critical - if it fails, the item is already deleted from DB
         if (itemImage.Contains("supabase.co/storage"))
         {
-            await _storageService.DeleteImageAsync(itemImage);
+            try
+            {
+                await _storageService.DeleteImageAsync(itemImage);
+            }
+            catch (Exception ex)
+            {
+                // Log warning but don't throw - item is already deleted from DB
+                Console.WriteLine($"Warning: Failed to delete image from Supabase Storage: {ex.Message}");
+                // Don't rethrow - the item is already deleted from the database
+            }
         }
     }
 }
