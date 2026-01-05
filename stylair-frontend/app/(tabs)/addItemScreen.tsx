@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
@@ -15,7 +15,7 @@ import { AIImageCard } from "../../components/add-item/AIImageCard";
 import { AIProductCard } from "../../components/add-item/AIProductCard";
 import { ManualForm } from "../../components/add-item/ManualForm";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { Link, useLocalSearchParams, useRouter } from "expo-router";
+import { Link, useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
@@ -156,6 +156,34 @@ export default function AddItemScreen() {
     // Only depend on isEditMode and itemImage - not the entire params object
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEditMode, params.itemImage]);
+
+  // Reset form when screen loses focus (user navigates away)
+  useFocusEffect(
+    useCallback(() => {
+      // This runs when screen gains focus
+      return () => {
+        // This cleanup function runs when screen loses focus
+        // Reset all form fields
+        setImage(null);
+        setImageBase64(null);
+        setChoice(null);
+        setCategory(null);
+        setSubCategory("");
+        setColor("");
+        setColors([]);
+        setStylesSelected([]);
+        setSeasonsSelected([]);
+        setSize("");
+        setTagsSelected([]);
+        setTouched({ image: false, category: false, color: false });
+        setBrand("");
+        setSku("");
+        setIsCategoryOpen(false);
+        setTempCategory(null);
+        setIsAnalyzing(false);
+      };
+    }, [])
+  );
 
   // Color is valid only if at least one color was added to the list (via "Add Color" button)
   const hasColor = colors.length > 0;

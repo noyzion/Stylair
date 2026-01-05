@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   TextInput,
   StyleSheet,
@@ -10,6 +10,7 @@ import {
   Keyboard,
   Modal,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { Image } from "expo-image";
 import { Pressable } from "react-native";
@@ -18,6 +19,7 @@ import { BlurView } from "expo-blur";
 import * as Location from "expo-location";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Link, useFocusEffect } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { 
   saveOutfit, 
   suggestOutfitWithAI, 
@@ -26,20 +28,25 @@ import {
 } from "../../services/closet.service";
 import { OutfitItem } from "../../types/closet";
 
-export default function TodayLookScreen() {
-  const [message, setMessage] = useState("");
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+interface ChatMessage {
+  id: string;
+  type: 'user' | 'ai';
+  text: string;
+  outfits?: OutfitSuggestion[];
+  timestamp: Date;
+}
 
-  const [outfits, setOutfits] = useState<OutfitSuggestion[]>([]); //list of outfits and function to set it (inital empty list)
-  const [loading, setLoading] = useState(false); //loading state and function to set it (inital false)
-  const [error, setError] = useState<string | null>(null); //error state and function to set it (inital null)
-  const [savingOutfitIndex, setSavingOutfitIndex] = useState<number | null>(
-    null
-  ); //track which outfit is being saved
-  const [savedOutfitIndices, setSavedOutfitIndices] = useState<Set<number>>(
-    new Set()
-  ); //track which outfits have already been saved
+export default function TodayLookScreen() {
+  const insets = useSafeAreaInsets();
+  const [message, setMessage] = useState("");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [savingOutfitIndex, setSavingOutfitIndex] = useState<number | null>(null);
+  const [savedOutfitIndices, setSavedOutfitIndices] = useState<Set<string>>(new Set());
   
   // Weather data
   const [tempC, setTempC] = useState<number | null>(null);
@@ -55,7 +62,7 @@ export default function TodayLookScreen() {
   useFocusEffect(
     useCallback(() => {
       // Reset state when screen is focused
-      setOutfits([]);
+      setChatMessages([]);
       setMessage("");
       setError(null);
       setSelectedImage(null);
@@ -63,6 +70,39 @@ export default function TodayLookScreen() {
       setSavingOutfitIndex(null);
     }, [])
   );
+
+  // Scroll to bottom when new messages are added
+  useEffect(() => {
+    if (chatMessages.length > 0) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [chatMessages]);
+
+  // Handle keyboard show/hide to scroll chat up
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      () => {
+        // Scroll to bottom when keyboard opens
+        setTimeout(() => {
+          scrollViewRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+      }
+    );
+    const hideSubscription = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => {
+        // Optional: scroll adjustment when keyboard closes
+      }
+    );
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   // Load weather data and closet items on mount
   useEffect(() => {
@@ -115,26 +155,6 @@ export default function TodayLookScreen() {
     })();
   }, []);
 
-  // Handle keyboard show/hide to adjust input position
-  useEffect(() => {
-    const showSubscription = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-      (e) => {
-        setKeyboardHeight(e.endCoordinates.height);
-      }
-    );
-    const hideSubscription = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-      () => {
-        setKeyboardHeight(0);
-      }
-    );
-
-    return () => {
-      showSubscription.remove();
-      hideSubscription.remove();
-    };
-  }, []);
 
   function mapWeatherCodeToCondition(code: number) {
     if (code === 0) return "sun";
@@ -149,15 +169,33 @@ export default function TodayLookScreen() {
 
   //function to send the message to the API, async because we are using await to wait for the response
   const handleSend = async () => {
-    if (message === "") return;
+    if (message.trim() === "") return;
     
     // Store message before clearing
-    const messageToSend = message;
+    const messageToSend = message.trim();
+    
+    // Add user message to chat
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      type: 'user',
+      text: messageToSend,
+      timestamp: new Date(),
+    };
+    setChatMessages(prev => [...prev, userMessage]);
     
     // Clear the message immediately after sending
     setMessage("");
     setLoading(true);
     setError(null);
+    
+    // Add loading message
+    const loadingMessageId = (Date.now() + 1).toString();
+    setChatMessages(prev => [...prev, {
+      id: loadingMessageId,
+      type: 'ai',
+      text: '',
+      timestamp: new Date(),
+    }]);
     
     try {
       const response = await suggestOutfitWithAI({
@@ -173,11 +211,32 @@ export default function TodayLookScreen() {
         throw new Error(response.errorMessage || "Failed to generate outfit suggestions");
       }
 
-      setOutfits(response.outfits);
+      // Remove loading message and add AI response
+      setChatMessages(prev => {
+        const filtered = prev.filter(msg => msg.id !== loadingMessageId);
+        return [...filtered, {
+          id: Date.now().toString(),
+          type: 'ai',
+          text: response.outfits.length > 0 
+            ? `I found ${response.outfits.length} outfit${response.outfits.length > 1 ? 's' : ''} for you!`
+            : 'I couldn\'t find any outfits matching your request.',
+          outfits: response.outfits,
+          timestamp: new Date(),
+        }];
+      });
+      
       setLoading(false);
-      // Clear saved indices when new outfits are loaded
-      setSavedOutfitIndices(new Set());
     } catch (error) {
+      // Remove loading message and add error message
+      setChatMessages(prev => {
+        const filtered = prev.filter(msg => msg.id !== loadingMessageId);
+        return [...filtered, {
+          id: Date.now().toString(),
+          type: 'ai',
+          text: error instanceof Error ? error.message : "An error occurred",
+          timestamp: new Date(),
+        }];
+      });
       setError(error instanceof Error ? error.message : "An error occurred");
       setLoading(false);
     }
@@ -185,14 +244,16 @@ export default function TodayLookScreen() {
 
   const handleSaveOutfit = async (
     outfit: OutfitSuggestion,
-    index: number
+    messageId: string,
+    outfitIndex: number
   ) => {
+    const saveKey = `${messageId}-${outfitIndex}`;
     // Don't save if already saved
-    if (savedOutfitIndices.has(index)) {
+    if (savedOutfitIndices.has(saveKey)) {
       return;
     }
 
-    setSavingOutfitIndex(index); // set the index of the outfit being saved
+    setSavingOutfitIndex(outfitIndex);
     try {
       // Map outfit suggestion to full items
       const fullItems: OutfitItem[] = outfit.items
@@ -211,9 +272,8 @@ export default function TodayLookScreen() {
         items: fullItems,
         reasonText: outfit.notes,
       });
-      // Add index to saved set
-      setSavedOutfitIndices((prev) => new Set(prev).add(index));
-      // Show success message (you can use alert or a toast notification)
+      // Add to saved set
+      setSavedOutfitIndices((prev) => new Set(prev).add(saveKey));
       alert("Outfit saved successfully!");
     } catch (error) {
       alert(error instanceof Error ? error.message : "Failed to save outfit");
@@ -231,7 +291,9 @@ export default function TodayLookScreen() {
     >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        enabled={chatMessages.length > 0}
       >
         {/* Home icon button */}
         <Link href="/(tabs)" asChild>
@@ -251,17 +313,8 @@ export default function TodayLookScreen() {
           />
         </View>
 
-        <ScrollView
-          style={styles.scrollView}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={
-            outfits.length > 0 || loading || error
-              ? styles.scrollContentWithResults
-              : styles.scrollContent
-          }
-        >
-          {/* Show header and input in center only if there are no results yet */}
-          {outfits.length === 0 && !loading && !error && (
+        {/* Initial Welcome Screen - Show when no messages */}
+        {chatMessages.length === 0 && (
             <View style={styles.headerContainer}>
               <Text style={styles.header}>
                 Let's find the perfect outfit for today...
@@ -283,106 +336,138 @@ export default function TodayLookScreen() {
             </View>
           )}
 
-          {/* Results */}
-          {loading && <Text style={styles.loadingText}>Loading...</Text>}
-          {error && <Text style={styles.errorText}>Error: {error}</Text>}
-          {outfits.length > 0 && (
-            <View style={styles.resultsContainer}>
-              {outfits.map((outfit, index) => {
-                // Map item IDs to full items
-                const fullItems = outfit.items
-                  .map(itemSuggestion => {
-                    const fullItem = allItems.find(item => item.itemId === itemSuggestion.id);
-                    return fullItem;
-                  })
-                  .filter((item): item is OutfitItem => item !== undefined);
-
-                return (
-                  <View key={index} style={styles.outfitCard}>
-                    <Text style={styles.occasionLabel}>
-                      {outfit.event}
-                    </Text>
-                    <Text style={styles.reasonText}>{outfit.notes}</Text>
-
-                    {/* Missing items warning */}
-                    {outfit.missingItems && outfit.missingItems.length > 0 && (
-                      <View style={styles.missingItemsContainer}>
-                        <Text style={styles.missingItemsLabel}>Missing items:</Text>
-                        <Text style={styles.missingItemsText}>
-                          {outfit.missingItems.join(", ")}
-                        </Text>
-                      </View>
-                    )}
-
-                    {/* Items images */}
-                    {fullItems.length > 0 && (
-                      <View style={styles.itemsContainer}>
-                        {fullItems.map((item, itemIndex) => (
-                          <TouchableOpacity
-                            key={itemIndex}
-                            onPress={() => setSelectedImage(item.itemImage)}
-                            activeOpacity={0.8}
-                          >
-                            <Image
-                              source={{ uri: item.itemImage }}
-                              style={styles.itemImage}
-                              contentFit="cover"
-                            />
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    )}
-
-                    {/* Save button - only show if outfit has items */}
-                    {fullItems.length > 0 && (
-                      <Pressable
-                        onPress={() => handleSaveOutfit(outfit, index)}
-                        disabled={
-                          savingOutfitIndex === index ||
-                          savedOutfitIndices.has(index)
-                        }
-                        style={[
-                          styles.saveOutfitButton,
-                          (savingOutfitIndex === index ||
-                            savedOutfitIndices.has(index)) &&
-                            styles.saveOutfitButtonDisabled,
-                          savedOutfitIndices.has(index) &&
-                            styles.saveOutfitButtonSaved,
-                        ]}
-                      >
-                        <Text style={styles.saveOutfitButtonText}>
-                          {savingOutfitIndex === index
-                            ? "Saving..."
-                            : savedOutfitIndices.has(index)
-                            ? "Saved ✓"
-                            : "Save to Archive"}
-                        </Text>
-                      </Pressable>
-                    )}
-                  </View>
-                );
-              })}
-            </View>
-          )}
-        </ScrollView>
-
-        {/* Chat input - Fixed at bottom only when there are results */}
-        {(outfits.length > 0 || loading || error) && (
-          <View
-            style={[
-              styles.inputContainerFixed,
-              { bottom: keyboardHeight > 0 ? keyboardHeight + 10 : 20 },
-            ]}
+        {/* Chat Messages - Show when conversation starts */}
+        {chatMessages.length > 0 && (
+          <ScrollView
+            ref={scrollViewRef}
+            style={styles.chatScrollView}
+            contentContainerStyle={styles.chatContent}
+            keyboardShouldPersistTaps="handled"
+            onContentSizeChange={() => {
+              setTimeout(() => {
+                scrollViewRef.current?.scrollToEnd({ animated: true });
+              }, 100);
+            }}
+            showsVerticalScrollIndicator={false}
           >
+            {chatMessages.map((msg) => (
+            <View
+              key={msg.id}
+              style={[
+                styles.messageContainer,
+                msg.type === 'user' ? styles.userMessageContainer : styles.aiMessageContainer,
+              ]}
+            >
+              {msg.type === 'user' ? (
+                <View style={styles.userMessage}>
+                  <Text style={styles.userMessageText}>{msg.text}</Text>
+                </View>
+              ) : (
+                <View style={styles.aiMessage}>
+                  {msg.text && (
+                    <Text style={styles.aiMessageText}>{msg.text}</Text>
+                  )}
+                  {!msg.text && loading && (
+                    <View style={styles.loadingContainer}>
+                      <ActivityIndicator size="small" color="rgb(108, 99, 255)" />
+                      <Text style={styles.loadingText}>Thinking...</Text>
+                    </View>
+                  )}
+                  {msg.outfits && msg.outfits.length > 0 && (
+                    <View style={styles.outfitsContainer}>
+                      {msg.outfits.map((outfit, outfitIndex) => {
+                        const fullItems = outfit.items
+                          .map(itemSuggestion => {
+                            const fullItem = allItems.find(item => item.itemId === itemSuggestion.id);
+                            return fullItem;
+                          })
+                          .filter((item): item is OutfitItem => item !== undefined);
+
+                        const saveKey = `${msg.id}-${outfitIndex}`;
+                        const isSaving = savingOutfitIndex === outfitIndex;
+                        const isSaved = savedOutfitIndices.has(saveKey);
+
+                        return (
+                          <View key={outfitIndex} style={styles.outfitCard}>
+                            <Text style={styles.occasionLabel}>{outfit.event}</Text>
+                            <Text style={styles.reasonText}>{outfit.notes}</Text>
+
+                            {outfit.missingItems && outfit.missingItems.length > 0 && (
+                              <View style={styles.missingItemsContainer}>
+                                <Text style={styles.missingItemsLabel}>Missing items:</Text>
+                                <Text style={styles.missingItemsText}>
+                                  {outfit.missingItems.join(", ")}
+                  </Text>
+                              </View>
+                            )}
+
+                            {fullItems.length > 0 && (
+                    <View style={styles.itemsContainer}>
+                                {fullItems.map((item, itemIndex) => (
+                        <TouchableOpacity
+                          key={itemIndex}
+                          onPress={() => setSelectedImage(item.itemImage)}
+                          activeOpacity={0.8}
+                        >
+                          <Image
+                            source={{ uri: item.itemImage }}
+                            style={styles.itemImage}
+                            contentFit="cover"
+                          />
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+
+                            {fullItems.length > 0 && (
+                    <Pressable
+                                onPress={() => handleSaveOutfit(outfit, msg.id, outfitIndex)}
+                                disabled={isSaving || isSaved}
+                      style={[
+                        styles.saveOutfitButton,
+                                  (isSaving || isSaved) && styles.saveOutfitButtonDisabled,
+                                  isSaved && styles.saveOutfitButtonSaved,
+                      ]}
+                    >
+                      <Text style={styles.saveOutfitButtonText}>
+                                  {isSaving
+                          ? "Saving..."
+                                    : isSaved
+                          ? "Saved ✓"
+                          : "Save to Archive"}
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
+                        );
+                      })}
+                    </View>
+                  )}
+                </View>
+              )}
+            </View>
+          ))}
+          </ScrollView>
+        )}
+
+        {/* Chat input - Fixed at bottom - Only show when conversation started */}
+        {chatMessages.length > 0 && (
+          <View style={[styles.chatInputContainer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
             <TextInput
               value={message}
               onChangeText={setMessage}
               placeholder="Type your message..."
               placeholderTextColor="#999"
-              style={styles.input}
+              style={styles.chatInput}
+              multiline
+              maxLength={500}
             />
-            <Pressable onPress={handleSend} style={styles.sendButton}>
-              <Text style={styles.sendButtonText}>Send</Text>
+            <Pressable 
+              onPress={handleSend} 
+              style={[styles.chatSendButton, !message.trim() && styles.chatSendButtonDisabled]}
+              disabled={!message.trim() || loading}
+            >
+              <Text style={styles.chatSendButtonText}>Send</Text>
             </Pressable>
           </View>
         )}
@@ -463,18 +548,6 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  scrollContentWithResults: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 100, // Space for input at bottom
-  },
   headerContainer: {
     flex: 1,
     justifyContent: "flex-start",
@@ -489,8 +562,123 @@ const styles = StyleSheet.create({
     color: "rgb(108, 99, 255)",
     textAlign: "center",
   },
-  resultsContainer: {
+  inputContainer: {
+    flexDirection: "row",
+    marginTop: 25,
     width: "100%",
+    padding: 16,
+    borderRadius: 32,
+    backgroundColor: "rgba(255, 255, 255, 0.79)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0)",
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    alignItems: "center",
+  },
+  input: {
+    flex: 1,
+    borderWidth: 0,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginRight: 8,
+    backgroundColor: "transparent",
+  },
+  sendButton: {
+    backgroundColor: "rgb(108, 99, 255)",
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sendButtonText: {
+    color: "white",
+    fontSize: 15,
+    fontWeight: "500",
+  },
+  chatScrollView: {
+    flex: 1,
+  },
+  chatContent: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 20,
+  },
+  messageContainer: {
+    marginBottom: 16,
+    maxWidth: "85%",
+  },
+  userMessageContainer: {
+    alignSelf: "flex-end",
+    alignItems: "flex-end",
+  },
+  aiMessageContainer: {
+    alignSelf: "flex-start",
+    alignItems: "flex-start",
+  },
+  userMessage: {
+    backgroundColor: "rgb(108, 99, 255)",
+    borderRadius: 20,
+    borderBottomRightRadius: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  userMessageText: {
+    color: "white",
+    fontSize: 16,
+    fontFamily: "Manrope-Regular",
+  },
+  aiMessage: {
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderRadius: 20,
+    borderBottomLeftRadius: 4,
+    padding: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  aiMessageText: {
+    color: "#1A1A1A",
+    fontSize: 16,
+    fontFamily: "Manrope-Regular",
+    marginBottom: 12,
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 8,
+  },
+  loadingText: {
+    color: "#666",
+    fontSize: 14,
+    fontFamily: "Manrope-Regular",
+  },
+  outfitsContainer: {
+    marginTop: 8,
+    gap: 12,
   },
   outfitCard: {
     backgroundColor: "rgba(240, 230, 255, 0.40)",
@@ -595,18 +783,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
   },
-  loadingText: {
-    textAlign: "center",
-    fontSize: 18,
-    color: "#666",
-    marginTop: 50,
-  },
-  errorText: {
-    textAlign: "center",
-    fontSize: 16,
-    color: "#FF0000",
-    marginTop: 50,
-  },
   missingItemsContainer: {
     backgroundColor: "rgba(255, 193, 7, 0.1)",
     borderLeftWidth: 3,
@@ -625,58 +801,55 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
   },
-  inputContainer: {
+  chatInputContainer: {
     flexDirection: "row",
-    marginTop: 25,
-    width: "100%",
-    padding: 16,
-    borderRadius: 32,
-    backgroundColor: "rgba(255, 255, 255, 0.79)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0)",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0, 0, 0, 0.1)",
+    alignItems: "flex-end",
+    gap: 8,
+    ...Platform.select({
+      ios: {
     shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
-    alignItems: "center",
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: -4 },
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
-  inputContainerFixed: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    marginHorizontal: 20,
-    padding: 16,
-    borderRadius: 32,
-    backgroundColor: "rgba(255, 255, 255, 0.79)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0)",
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
-    alignItems: "center",
-  },
-  input: {
+  chatInput: {
     flex: 1,
-    borderWidth: 0,
-    borderRadius: 10,
+    backgroundColor: "rgba(240, 240, 240, 0.8)",
+    borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    marginRight: 8,
-    backgroundColor: "transparent",
+    fontSize: 16,
+    fontFamily: "Manrope-Regular",
+    color: "#1A1A1A",
+    maxHeight: 100,
+    minHeight: 44,
   },
-  sendButton: {
+  chatSendButton: {
     backgroundColor: "rgb(108, 99, 255)",
-    borderRadius: 20,
+    borderRadius: 22,
     paddingHorizontal: 20,
     paddingVertical: 10,
     justifyContent: "center",
     alignItems: "center",
+    minWidth: 70,
   },
-  sendButtonText: {
+  chatSendButtonDisabled: {
+    opacity: 0.5,
+  },
+  chatSendButtonText: {
     color: "white",
-    fontSize: 15,
-    fontWeight: "500",
+    fontSize: 16,
+    fontWeight: "600",
+    fontFamily: "Manrope-SemiBold",
   },
 });
