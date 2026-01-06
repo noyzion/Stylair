@@ -81,9 +81,9 @@ public class OutfitChatService
             }
 
             // Get user's closet items
-            var closetItems = _closetStore.GetAll(userId);
+            var allClosetItems = _closetStore.GetAll(userId);
 
-            if (closetItems == null || closetItems.Count == 0)
+            if (allClosetItems == null || allClosetItems.Count == 0)
             {
                 return new OutfitChatResponse
                 {
@@ -92,14 +92,17 @@ public class OutfitChatService
                 };
             }
 
+            // Filter items intelligently based on user message and context
+            var filteredItems = FilterRelevantItems(allClosetItems, request);
+
             // Get recently saved outfits to avoid repeating them
             var savedOutfits = _savedOutfitStore.GetAll(userId)
                 .OrderByDescending(o => o.CreatedAt)
-                .Take(10) // Get last 10 saved outfits
+                .Take(10)
                 .ToList();
 
             // Prepare items data for AI (only essential fields)
-            var itemsForAI = closetItems.Select(item => new
+            var itemsForAI = filteredItems.Select(item => new
             {
                 id = item.ItemId.ToString(),
                 category = item.ItemCategory,
@@ -199,8 +202,8 @@ public class OutfitChatService
                 };
             }
 
-            // Parse JSON response
-            var chatResponse = ParseOpenAIResponse(responseText, closetItems);
+            // Parse JSON response - use all items for validation
+            var chatResponse = ParseOpenAIResponse(responseText, allClosetItems);
 
             // Validate that we got at least some items
             if (chatResponse.Success && chatResponse.Outfits.Count > 0)
@@ -572,7 +575,146 @@ If you cannot find suitable items, be honest in the missingItems array and notes
             return false;
         }
 
-        return true; // Default to relevant if no strong indicators either way
+        return true;
+    }
+
+    /// Filters closet items to only include relevant ones based on user message and context
+    private List<OutfitItem> FilterRelevantItems(List<OutfitItem> allItems, OutfitChatRequest request)
+    {
+        var lowerMessage = request.UserMessage.ToLower();
+        var requiredCategories = new HashSet<string>();
+
+        // Check for specific category mentions
+        if (lowerMessage.Contains("dress") || lowerMessage.Contains("שמלה"))
+            requiredCategories.Add("dress");
+        if (lowerMessage.Contains("top") || lowerMessage.Contains("shirt") || lowerMessage.Contains("jacket") || 
+            lowerMessage.Contains("sweater") || lowerMessage.Contains("blouse") || lowerMessage.Contains("חולצה") || 
+            lowerMessage.Contains("ג'קט") || lowerMessage.Contains("סוודר"))
+            requiredCategories.Add("top");
+        if (lowerMessage.Contains("bottom") || lowerMessage.Contains("pants") || lowerMessage.Contains("jeans") || 
+            lowerMessage.Contains("shorts") || lowerMessage.Contains("skirt") || lowerMessage.Contains("מכנסיים") || 
+            lowerMessage.Contains("חצאית"))
+            requiredCategories.Add("bottom");
+        if (lowerMessage.Contains("shoes") || lowerMessage.Contains("sneakers") || lowerMessage.Contains("boots") || 
+            lowerMessage.Contains("heels") || lowerMessage.Contains("sandals") || lowerMessage.Contains("נעליים"))
+            requiredCategories.Add("shoes");
+        if (lowerMessage.Contains("accessories") || lowerMessage.Contains("hat") || lowerMessage.Contains("bag") || 
+            lowerMessage.Contains("jewelry") || lowerMessage.Contains("אקססוריז"))
+            requiredCategories.Add("accessories");
+
+        // If no specific categories mentioned, assume all standard categories are needed
+        if (requiredCategories.Count == 0)
+        {
+            requiredCategories.Add("top");
+            requiredCategories.Add("bottom");
+            requiredCategories.Add("shoes");
+        }
+
+        // Filter by category
+        var categoryFiltered = allItems.Where(item => 
+            requiredCategories.Contains(item.ItemCategory.ToLower()) ||
+            item.ItemCategory.ToLower() == "dress" ||
+            item.ItemCategory.ToLower() == "accessories"
+        ).ToList();
+
+        // Filter by season based on weather
+        if (request.Weather != null && request.Weather.Temperature.HasValue)
+        {
+            var currentSeason = GetSeasonFromTemperature(request.Weather.Temperature.Value);
+            var seasonFiltered = categoryFiltered.Where(item =>
+            {
+                var itemSeasons = item.Season ?? new List<string>();
+                return itemSeasons.Any(s => s.Equals("all", StringComparison.OrdinalIgnoreCase) || 
+                                           s.Equals("all season", StringComparison.OrdinalIgnoreCase) ||
+                                           s.Equals(currentSeason, StringComparison.OrdinalIgnoreCase));
+            }).ToList();
+
+            if (seasonFiltered.Count >= categoryFiltered.Count * 0.3)
+            {
+                categoryFiltered = seasonFiltered;
+            }
+        }
+
+        // Filter by style if mentioned
+        var styleKeywords = new Dictionary<string, List<string>>
+        {
+            { "formal", new List<string> { "formal", "business", "professional" } },
+            { "casual", new List<string> { "casual", "everyday", "comfortable" } },
+            { "sport", new List<string> { "sport", "sporty", "athletic", "gym", "workout" } },
+            { "evening", new List<string> { "evening", "night", "party", "date" } }
+        };
+
+        foreach (var stylePair in styleKeywords)
+        {
+            if (lowerMessage.Contains(stylePair.Key))
+            {
+                var styleFiltered = categoryFiltered.Where(item =>
+                {
+                    var itemStyles = item.Style ?? new List<string>();
+                    return itemStyles.Any(s => stylePair.Value.Any(v => 
+                        s.Equals(v, StringComparison.OrdinalIgnoreCase)));
+                }).ToList();
+
+                if (styleFiltered.Count >= categoryFiltered.Count * 0.3)
+                {
+                    categoryFiltered = styleFiltered;
+                }
+                break;
+            }
+        }
+
+        // Ensure minimum items per category
+        var finalItems = new List<OutfitItem>();
+        var minItemsPerCategory = 5;
+
+        foreach (var category in requiredCategories)
+        {
+            var categoryItems = categoryFiltered
+                .Where(item => item.ItemCategory.ToLower() == category)
+                .Take(minItemsPerCategory * 2)
+                .ToList();
+
+            if (categoryItems.Count < minItemsPerCategory)
+            {
+                categoryItems = categoryFiltered
+                    .Where(item => item.ItemCategory.ToLower() == category)
+                    .ToList();
+            }
+
+            finalItems.AddRange(categoryItems);
+        }
+
+        // Always include some accessories and dresses if available
+        finalItems.AddRange(categoryFiltered
+            .Where(item => item.ItemCategory.ToLower() == "accessories")
+            .Take(3));
+        
+        finalItems.AddRange(categoryFiltered
+            .Where(item => item.ItemCategory.ToLower() == "dress")
+            .Take(3));
+
+        // Remove duplicates
+        finalItems = finalItems
+            .GroupBy(item => item.ItemId)
+            .Select(g => g.First())
+            .ToList();
+
+        // If filtering removed too many items, return all items
+        if (finalItems.Count < allItems.Count * 0.2)
+        {
+            return allItems;
+        }
+
+        return finalItems;
+    }
+
+    /// Gets season from temperature
+    private string GetSeasonFromTemperature(double temperature)
+    {
+        if (temperature >= 20) return "summer";
+        if (temperature >= 10) return "spring";
+        if (temperature >= 0) return "fall";
+        return "winter";
     }
 
     /// Parses OpenAI response and validates against actual closet items
