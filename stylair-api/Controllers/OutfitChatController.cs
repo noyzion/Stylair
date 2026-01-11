@@ -6,10 +6,6 @@ using stylair_api.Services;
 
 namespace stylair_api.Controllers;
 
-/// <summary>
-/// Controller for AI-powered outfit chat
-/// Generates outfit suggestions based on user message, weather, and closet items
-/// </summary>
 [Authorize] // Requires authentication - only logged-in users can use this
 [ApiController]
 [Route("api/outfit-chat")]
@@ -23,40 +19,6 @@ public class OutfitChatController : ControllerBase
         _outfitChatService = outfitChatService;
     }
 
-    /// <summary>
-    /// Generates outfit suggestions based on user message, weather, and closet items
-    /// 
-    /// POST /api/outfit-chat/suggest
-    /// 
-    /// Request body:
-    /// {
-    ///   "userMessage": "I have a meeting at noon and a workout in the evening",
-    ///   "weather": {
-    ///     "temperature": 25,
-    ///     "condition": "sun",
-    ///     "isNight": false
-    ///   }
-    /// }
-    /// 
-    /// Response:
-    /// {
-    ///   "success": true,
-    ///   "outfits": [
-    ///     {
-    ///       "event": "meeting",
-    ///       "items": [
-    ///         {
-    ///           "id": "item-id",
-    ///           "category": "top",
-    ///           "reason": "short explanation"
-    ///         }
-    ///       ],
-    ///       "missingItems": [],
-    ///       "notes": "why this outfit fits"
-    ///     }
-    ///   ]
-    /// }
-    /// </summary>
     [HttpPost("suggest")]
     public async Task<IActionResult> SuggestOutfit([FromBody] OutfitChatRequest request)
     {

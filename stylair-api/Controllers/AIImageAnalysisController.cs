@@ -19,28 +19,7 @@ public class AIImageAnalysisController : ControllerBase
     {
         _openAIService = openAIService;
     }
-
-    /// Analyzes a clothing item image using OpenAI Vision API
-    /// 
-    /// POST /api/ai/analyze-image
-    /// 
-    /// Request body:
-    /// {
-    ///   "imageUrl": "https://example.com/image.jpg" // OR
-    ///   "imageBase64": "data:image/jpeg;base64,..."
-    /// }
-    /// 
-    /// Response:
-    /// {
-    ///   "category": "Shirt",
-    ///   "color": "Blue",
-    ///   "style": "Casual",
-    ///   "season": "All Season",
-    ///   "confidence": 0.95,
-    ///   "notes": null,
-    ///   "success": true,
-    ///   "errorMessage": null
-    /// }
+    
     [HttpPost("analyze-image")]
     public async Task<IActionResult> AnalyzeImage([FromBody] AIImageAnalysisRequest request)
     {
